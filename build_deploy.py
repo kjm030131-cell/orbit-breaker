@@ -12,6 +12,8 @@ if not html.lstrip().lower().startswith('<!doctype'):
 html=html.replace('<script src="mech_glb.js"></script>\n','').replace('<script src="enemy_glb.js"></script>\n','')
 html=html.replace('<script src="rig.js"></script>','<script src="rig.js"></script>\n<script src="lib/meshopt_decoder.js"></script>\n<script>window.GLB_BASE="models/"</script>',1)
 assert 'GLB_BASE' in html and 'mech_glb.js' not in html
+ver0=str(int(os.path.getmtime('orbit-breaker.html')))
+html=html.replace('<script src="rig.js"></script>','<script src="rig.js?v='+ver0+'"></script>',1)  # bust the 1h JS cache on every deploy
 open(D+'/index.html','w').write(html)
 shutil.copy('node_modules/three/examples/js/libs/meshopt_decoder.js',D+'/lib/')
 shutil.copy('rig.js',D+'/rig.js')

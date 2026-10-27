@@ -26,7 +26,7 @@ function spawnMS(pos){const T=msTemplate();if(!T)return null;const k=MS_H/T.h,g=
   g.position.copy(pos);const yaw=Math.atan2(S.pos.x-pos.x,S.pos.z-pos.z);g.rotation.y=yaw;scene.add(g);
   const e={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:Math.random()*10,flash:0,elite:false,rad:3.6,ms:true,hp:2,stun:0,push:new V3(),
     dashT:1.5+Math.random()*2,dashV:new V3(),burstN:0,burstT:0,ram:false,rs:"hunt",rt:0,rdir:new V3(),fireT:1.5+Math.random()*2,tele:0,teleLock:false,teleDir:new V3(),
-    keep:22+Math.random()*8,yaw,aim:false,J,aimK:0};if(J)msPose(e,0);
+    keep:22+Math.random()*8,yaw,aim:false,J,aimK:0,orbit2:Math.random()<.5?-1:1,dashK:0,kick:0,roll:null};if(J)msPose(e,0);
   enemies.push(e);emit(ADD,{pos,tex:TX.ring,color:0xff2a2a,s0:2,s1:14,life:.5,a:.6});return e}
 
 // first hit on a full-armor MS: stagger instead of launch
@@ -34,22 +34,32 @@ function msArmor(e,dir){e.hp--;e.flash=1;e.stun=.75;e.push.copy(dir).setY(dir.y*
   sparks(e.m.position,dir,0xffc080,30,.5,22);fxImpact(e.m.position.clone(),0xffb060);sfx("heavy",e.m.position);S.hitstop=Math.max(S.hitstop,.05);
   addScore(200,e.m.position.clone());popText("장갑 파손 · 한 번 더!")}
 
-// arms hang at the sides; the gun arm comes up and points forward while telegraphing / firing
-function msPose(e,T){const J=e.J;if(!J)return;const a=e.aimK,sw=Math.sin(T*2+e.phase)*.06;
-  J.armR.rotation.set(-.5*a+sw,0,1.25);J.foreR.rotation.set(-1.2*a,0,0);J.armL.rotation.set(-sw,0,-1.25);J.foreL.rotation.set(-.35,0,0);
-  const leg=Math.sin(T*1.6+e.phase)*.12;J.thighR.rotation.set(-.15+leg,0,0);J.thighL.rotation.set(-.15-leg,0,0);J.shinR.rotation.set(.35,0,0);J.shinL.rotation.set(.35,0,0)}
+// combat stance: knees tucked like a mech in flight, torso leaning in, gun arm half raised and fully up while firing
+function msPose(e,T){const J=e.J;if(!J)return;const a=Math.max(.35,e.aimK),sw=Math.sin(T*2+e.phase)*.05,ds=e.dashK||0,kick=e.kick||0;
+  J.torso.rotation.set(.18+ds*.25,0,0);J.head.rotation.set(-.12-ds*.15,0,0);
+  J.armR.rotation.set(-.5*a+sw-kick*.3,0,1.25-.15*a);J.foreR.rotation.set(-1.2*a-kick*.25,0,0);
+  J.armL.rotation.set(-.55+ds*.6-sw,0,-1.2);J.foreL.rotation.set(-.9+ds*.4,0,0);
+  const leg=Math.sin(T*1.6+e.phase)*.08;J.thighR.rotation.set(.45-ds*.55+leg,0,-.08);J.thighL.rotation.set(.3-ds*.65-leg,0,.08);
+  J.shinR.rotation.set(.95-ds*.5,0,0);J.shinL.rotation.set(1.15-ds*.6,0,0)}
 function msMove(e,dt,T){if(e.J){e.aimK+=((e.tele>0||e.burstN>0?1:0)-e.aimK)*Math.min(1,dt*8);msPose(e,T)}const em=e.m,to=S.pos.clone().sub(em.position),d=to.length();to.normalize();const side=new V3(to.z,0,-to.x);let lean=0;
   if(e.stun>0){e.stun-=dt;em.position.addScaledVector(e.push,dt);e.push.multiplyScalar(Math.exp(-4*dt));em.rotation.set(-.35*(e.stun/.75),e.yaw,Math.sin(T*30)*.06);return true}
-  if(d>e.keep+3)em.position.addScaledVector(to,dt*7);else if(d<e.keep-5)em.position.addScaledVector(to,-dt*6);
-  e.dashT-=dt;if(e.dashT<=0&&e.tele<=0){e.dashT=2.4+Math.random()*1.8;e.dashV.copy(side).multiplyScalar((Math.random()<.5?-1:1)*26);e.dashV.y=(Math.random()-.5)*8;sfx("dash",em.position)}
-  if(e.dashV.lengthSq()>1){em.position.addScaledVector(e.dashV,dt);lean=-e.dashV.dot(side)/26*.45;e.dashV.multiplyScalar(Math.exp(-3.2*dt))}
+  if(d>e.keep+3)em.position.addScaledVector(to,dt*8);else if(d<e.keep-5)em.position.addScaledVector(to,-dt*7);
+  em.position.addScaledVector(side,e.orbit2*(d<e.keep+10?7:2)*dt); // circle strafe
+  e.dashT-=dt;if(e.dashT<=0&&e.tele<=0&&e.burstN<=0){e.dashT=1.4+Math.random()*1.3;
+    const close=d<13,dir=close?to.clone().negate().addScaledVector(side,(Math.random()-.5)*1.4):side.clone().multiplyScalar(Math.random()<.5?-1:1).addScaledVector(to,(Math.random()-.4)*.8);
+    dir.y+=(Math.random()-.5)*.9;e.dashV.copy(dir.normalize().multiplyScalar(close?42:34));if(Math.random()<.35)e.roll={t:0,s:Math.random()<.5?-1:1};
+    if(Math.random()<.4)e.orbit2*=-1;sfx("dash",em.position)}
+  const dv2=e.dashV.lengthSq();if(dv2>1){em.position.addScaledVector(e.dashV,dt);lean=-e.dashV.dot(side)/34*.6;e.dashV.multiplyScalar(Math.exp(-2.6*dt));
+    if(Math.random()<.5)emit(ADD,{pos:em.position.clone().addScaledVector(e.dashV,-.03),tex:TX.streak,color:0xff6a3a,s0:4,s1:.6,life:.22,a:.35})}
+  e.dashK=Math.min(1,Math.sqrt(dv2)/30);
   for(const o of enemies){if(o===e||!o.alive||o.launched>0||o.isBoss||o.isWP||o.isRemote)continue;const dv=em.position.clone().sub(o.m.position),dd=dv.length(),min=(e.rad+o.rad)*1.05;
     if(dd<min&&dd>1e-3)em.position.addScaledVector(dv.divideScalar(dd),Math.min(min-dd,dt*9))}
   em.position.y+=Math.sin(e.phase*1.1)*dt*.8;
   const want=Math.atan2(S.pos.x-em.position.x,S.pos.z-em.position.z),dy=Math.atan2(Math.sin(want-e.yaw),Math.cos(want-e.yaw));e.yaw+=clamp(dy,-3*dt,3*dt);
-  em.rotation.set(.12+Math.sin(e.phase*.7)*.04,e.yaw,lean);
+  let roll=lean;if(e.roll){e.roll.t+=dt;const u=Math.min(1,e.roll.t/.5);roll+=e.roll.s*u*u*(3-2*u)*Math.PI*2;if(u>=1)e.roll=null}
+  em.rotation.set(.1+e.dashK*.35*Math.max(0,e.dashV.dot(to))/34+Math.sin(e.phase*.7)*.04,e.yaw,roll);e.kick=Math.max(0,(e.kick||0)-dt*7);
   const j=em.userData.jets;if(j){const k=e.dashV.lengthSq()>4?2.6:1.2+Math.sin(T*20+e.phase)*.2;j.forEach(s=>s.scale.setScalar(k))}
   // remaining shots of a burst
   if(e.burstN>0&&SCREEN==="play"&&S.started&&!S.ended){e.burstT-=dt;if(e.burstT<=0){e.burstN--;e.burstT=.16;const from=em.position.clone().add(new V3(0,.6,0));
-    const dir=S.pos.clone().add(S.vel.clone().multiplyScalar(.15)).sub(from).normalize().add(new V3().randomDirection().multiplyScalar(.03)).normalize();fireEnemyBolt(from,dir,false,e)}}
+    const dir=S.pos.clone().add(S.vel.clone().multiplyScalar(.15)).sub(from).normalize().add(new V3().randomDirection().multiplyScalar(.03)).normalize();fireEnemyBolt(from,dir,false,e);e.kick=1}}
   return false}

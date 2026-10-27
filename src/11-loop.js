@@ -61,7 +61,7 @@ function update(rdt){
     const m=P.root;if(SCREEN==="play"&&G.dead<=0&&S.started)m.visible=!(G.iframe>.3&&G.iframe<3.01&&G.respawnBlink&&((T*14|0)%2));
     m.position.copy(S.pos);m.position.y+=Math.sin(T*1.6)*.12*(CINE.on?0:1)+CINE.crouch;m.rotation.y=S.face;
     const localV=S.vel.clone().applyAxisAngle(new V3(0,1,0),-S.face);
-    if(CINE.on){m.rotation.x=0;m.rotation.z=0}else attitude(m,localV,dt,T);
+    if(CINE.on){m.rotation.x=0;m.rotation.z=0}else{attitude(m,localV,dt,T);bodyMotion(m,dt)}
     solvePose(dt,localV,boosting,T);
     const heatC=new THREE.Color().setHSL(.07-S.heat/100*.07,1,.55+S.heat/400);
     P.inner.material.color.copy(S.over>0?new THREE.Color(0xff2030):heatC);

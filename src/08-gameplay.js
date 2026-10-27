@@ -86,7 +86,7 @@ function enemyAI(e,dt,T){
     const tm=e.teleMesh;tm.position.copy(from);tm.lookAt(from.clone().add(e.teleDir));const reach=Math.max(4,S.pos.clone().sub(from).dot(e.teleDir)-1.5);tm.scale.set(e.teleLock?1.8:1,e.teleLock?1.8:1,reach);
     tm.material.opacity=e.teleLock?(.55+.4*((T*30|0)%2)):.12+(1-e.tele/ph.tele)*.3;
     if(eye)eye.scale.setScalar((e.elite?1.6:1.1)*(1.4+Math.sin(T*40)*.3));
-    if(e.tele<=0||!live){if(live){fireEnemyBolt(from,e.teleDir,e.elite,e);if(e.ms){e.burstN=2;e.burstT=.16}}clearTele(e)}
+    if(e.tele<=0||!live){if(live){fireEnemyBolt(from,e.teleDir,e.elite,e);if(e.ms){e.burstN=2;e.burstT=.16;e.kick=1}}clearTele(e)}
   }else{
     if(eye){eye.material.opacity=.75+Math.sin(T*6+e.phase)*.25;eye.scale.setScalar(e.elite?1.6:1.1)}
     if(live){e.fireT-=dt;
@@ -133,13 +133,14 @@ function dodge(){
   if(VS){
     if(!vsCanAct()||S.over>0||G.dodgeCd>0||S.attackCd>0||S.shotCd>0||S.boost<25)return;
     G.dodgeCd=.65;S.boost-=25;G.iframe=Math.max(G.iframe,.18);const d=new V3(),f=fwd(),r=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw));
-    if(keys.KeyW)d.add(f);if(keys.KeyS)d.sub(f);if(keys.KeyA)d.add(r);if(keys.KeyD)d.sub(r);if(keys.Space)d.y+=1;if(keys.KeyC)d.y-=1;if(!d.lengthSq())d.copy(r).negate();S.vel.copy(d.normalize().multiplyScalar(72));vsSend({t:"dodge"});sfx("dodge");return;
+    if(keys.KeyW)d.add(f);if(keys.KeyS)d.sub(f);if(keys.KeyA)d.add(r);if(keys.KeyD)d.sub(r);if(keys.Space)d.y+=1;if(keys.KeyC)d.y-=1;if(!d.lengthSq())d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(72));vsSend({t:"dodge"});sfx("dodge");return;
   }
   if(SCREEN!=="play"||S.ended||PAUSED||G.dodgeCd>0||G.stagger>0||G.dead>0||S.over>0||S.boost<15)return;
   G.dodgeCd=.45;S.boost-=15;G.iframe=Math.max(G.iframe,.22);
   const f=fwd(),r=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw)),d=new V3();
   if(keys.KeyW)d.add(f);if(keys.KeyS)d.sub(f);if(keys.KeyA)d.add(r);if(keys.KeyD)d.sub(r);if(keys.Space)d.y+=1;if(keys.KeyC)d.y-=1;
-  if(d.lengthSq()===0)d.copy(r).negate();d.normalize();S.vel.copy(d.multiplyScalar(72));sfx("dodge");
+  if(d.lengthSq()===0)d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(72));sfx("dodge");
+  for(let i=0;i<10;i++){const k=i/10;emit(ADD,{pos:S.pos.clone().addScaledVector(d,-k*6/72).add(new V3(0,.8,0)),tex:TX.streak,color:0x7fe0ff,s0:5,s1:1,life:.25+k*.2,a:.45*(1-k)})}
   for(let i=0;i<6;i++)emit(ADD,{pos:S.pos.clone().add(new V3((Math.random()-.5)*1.5,Math.random()*2.5-.5,(Math.random()-.5)*1.5)),color:0x7fe0ff,s0:2,s1:.3,life:.35,a:.5});
   let just=false;
   const me=S.pos.clone().add(new V3(0,.4,0));
