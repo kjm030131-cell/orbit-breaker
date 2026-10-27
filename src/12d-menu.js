@@ -22,5 +22,5 @@ try{if(localStorage.getItem("ob.fps")==="1")setTimeout(()=>setFps(true),0)}catch
 // pause menu: resume, settings, end the sortie (ranked: counts as a finished run with the current score)
 function resumePlay(){PAUSED=false;$("pause").hidden=true;muffle(false);lock()}
 $("pResume").addEventListener("click",()=>{sfx("uiok");resumePlay()});
-$("pQuit").addEventListener("click",()=>{sfx("uiback");PAUSED=false;$("pause").hidden=true;muffle(false);
+$("pQuitB").addEventListener("click",()=>{sfx("uiback");PAUSED=false;$("pause").hidden=true;muffle(false);
   if(VS){vsClose();show("title");return}finishRun("quit")});

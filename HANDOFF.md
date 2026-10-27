@@ -121,3 +121,11 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 - Mk-II 소총은 손 뼈에 붙은 정점 988개를 따로 떼어 `gun` 뼈로 옮김 → 칼을 뽑을 때 숨김. 총구 위치도 소총 정점에서 계산.
 - 주의: three r147의 `boneTransform(i,v)`는 v에 정점 위치를 먼저 넣어야 함. `bakeGLTF`는 스킨 메시를 건너뜀(바인드 행렬이 깨지므로).
 - 대전 상대 기체는 `THREE.SkeletonUtils.clone`으로 복제하고, 처음 저장한 기본 자세로 되돌린 뒤 연결함.
+
+## 13. UI 개편 (10/27~28)
+- 글꼴: Pretendard 하나로 통일, `build_deploy.py`가 node_modules/pretendard를 lib/에 자체 호스팅.
+- 설정 창(`#settings`, src/12d-menu.js): 감도·화질·사운드·볼륨·화면 흔들림(SHAKE_K)·FPS 표시. 일시정지 메뉴: 계속하기·설정·작전 종료(현재 점수로 기록).
+- 기체 선택 화면: 왼쪽 패널, 오른쪽에 선택 기체 3D 미리보기(카메라는 11-loop의 S.demo + SCREEN==="load").
+- UI 아트(ui/): ic_*.webp 아이콘, btn_pri/btn_sec(버튼 border-image), radio(무전창), medal1~3(랭킹), grade_S~C(결과 등급: 25만/15만/7만 기준), bossbar, reticle/lockon.
+- 무전 얼굴: ui/face_op.webp(CIC), face_ace.webp(적), face_cap.webp(함장) 파일만 넣으면 radio()가 자동 표시.
+- 최적화: 패널 backdrop-filter(blur) 제거.

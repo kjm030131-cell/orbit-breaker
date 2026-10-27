@@ -98,5 +98,8 @@ function resetBoss(){
   Object.assign(BOSS,{e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0});
 }
 // radio chatter overlay (reuses the cutscene subtitle style, but small, top-centre)
-function radio(who,txt){const r=$("radio");if(!r)return;$("radioWho").textContent=who;$("radioTxt").textContent=txt;r.classList.remove("on");void r.offsetWidth;r.classList.add("on");
+// portraits: ui/face_op.webp (CIC), face_ace.webp (enemy), face_cap.webp (captain) when present
+const FACES={CIC:"face_op",적:"face_ace",함장:"face_cap"};
+function radio(who,txt){const r=$("radio");if(!r)return;$("radioWho").textContent=who;const k=Object.keys(FACES).find(n=>who.includes(n)),f=$("radioFace");
+  f.style.backgroundImage=k?`url(ui/${FACES[k]}.webp)`:"";f.textContent="";if(k){const im=new Image();im.onerror=()=>{f.style.backgroundImage=""};im.src=`ui/${FACES[k]}.webp`}$("radioTxt").textContent=txt;r.classList.remove("on");void r.offsetWidth;r.classList.add("on");
   sfx("radio");clearTimeout(radio.h);radio.h=setTimeout(()=>r.classList.remove("on"),3600)}

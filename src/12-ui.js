@@ -35,12 +35,12 @@ function setNet(on){const n=$("netStatus");n.classList.toggle("off",!on);n.lastC
 /* ================= boards ================= */
 function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c])}
 function rowsHTML(rows,start){return rows.map((r,i)=>{const n=start+i+1;
-  return `<tr class="${n<=3?"p"+n:""} ${r.me||(r.sid&&r.sid===PILOT.sid)?"me":""}"><td class="r">${String(n).padStart(2,"0")}</td><td>${esc(r.name)}${r.sidm?`<span class="ut"> ${esc(r.sidm)}</span>`:""}${r.unit&&U_SHORT[r.unit]?`<span class="ut"> · ${U_SHORT[r.unit]}</span>`:""}</td><td class="d">${esc(r.dept)}</td><td class="s">${(r.best||0).toLocaleString()}</td></tr>`}).join("")}
+  return `<tr class="${n<=3?"p"+n:""} ${r.me||(r.sid&&r.sid===PILOT.sid)?"me":""}"><td class="r">${n<=3?`<img class="medal" src="ui/medal${n}.webp" alt="${n}">`:String(n).padStart(2,"0")}</td><td>${esc(r.name)}${r.sidm?`<span class="ut"> ${esc(r.sidm)}</span>`:""}${r.unit&&U_SHORT[r.unit]?`<span class="ut"> · ${U_SHORT[r.unit]}</span>`:""}</td><td class="d">${esc(r.dept)}</td><td class="s">${(r.best||0).toLocaleString()}</td></tr>`}).join("")}
 function tableHTML(rows,extra){
   if(!rows.length)return '<div class="empty">아직 작전 기록이 없습니다.<br>첫 번째 파일럿이 되어 보세요.</div>';
   return `<table class="board"><thead><tr><th>#</th><th>파일럿</th><th>학과</th><th class="s">최고점</th></tr></thead><tbody>${rowsHTML(rows,0)}${extra||""}</tbody></table>`}
 function renderBoards(){
-  $("miniBoard").innerHTML=BOARD.length?BOARD.slice(0,5).map((r,i)=>`<div class="mrow ${i===0?"top":""}"><span class="r">${String(i+1).padStart(2,"0")}</span><span>${esc(r.name)}</span><span class="sc">${(r.best||0).toLocaleString()}</span></div>`).join(""):'<div class="note">아직 기록이 없습니다.</div>';
+  $("miniBoard").innerHTML=BOARD.length?BOARD.slice(0,5).map((r,i)=>`<div class="mrow ${i===0?"top":""}"><span class="r">${i<3?`<img class="medal" src="ui/medal${i+1}.webp" alt="${i+1}">`:String(i+1).padStart(2,"0")}</span><span>${esc(r.name)}</span><span class="sc">${(r.best||0).toLocaleString()}</span></div>`).join(""):'<div class="note">아직 기록이 없습니다.</div>';
   $("miniCount").textContent=BOARD.length?BOARD.length+" PILOTS":"";
   $("fullBoard").innerHTML=tableHTML(BOARD);$("rankCount").textContent=BOARD.length+"명 참가";
   const me=BOARD.findIndex(r=>r.me||(r.sid&&r.sid===PILOT.sid));
@@ -176,7 +176,7 @@ function finishRun(reason){
   rec.at=new Date().toISOString();putRec({...rec});
   if(SERVER&&RUN){const runId=RUN;RUN=null;api("finish",{runId,score,kills:S.kills||0,chain:S.best,combo:G.maxKC}).then(j=>{rec.best=j.best;rec.attempts=j.attempts;$("rBest").textContent=(j.best||0).toLocaleString();applyBoard(j);updateRankLine()}).catch(e=>{$("rRank").innerHTML='<span class="note" style="color:var(--red)">기록 서버 전송 실패 — 운영진에게 화면을 보여주세요.</span>'})}
   music(null);sfx("end");if(pb&&score>0)sfx("pb");setTimeout(()=>{if(SCREEN==="result"){music("title");muffle(true)}},2600);
-  $("rScore").textContent=score.toLocaleString();$("rKills").textContent=S.kills||0;$("rCombo").textContent=G.maxKC;$("rChain").textContent=S.best;$("rBest").textContent=(rec.best||0).toLocaleString();
+  $("rScore").textContent=score.toLocaleString();{const g=score>=250000?"S":score>=150000?"A":score>=70000?"B":"C",im=$("rGrade");im.hidden=false;im.src=`ui/grade_${g}.webp`;im.alt=g+" 등급";im.style.animation="none";void im.offsetWidth;im.style.animation=""}$("rKills").textContent=S.kills||0;$("rCombo").textContent=G.maxKC;$("rChain").textContent=S.best;$("rBest").textContent=(rec.best||0).toLocaleString();
   $("rPb").innerHTML=(pb&&score>0?'<span class="pb">개인 최고 기록 갱신</span> ':"")+(lost?'<span class="note">전 기체 손실 · 작전 조기 종료</span>':`<span class="note">생존 보너스 +${bonus.toLocaleString()} (전투 점수의 ${Math.round(rate*100)}% · 남은 기체 ${G.lives}${G.lives===MAX_LIVES?" · 무피격 클리어":""})</span>`);
   $("rDebrief").innerHTML='<span class="who">아스트라이아 CIC · 한서윤 중위</span>'+debriefLine(lost,score);
   $("rSortie").textContent=`출격 ${rec.attempts} / ${MAX_SORTIE}`;
