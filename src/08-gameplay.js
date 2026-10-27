@@ -1,9 +1,9 @@
 /* ================= gameplay systems ================= */
 const PHASES=[
-  {at:0,name:"1단계 · 선발 정찰대",sub:"PHASE 1 · RECON",count:12,elites:0,rams:0,ms:0,maxTele:2,fire:[4.5,7.5],tele:.9,bolt:85},
-  {at:25,name:"2단계 · 돌격 드론 출현",sub:"PHASE 2 · RAMMERS",count:14,elites:0,rams:2,ms:1,maxTele:3,fire:[3,5],tele:.8,bolt:92},
-  {at:55,name:"3단계 · 정예 호위기",sub:"PHASE 3 · ELITE ESCORT",count:14,elites:2,rams:2,ms:1,maxTele:3,fire:[2.6,4.4],tele:.75,bolt:100},
-  {at:90,name:"최종 단계 · 지휘기 케르베로스",sub:"FINAL PHASE · SCORE ×2",count:12,elites:2,rams:3,ms:2,maxTele:4,fire:[2.4,4],tele:.7,bolt:108}];
+  {at:0,name:"1단계 · 선발 정찰대",sub:"",count:12,elites:0,rams:0,ms:0,maxTele:2,fire:[4.5,7.5],tele:.9,bolt:85},
+  {at:25,name:"2단계 · 돌격 드론 출현",sub:"",count:14,elites:0,rams:2,ms:1,maxTele:3,fire:[3,5],tele:.8,bolt:92},
+  {at:55,name:"3단계 · 정예 호위기",sub:"",count:14,elites:2,rams:2,ms:1,maxTele:3,fire:[2.6,4.4],tele:.75,bolt:100},
+  {at:90,name:"최종 단계 · 지휘기 케르베로스",sub:"",count:12,elites:2,rams:3,ms:2,maxTele:4,fire:[2.4,4],tele:.7,bolt:108}];
 // clean streak: every 15s without a hit adds +0.2 to the score multiplier (max ×2.0); a hit resets it
 const CLEAN_STEP=15;
 function cleanMult(){return Math.min(2,1+Math.floor(G.clean/CLEAN_STEP)*.2)}

@@ -1,18 +1,18 @@
 /* ================= option units: the chosen pack decides R skill, F special and a passive ================= */
 const UNITS={
-  boost:{name:"오버부스트 유닛",en:"OB-3 OVERBOOST",color:0xffb21a,css:"#ffb21a",
+  boost:{name:"오버부스트 유닛",en:"OB-3",color:0xffb21a,css:"#ffb21a",
     r:"돌진 관통베기",rd:"조준 방향으로 초고속 돌진, 경로의 적을 모두 베어 날림",cd:7,
     f:"궤도 파쇄",fd:"주변 42m의 적을 모두 바깥으로 날림",
     p:"부스트 회복 +30%"},
-  pods:{name:"원격 포드 유닛",en:"RF-6 REMOTE PODS",color:0x48d8ff,css:"#48d8ff",
+  pods:{name:"원격 포드 유닛",en:"RF-6",color:0x48d8ff,css:"#48d8ff",
     r:"포드 강습",rd:"포드 3기가 록온 대상을 직접 타격해 날림",cd:8,
     f:"올 레인지",fd:"포드가 주변 적을 한 점으로 끌어모은 뒤 사방으로 폭산",
     p:"20초마다 적탄 1발 자동 요격"},
-  missile:{name:"다탄두 미사일 유닛",en:"MP-12 MICRO MISSILE",color:0xff6a3d,css:"#ff6a3d",
+  missile:{name:"다탄두 미사일 유닛",en:"MP-12",color:0xff6a3d,css:"#ff6a3d",
     r:"멀티 록",rd:"누르고 있는 동안 최대 6기 표적, 떼면 일제 발사",cd:9,
     f:"풀 버스트",fd:"60m 안의 적 최대 14기에 미사일 일제 사격",
     p:"라이플 연사 간격 −25%"},
-  shield:{name:"실드 비트 유닛",en:"SB-4 SHIELD BIT",color:0x8dff7a,css:"#8dff7a",
+  shield:{name:"실드 비트 유닛",en:"SB-4",color:0x8dff7a,css:"#8dff7a",
     r:"반사 장벽",rd:"3초간 장벽 전개, 닿는 적탄을 쏜 적에게 되돌림",cd:10,
     f:"카운터 필드",fd:"4초간 무적 · 모든 적탄 반사, 종료 시 충격파",
     p:"저스트 회피 시 1회 피격 무효 (25초마다)"}};

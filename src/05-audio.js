@@ -1,12 +1,12 @@
 /* ================= audio engine ================= */
-let AC=null;const AUD={on:true,ready:false};
-try{AUD.on=localStorage.getItem("orbitbreaker.sound")!=="off"}catch(e){}
+let AC=null;const AUD={on:true,ready:false,vol:.9};
+try{AUD.on=localStorage.getItem("orbitbreaker.sound")!=="off";const v=localStorage.getItem("ob.vol");if(v!==null)AUD.vol=+v}catch(e){}
 let MASTER,SFXB,MUSB,AMBB,REV,COMP,MUSLP,DUCK,NOISE,CRUSH;const LOOP={};
 function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)();audioInit()}catch(e){AC=null}}return AC}
 function audioInit(){
   const a=AC;
   COMP=a.createDynamicsCompressor();COMP.threshold.value=-14;COMP.knee.value=8;COMP.ratio.value=4;COMP.attack.value=.003;COMP.release.value=.2;
-  MASTER=a.createGain();MASTER.gain.value=AUD.on?.9:0;COMP.connect(MASTER);MASTER.connect(a.destination);
+  MASTER=a.createGain();MASTER.gain.value=AUD.on?AUD.vol:0;COMP.connect(MASTER);MASTER.connect(a.destination);
   SFXB=a.createGain();SFXB.gain.value=.9;SFXB.connect(COMP);
   DUCK=a.createGain();MUSLP=a.createBiquadFilter();MUSLP.type="lowpass";MUSLP.frequency.value=18000;
   MUSB=a.createGain();MUSB.gain.value=.52;MUSB.connect(MUSLP);MUSLP.connect(DUCK);DUCK.connect(COMP);
@@ -20,7 +20,7 @@ function audioInit(){
   if(MUS.want!==undefined){const w=MUS.want;MUS.want=undefined;music(w)}
 }
 function setSound(on){AUD.on=on;try{localStorage.setItem("orbitbreaker.sound",on?"on":"off")}catch(e){}
-  if(AUD.ready)MASTER.gain.setTargetAtTime(on?.9:0,AC.currentTime,.05);
+  if(AUD.ready)MASTER.gain.setTargetAtTime(on?AUD.vol:0,AC.currentTime,.05);
   document.querySelectorAll("[data-sound]").forEach(b=>{b.textContent=on?"사운드 켜짐":"사운드 꺼짐";b.setAttribute("aria-pressed",on?"true":"false")})}
 function setP(p,v,tc){p.setTargetAtTime(v,AC.currentTime,tc||.05)}
 

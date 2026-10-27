@@ -66,7 +66,7 @@ function show(name){
   if(name==="title"){markMenu();PILOT.sid=PILOT.sid}
   if(name==="form"){if(prev==="title"){["fName","fDept","fSid"].forEach(id=>$(id).value="");$("fErr").textContent="";meter(null)}setTimeout(()=>$("fName").focus(),60)}
   if(name==="load"){renderUnits();setTimeout(()=>$("loadGo").focus(),60)}
-  if(name==="brief"){const l=briefMode==="launch";$("briefStep").textContent=l?"Step 3 / 3":"Manual";$("launchBtn").hidden=!l;$("launchNote").hidden=!l;setTimeout(()=>(l?$("launchBtn"):$("briefBack")).focus(),60)}
+  if(name==="brief"){const l=briefMode==="launch";$("briefStep").textContent=l?"3 / 3":"조작법";$("launchBtn").hidden=!l;$("launchNote").hidden=!l;setTimeout(()=>(l?$("launchBtn"):$("briefBack")).focus(),60)}
   if(name==="rank")renderBoards();
   if(name==="duel")duelOpen();
   if(["title","form","load","duel","brief","rank"].includes(name)){music("title");muffle(false)}
@@ -126,7 +126,7 @@ $("pilotForm").addEventListener("submit",async e=>{
 
 /* ================= loadout ================= */
 const U_SHORT={boost:"부스트",pods:"포드",missile:"미사일",shield:"실드"};
-function renderFrames(){$("frames").innerHTML=Object.keys(FRAMES).map(k=>{const F=FRAMES[k];return `<button type="button" class="fr ${P&&P.frame===k?"sel":""}" data-frame="${k}" ${F.obj?"":"disabled"}><b>${F.name}</b><span>${F.obj?F.kr:"기체 데이터 수신 중…"}</span></button>`}).join("")}
+function renderFrames(){if(P&&FRAMES[P.frame]){$("pvName").textContent=FRAMES[P.frame].name;$("pvSub").textContent=FRAMES[P.frame].kr}$("frames").innerHTML=Object.keys(FRAMES).map(k=>{const F=FRAMES[k];return `<button type="button" class="fr ${P&&P.frame===k?"sel":""}" data-frame="${k}" ${F.obj?"":"disabled"}><b>${F.name}</b><span>${F.obj?F.kr:"기체 데이터 수신 중…"}</span></button>`}).join("")}
 function onFrameLoaded(){if(SCREEN==="load")renderFrames();if(SCREEN==="duel"){dFrameBtns();if(VS)vsLobby();}const want=PILOT.frame;if(want&&FRAMES[want].obj&&(!P||P.frame!==want))setFrame(want)}
 $("frames").addEventListener("click",e=>{const b=e.target.closest("[data-frame]");if(!b||b.disabled)return;if(setFrame(b.dataset.frame)){sfx("ui");PILOT.frame=b.dataset.frame;buildBits(G.unit)}renderFrames()});
 function renderUnits(){renderFrames();
@@ -179,7 +179,7 @@ function finishRun(reason){
   $("rScore").textContent=score.toLocaleString();$("rKills").textContent=S.kills||0;$("rCombo").textContent=G.maxKC;$("rChain").textContent=S.best;$("rBest").textContent=(rec.best||0).toLocaleString();
   $("rPb").innerHTML=(pb&&score>0?'<span class="pb">개인 최고 기록 갱신</span> ':"")+(lost?'<span class="note">전 기체 손실 · 작전 조기 종료</span>':`<span class="note">생존 보너스 +${bonus.toLocaleString()} (전투 점수의 ${Math.round(rate*100)}% · 남은 기체 ${G.lives}${G.lives===MAX_LIVES?" · 무피격 클리어":""})</span>`);
   $("rDebrief").innerHTML='<span class="who">아스트라이아 CIC · 한서윤 중위</span>'+debriefLine(lost,score);
-  $("rSortie").textContent=`Sortie ${rec.attempts} / ${MAX_SORTIE}`;
+  $("rSortie").textContent=`출격 ${rec.attempts} / ${MAX_SORTIE}`;
   const left=MAX_SORTIE-rec.attempts,ag=$("againBtn");ag.disabled=left<=0;
   ag.firstChild.textContent=left>0?`재출격 · ${left}회 남음 `:"출격 횟수 소진 ";
   show("result");renderBoards();updateRankLine();setTimeout(()=>(left>0?ag:document.querySelector("#scrResult [data-go]")).focus(),120);
@@ -203,7 +203,7 @@ function hudUpdate(){
   setW("boostF",S.boost);setT("boostV",Math.round(S.boost));
   setW("heatF",S.heat);setT("mult",Math.round(S.heat)+"%");setC("heatG","hot",S.heat>=80||S.over>0);
   setC("comboBox","live",G.kc>0);setT("kcNum",G.kc);setT("kcMult","×"+mult().toFixed(1));setW("kcBar",G.kc>0?G.kcT/KC_WINDOW*100:0);
-  setT("phaseTag","PHASE "+(G.phase+1)+" / 4"+(G.phase>=3?" · ×2":""));setH("critTag",!(G.crit>0));
+  setT("phaseTag","단계 "+(G.phase+1)+" / 4"+(G.phase>=3?" · ×2":""));setH("critTag",!(G.crit>0));
   setT("gravN","×"+G.grav);setC("wGrav","off",G.grav<=0);setC("wGrav","act",G.wells.length>0);
   setW("specBar",G.spec);setC("wSpec","ready",G.spec>=100);setT("specTxt",G.spec>=100?"READY":Math.floor(G.spec)+"%");setH("armorTag",!(G.armor>0));
   const sl=S.act&&S.act.startsWith("slash");setT("chainNow",sl?`콤보 ${S.combo+1} / 3`:"록온 돌진");
@@ -221,7 +221,7 @@ function hudUpdate(){
      const k="mk"+i;if(HC[k]!==on){HC[k]=on;d.style.display=on?"block":"none"}}}
   const lk=$("lock");let show=false;
   if(target&&SCREEN==="play"){const p=target.m.position.clone().project(camera);if(p.z<1){show=true;const sh=!!target.elite&&eliteBlocks(target,S.pos);
-    const fc=G.focus===target;setC("lock","focus",fc);setT("lockTxt",target.isWP?`약점 포드 · ${target.hp}/${WP_HP}`:target.isBoss?"기능 정지 · 베어라":fc&&!G.aimN?"FOCUS":G.aimN>0?`예상 연쇄 ×${G.aimN}`:(target.elite?(sh?"SHIELD · 측후방 공격":"BACK · 공격 가능"):"LOCK"));setC("lock","hot",G.aimN>0);setC("lock","shield",sh);
+    const fc=G.focus===target;setC("lock","focus",fc);setT("lockTxt",target.isWP?`약점 포드 · ${target.hp}/${WP_HP}`:target.isBoss?"기능 정지 · 베어라":fc&&!G.aimN?"고정":G.aimN>0?`예상 연쇄 ×${G.aimN}`:(target.elite?(sh?"실드 · 뒤를 노려라":"BACK · 공격 가능"):"LOCK"));setC("lock","hot",G.aimN>0);setC("lock","shield",sh);
     lk.style.transform=`translate(${((p.x+1)/2*innerWidth).toFixed(1)}px,${((1-p.y)/2*innerHeight).toFixed(1)}px) translate(-50%,-50%)`}}
   if(HC.lockShow!==show){HC.lockShow=show;lk.style.display=show?"block":"none"}
   drawRadar();duelHud();

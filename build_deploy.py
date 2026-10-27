@@ -4,6 +4,11 @@ from PIL import Image
 OUT=os.environ.get('OUT','../orbit-breaker-deploy');D=OUT+'/public';shutil.rmtree(D,ignore_errors=True);os.makedirs(D+'/lib',exist_ok=True);os.makedirs(D+'/icons',exist_ok=True)
 html=open('orbit-breaker.html').read()
 libs=re.findall(r'https://cdn\.jsdelivr\.net/npm/three@0\.147\.0/([^"]+)',html)
+# self-host Pretendard (css + on-demand woff2 subsets) so the font works without the CDN
+PF='node_modules/pretendard/dist/web/variable/'
+if os.path.isdir(PF):
+    shutil.copytree(PF+'woff2-dynamic-subset',D+'/lib/woff2-dynamic-subset',dirs_exist_ok=True);shutil.copy(PF+'pretendardvariable-dynamic-subset.css',D+'/lib/')
+    html=html.replace('https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css','lib/pretendardvariable-dynamic-subset.css')
 for p in libs:
     dst=D+'/lib/'+os.path.basename(p);shutil.copy('node_modules/three/'+p,dst)
     html=html.replace('https://cdn.jsdelivr.net/npm/three@0.147.0/'+p,'lib/'+os.path.basename(p))

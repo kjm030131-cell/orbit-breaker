@@ -114,13 +114,13 @@ function update(rdt){
   if(!(CINE.on&&cineCamera(rdt))){
   const cf=camFwd(),dist=S.demo?12:10;
   const want=S.pos.clone().addScaledVector(cf,-dist).add(new V3(0,2.8,0));
-  if(S.demo){const a=S.demoT*.25;want.copy(S.pos).add(new V3(Math.sin(a+2.6)*11,2.2+Math.sin(a*.7),Math.cos(a+2.6)*11))}
+  if(S.demo){const pv=SCREEN==="load",a=S.demoT*(pv?.35:.25),r=pv?10.5:11;want.copy(S.pos).add(new V3(Math.sin(a+2.6)*r,(pv?.6:2.2)+Math.sin(a*.7)*(pv?.3:1),Math.cos(a+2.6)*r))}
   camera.position.lerp(want,1-Math.pow(.0005,rdt));
   if(!VS&&S.camKick>0)camera.position.addScaledVector(camFwd(),-S.camKick*.9).y+=S.camKick*.25;
-  S.shake=Math.max(0,S.shake-rdt*2.4);const sh=VS?0:S.shake*S.shake*.9;
+  S.shake=Math.max(0,S.shake-rdt*2.4);const sh=VS?0:S.shake*S.shake*.9*(typeof SHAKE_K==='number'?SHAKE_K:1);
   camera.position.add(new V3((Math.random()-.5)*sh,(Math.random()-.5)*sh,(Math.random()-.5)*sh));
   if(S.demo){const toCam=camera.position.clone().sub(S.pos).setY(0).normalize();const R=new V3().crossVectors(new V3(0,1,0),toCam);
-    camera.lookAt(S.pos.clone().add(new V3(0,.9,0)).addScaledVector(R,-(innerWidth>820?4.5:0)))}
+    camera.lookAt(S.pos.clone().add(new V3(0,SCREEN==="load"?.2:.9,0)).addScaledVector(R,-(innerWidth>820?(SCREEN==="load"?4.6:4.5):0)))}
   else if(VS)camera.lookAt(camera.position.clone().addScaledVector(cf,18));
   else camera.lookAt(S.pos.clone().addScaledVector(cf,8).add(new V3(0,1.4,0)));
   const fovT=VS?68:boosting||S.dash>0?74:62;if(Math.abs(fovT-camera.fov)>.01){camera.fov+=(fovT-camera.fov)*(1-Math.exp(-8*rdt));camera.updateProjectionMatrix();}}

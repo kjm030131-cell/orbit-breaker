@@ -5,7 +5,7 @@ const keys={};let SCREEN="title",PAUSED=false,wasLocked=false;
 addEventListener("keydown",e=>{keys[e.code]=true;{const a=ac();if(a&&a.state!=="running")a.resume().catch(()=>{})}if(e.code==="KeyM"&&!(e.target&&e.target.tagName==="INPUT")){setSound(!AUD.on);return}if(SCREEN==="play"){if(["Space","Tab"].includes(e.code))e.preventDefault();if((e.code==="ShiftLeft"||e.code==="ShiftRight")&&!e.repeat)dodge();if(e.code==="KeyQ"&&!e.repeat)throwGrav();if(e.code==="KeyE"&&!e.repeat)toggleFocus();if(e.code==="KeyR"&&!e.repeat)unitSkill();if(e.code==="KeyF"&&!e.repeat){e.preventDefault();special()}if(e.code==="KeyX"&&S.over>0&&!VS){S.over=Math.max(0,S.over-.12);sfx("cool")}}UI.key(e)});
 addEventListener("keyup",e=>{keys[e.code]=false;if(e.code==="KeyR"&&SCREEN==="play")unitSkillUp()});
 let locked=false,mouseX=0,clockT=0;
-document.addEventListener("pointerlockchange",()=>{locked=document.pointerLockElement===renderer.domElement;if(locked)wasLocked=true;else if(SCREEN==="play"&&wasLocked&&!S.ended){$("pauseLabel").textContent=VS?"ONLINE MATCH":"Paused";$("pauseTitle").textContent=VS?"대전은 계속 진행 중입니다":"일시정지";$("pauseNote").textContent=VS?"클릭하면 조작을 재개합니다. 대전 시간은 멈추지 않습니다.":"클릭하면 작전을 계속합니다";PAUSED=true;for(const k in keys)keys[k]=false;$("pause").hidden=false;muffle(true);audioFrame({hum:0,swing:0,thrust:0,amb:0})}});
+document.addEventListener("pointerlockchange",()=>{locked=document.pointerLockElement===renderer.domElement;if(locked)wasLocked=true;else if(SCREEN==="play"&&wasLocked&&!S.ended){$("pauseLabel").textContent=VS?"ONLINE MATCH":"Paused";$("pauseTitle").textContent=VS?"대전은 계속 진행 중입니다":"일시정지";$("pauseNote").textContent=VS?"대전 시간은 멈추지 않습니다.":"작전이 멈춰 있습니다";$("pQuit").textContent=VS?"대전 나가기":"작전 종료";$("pQuitNote").hidden=!!VS||!SERVER;PAUSED=true;for(const k in keys)keys[k]=false;$("pause").hidden=false;muffle(true);audioFrame({hum:0,swing:0,thrust:0,amb:0})}});
 renderer.domElement.addEventListener("contextmenu",e=>e.preventDefault());
 function lock(){try{const p=renderer.domElement.requestPointerLock();if(p&&p.catch)p.catch(()=>{})}catch(_){}}
 renderer.domElement.addEventListener("mousedown",e=>{if(SCREEN!=="play"||S.ended||PAUSED)return;if(!locked&&(wasLocked||VS))lock();if(e.button===0)attack();else if(e.button===2)shoot()});
@@ -16,5 +16,5 @@ document.querySelectorAll(".sens").forEach(l=>{l.addEventListener("click",e=>e.s
 document.querySelectorAll(".sensIn").forEach(i=>i.addEventListener("input",()=>setSens(i.value)));setSens(SENS);
 addEventListener("mousemove",e=>{if(SCREEN!=="play")return;if(locked){if(G.focus&&targetable(G.focus))return;const mx=e.movementX,my=e.movementY;if(Math.abs(mx)>260||Math.abs(my)>260)return; /* Chrome pointer-lock spike */S.yaw-=clamp(mx,-120,120)*.0026*SENS;S.pitch=clamp(S.pitch-clamp(my,-120,120)*.002*SENS,-.7,.5)}else mouseX=(e.clientX/innerWidth-.5)*2});
 document.addEventListener("pointerdown",()=>{const a=ac();if(a&&a.state!=="running")a.resume().catch(()=>{})});
-$("pause").addEventListener("click",()=>{PAUSED=false;$("pause").hidden=true;muffle(false);lock()});
+
 const UI={key(){}};
