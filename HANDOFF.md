@@ -86,3 +86,8 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 - 타임어택의 체력·옵션·점수·3회 제한은 변경하지 않음. bakeGLTF 그대로 보존.
 - `build_deploy.py`가 PvP 서버 소스도 배포 폴더에 복사함. 기존 빌드 3단계 후 deploy.sh 실행.
 - 자동 검증: `node --test tests/pvp-arena.test.mjs`. 실제 2PC에서 조작감/지연 최종 확인 필요.
+
+## 8. 효과음
+- `sfx/*.mp3`: Kenney Sci-Fi / Impact / Interface Sounds (CC0)를 겹쳐 만든 효과음. 만든 방법은 `sfx/_mix.py`(ffmpeg).
+- 파일이 있는 키만 합성음 대신 재생 (`05-audio.js`의 SFX_KEYS). 없는 키는 기존 합성음.
+- 기획서 라이선스 표기: Kenney 효과음(CC0).

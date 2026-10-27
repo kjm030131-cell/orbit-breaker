@@ -44,15 +44,15 @@ function duck(amount,time){if(!DUCK)return;const t=AC.currentTime;DUCK.gain.canc
 
 /* ---- recorded samples: sfx/<key>.mp3 replaces the synthesized sound when present ---- */
 const SFX_KEYS=["shot","hit","ignite","slash","heavy","boom","destroyed","chain","efire","tele","block","dash","dodge","just","hurt",
-  "specBurst","specReady","lock","phase","pickup","cataCharge","cataLaunch","radio","uiok"];
-const SAMPLES={},SAMPLE_GAIN={shot:.85,hit:.8,boom:.9,ui:.5,uiok:.6,radio:.7,tele:.8,efire:.7};
+  "specBurst","specReady","lock","phase","pickup","cataCharge","cataLaunch","radio","uiok","ui","uiback","deny","doors"];
+const SAMPLES={},SAMPLE_GAIN={shot:.8,hit:.7,boom:.8,chain:.8,destroyed:.95,ui:.35,uiok:.5,uiback:.45,deny:.5,lock:.6,radio:.6,efire:.6,dash:.75,dodge:.7,ignite:.7,doors:.7};
 const SAMPLE_DUCK={heavy:[.7,.25],boom:[.7,.2],destroyed:[.35,.9],specBurst:[.25,1.4],just:[.25,.9],hurt:[.5,.5],cataLaunch:[.4,1.2],phase:[.55,.6]};
 const SAMPLE_VARY={shot:.05,hit:.07,boom:.08,slash:.04,efire:.06,chain:.05,block:.05};
 function loadSamples(){const base="sfx/";if(location.protocol==="file:"||!window.GLB_BASE)return; // deploy build only
   fetch(base+"list.json",{cache:"no-cache"}).then(r=>r.ok?r.json():[]).catch(()=>[]).then(list=>{for(const k of list)if(SFX_KEYS.includes(k))fetch(base+k+".mp3").then(r=>r.ok?r.arrayBuffer():null).then(b=>b&&AC.decodeAudioData(b)).then(buf=>{if(buf)SAMPLES[k]=buf}).catch(()=>{})})}
 function playSample(k,pos,arg){const a=AC,src=a.createBufferSource();src.buffer=SAMPLES[k];
   let rate=1+(Math.random()*2-1)*(SAMPLE_VARY[k]||0);if(k==="slash")rate*=1+(arg||0)*.06;src.playbackRate.value=rate;
-  const o=bus(pos,SAMPLE_GAIN[k]||1,k==="destroyed"||k==="specBurst"?.35:.15);src.connect(o);src.start(a.currentTime+.003);
+  const o=bus(pos,SAMPLE_GAIN[k]||.85,k==="destroyed"||k==="specBurst"?.35:.15);src.connect(o);src.start(a.currentTime+.003);
   const d=SAMPLE_DUCK[k];if(d)duck(d[0],d[1])}
 
 /* ---- one-shot effects ---- */
