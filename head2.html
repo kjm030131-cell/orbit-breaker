@@ -434,8 +434,10 @@ body{font-variant-numeric:tabular-nums;word-break:keep-all}
 .btn.primary{border-image:url(ui/btn_pri.webp) 30 60 fill/14px 30px stretch;background:transparent;color:#1d1300;text-shadow:0 1px 0 rgba(255,220,150,.4)}
 .btn:hover,.btn:focus-visible{filter:brightness(1.18)}
 .btn.primary:hover,.btn.primary:focus-visible{background:transparent}
-.reticle{width:46px;height:42px;background:url(ui/reticle.webp) center/contain no-repeat;opacity:.85}
-.reticle::before,.reticle::after{display:none}
+.reticle{width:66px;height:60px;background:url(ui/reticle.webp) center/contain no-repeat;opacity:1;filter:drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000) drop-shadow(0 0 5px rgba(255,170,60,.85));transition:transform .08s,filter .08s}
+.reticle::before{display:none}.reticle::after{display:block;content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px #000,0 0 6px #ffd38a}
+.reticle.on{transform:translate(-50%,-50%) scale(1.12);filter:drop-shadow(0 0 1px #000) drop-shadow(0 0 1px #000) drop-shadow(0 0 7px rgba(255,40,40,.95)) hue-rotate(-35deg) saturate(1.8)}
+.reticle.on::after{background:#ff4a3a;box-shadow:0 0 0 1px #000,0 0 8px #ff3020}
 #lock{width:74px;height:70px;background:url(ui/lockon.webp) center/contain no-repeat}
 #lock i{display:none}
 #lock.focus{filter:hue-rotate(-30deg) saturate(1.6) drop-shadow(0 0 6px rgba(255,90,40,.7))}
