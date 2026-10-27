@@ -141,3 +141,4 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 - src/08c-blade.js: `spawnMS(pos,true)` = 검투기. hunt→wind(0.6s, 붉은 링 수축)→strike(돌진 베기)→rec(빈틈).
   · wind 중 베기 = 카운터(즉시 격파), 회피로 피하면 간파(rec 1.3s), 서로 베면 칼날 격돌(양쪽 튕김, 적 경직 1.15s), hunt 중 베기 = 막힘(경직 .6s).
   · 빔은 rec/경직 외엔 튕겨냄(bladeDeflect). PHASES.blade 로 단계별 수.
+- 사벨 사운드(10/28): 사용자 ElevenLabs 9종 → sfx/_saber.py 로 slash/slash2/slash3(콤보 단별), ignite, clash(칼날 격돌), sizzle(베기 명중 지글), humtex(대기 험 질감 루프, 05-audio audioFrame LOOP.tex) 생성.
