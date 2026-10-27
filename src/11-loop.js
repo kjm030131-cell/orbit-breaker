@@ -1,3 +1,4 @@
+let RET_ON=false,RET_EL=null,LW_ON=false;
 const _SAB_C=new THREE.Color(0xff3aa8),_SAB_HOT=new THREE.Color(0xff2030);
 /* ================= main loop ================= */
 const clock=new THREE.Clock();
@@ -57,8 +58,8 @@ function update(rdt){
 
   const prevT=target;target=pickTarget();
   {let on=false;if(SCREEN==="play"&&camera){const ad=aimDir(),cp=camera.position;for(const e of enemies){if(!e.alive||e.launched>0||e.isRemote&&!VS)continue;const v=e.m.position.clone().sub(cp),L=v.length();if(L<170&&v.dot(ad)/L>Math.cos(.044+Math.atan((e.rad||3)/L))){on=true;break}}}
-   const rt=document.querySelector(".reticle");if(rt&&rt.classList.contains("on")!==on)rt.classList.toggle("on",on)}
-  {let lk=false;if(SCREEN==="play"&&!VS)for(const e of enemies)if(e.alive&&e.teleLock&&e.launched<=0){lk=true;break}const w=$("lockWarn");if(w&&w.classList.contains("on")!==lk)w.classList.toggle("on",lk)}
+   if(on!==RET_ON){RET_ON=on;const rt=RET_EL||(RET_EL=document.querySelector(".reticle"));if(rt)rt.classList.toggle("on",on)}}
+  {let lk=false;if(SCREEN==="play"&&!VS)for(const e of enemies)if(e.alive&&e.teleLock&&e.launched<=0){lk=true;break}if(lk!==LW_ON){LW_ON=lk;const w=$("lockWarn");if(w)w.classList.toggle("on",lk)}}
   if(SCREEN==="play"&&target&&target!==prevT&&clockT-(S.lockT||0)>.3){S.lockT=clockT;sfx("lock")}
   gameplayTick(dt,rdt,T);
 

@@ -162,3 +162,4 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
   단계 8개(이동 웨이포인트/회피/사격 3기/3타 콤보/저스트 회피/특수기 2종/카인 카운터/귀환) → 엔딩 카드 "그날 밤 서울 하늘에는 유성 N개" → 실전 출격/메인.
   카운터 훅: dodge, justDodge, onKill, slashStrike(slash3), special, unitSkill, throwGrav, bladeParry.
 - 롤백용: origin/stable-pre-tutorial (튜토리얼 이전 main).
+- 튜토리얼 수정(10/28 아침): 단계별 keep{n,passive,d} 로 표적 자동 보충(tutKeep), 에이스 사라지면 재등장. 3연속 베기는 3타 스윙 자체로 인정. 렉 완화: 목표/조준선/경고 DOM은 변경 시에만, 경고 테두리 box-shadow→radial-gradient, 조준선 drop-shadow 필터 제거.
