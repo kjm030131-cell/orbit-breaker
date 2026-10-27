@@ -90,8 +90,8 @@ function update(rdt){
   for(const e of enemies){if(!e.alive)continue;const em=e.m;
     // Menu showcase: keep combatants out of the orbiting camera's view.
     // Remote player visibility is owned by the PvP state stream.
-    if(!e.isRemote)em.visible=!S.demo;
-    if(S.demo){if(e.teleMesh)e.teleMesh.visible=false;continue}
+    if(!e.isRemote)em.visible=!S.demo&&!CINE.on;
+    if(S.demo||CINE.on){if(e.teleMesh)e.teleMesh.visible=false;continue}
     if(e.teleMesh)e.teleMesh.visible=true;
     if(e.flash>0){e.flash-=rdt*5;if(em.userData.mat)em.userData.mat.emissive.setRGB(Math.max(0,e.flash),Math.max(0,e.flash)*.8,Math.max(0,e.flash)*.6)}
     if(e.launched>0){e.launched-=dt;em.position.addScaledVector(e.v,dt);em.rotation.x+=e.spin.x*dt;em.rotation.y+=e.spin.y*dt;em.rotation.z+=e.spin.z*dt;

@@ -46,6 +46,7 @@ window.MechRig = (function () {
         return -1;
       },
       collar: 0.845,
+      armFloor: [0.52, 0.165], // below y .52 and inside |x| .165 is hip/thigh, never forearm
       hand: [0, -0.15, 0.03],
     },
     // XR-09 Swift (high-mobility frame with large wing binders, empty hands)
@@ -115,14 +116,34 @@ window.MechRig = (function () {
       if (d < bd) { bd = d; best = s[0]; }
     }
     if (best === 2 && y < L.collar) return 1; // keep the collar on the chest
+    if (L.armFloor && best >= 3 && best <= 6 && y < L.armFloor[0] && Math.abs(x) < L.armFloor[1]) {
+      let b2 = 0, d2 = 1e9;
+      for (const s of L.seg) { if (s[0] >= 3 && s[0] <= 6 || s[0] === 11) continue; const d = segDist(x, y, z, s[1], s[2]) * s[3]; if (d < d2) { d2 = d; b2 = s[0]; } }
+      return b2;
+    }
     return best;
   }
+  // Soft skinning near joints: a vertex close to the border between a bone and its parent/child is
+  // shared by both (smooth falloff over BAND), so bent joints stretch instead of tearing open.
+  const BAND = 0.03;
+  function related(L, a, b) { return L.bones[a][1] === b || L.bones[b][1] === a; }
   function assign(geometry, L) {
     const p = geometry.attributes.position, n = p.count;
     const ids = new Uint16Array(n * 4), w = new Float32Array(n * 4);
     for (let i = 0; i < n; i++) {
-      ids[i * 4] = boneFor(L, p.getX(i), p.getY(i), p.getZ(i));
-      w[i * 4] = 1;
+      const x = p.getX(i), y = p.getY(i), z = p.getZ(i);
+      const b1 = boneFor(L, x, y, z);
+      ids[i * 4] = b1; w[i * 4] = 1;
+      if (L.rule(x, y, z) >= 0) continue;
+      let d1 = 1e9, d2 = 1e9, b2 = -1;
+      for (const s of L.seg) { const d = segDist(x, y, z, s[1], s[2]) * s[3]; if (s[0] === b1) d1 = Math.min(d1, d); }
+      for (const s of L.seg) { if (s[0] === b1 || !related(L, b1, s[0])) continue; const d = segDist(x, y, z, s[1], s[2]) * s[3]; if (d < d2) { d2 = d; b2 = s[0]; } }
+      if (b2 < 0) continue;
+      const gap = Math.max(0, d2 - d1);
+      if (gap >= BAND) continue;
+      const t = gap / BAND, k = t * t * (3 - 2 * t); // smoothstep: 0 at the border, 1 at BAND away
+      const w2 = 0.5 * (1 - k); // exactly 50/50 on the border so both sides meet without a seam
+      ids[i * 4 + 1] = b2; w[i * 4] = 1 - w2; w[i * 4 + 1] = w2;
     }
     return { ids, w };
   }

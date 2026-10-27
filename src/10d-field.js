@@ -33,7 +33,7 @@ function fieldPlace(name,tpl){for(const L of FLAYOUT){if(L[0]!==name)continue;co
   FIELD.obs.push(o)}}
 function loadField(){if(!window.GLB_BASE||FIELD.load)return;FIELD.load=1;
   for(const name of Object.keys(FDEF))glb("obj_"+name,null,g=>{let tpl=null;g.scene.traverse(x=>{if(x.isMesh&&!tpl)tpl=x});if(!tpl)return;
-    if(!tpl.geometry.attributes.normal)tpl.geometry.computeVertexNormals();tpl.material.envMap=ENV;tpl.material.envMapIntensity=.45;
+    if(!tpl.geometry.attributes.normal)tpl.geometry.computeVertexNormals();if(/wreck|engine|station|satellite/.test(name))tpl.material.side=THREE.DoubleSide;tpl.material.envMap=ENV;tpl.material.envMapIntensity=.45;
     fieldPlace(name,tpl);FIELD.ready=true});
   // small drifting debris: swap the placeholder icosahedra for a low-poly rock, re-centred on the battlefield
   glb("obj_rock_lo",null,g=>{let tpl=null;g.scene.traverse(x=>{if(x.isMesh&&!tpl)tpl=x});if(!tpl)return;tpl.material.envMap=ENV;tpl.material.envMapIntensity=.3;
@@ -67,7 +67,8 @@ function fieldPush(){if(!FIELD.ready||inVS())return;for(const o of FIELD.obs){if
   for(const s of o.sph){const d=S.pos.clone().sub(s.c),L=d.length(),min=s.r+2.2;if(L>=min)continue;d.divideScalar(L||1);S.pos.copy(s.c).addScaledVector(d,min);
     const vn=S.vel.dot(d);if(vn<0)S.vel.addScaledVector(d,-vn*1.2)}}}
 function fieldReset(){if(!FIELD)return;for(const o of FIELD.obs){o.alive=true;o.hp=o.def.hp;o.respawn=0;o.mesh.visible=true;o.mesh.scale.setScalar(o.mesh.scale.x);if(o.glow)o.glow.visible=true}}
-function fieldStep(dt,T){FIELD.g.visible=!inVS();if(!FIELD.ready||inVS())return;
+// inside the catapult cut-scene the hangar has open gaps: keep the battlefield out of view until launch
+function fieldStep(dt,T){const show=!inVS()&&!CINE.on;FIELD.g.visible=show;if(FIELD.dvis!==show){FIELD.dvis=show;for(const d of debris)d.visible=show}if(!FIELD.ready||inVS())return;
   for(const o of FIELD.obs){if(o.flash>0){o.flash-=dt*4;o.mesh.material.emissive.setRGB(Math.max(0,o.flash)*.9,Math.max(0,o.flash)*.35,0)}
     if(o.glow&&o.alive)o.glow.material.opacity=.55+.35*Math.sin(T*3+o.center.x);
     if(!o.alive){o.respawn-=dt;if(o.respawn<=0&&o.center.distanceTo(S.pos)>o.rad+25){o.alive=true;o.hp=o.def.hp;o.mesh.visible=true;if(o.glow)o.glow.visible=true;emit(ADD,{pos:o.center,tex:TX.ring,color:0x6fb8ff,s0:2,s1:o.rad*2,life:.6,a:.5})}}}

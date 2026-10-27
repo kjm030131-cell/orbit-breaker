@@ -1,9 +1,9 @@
 /* ================= gameplay systems ================= */
 const PHASES=[
-  {at:0,name:"1단계 · 선발 정찰대",sub:"PHASE 1 · RECON",count:12,elites:0,rams:0,maxTele:2,fire:[4.5,7.5],tele:.9,bolt:85},
-  {at:25,name:"2단계 · 돌격 드론 출현",sub:"PHASE 2 · RAMMERS",count:14,elites:0,rams:2,maxTele:3,fire:[3,5],tele:.8,bolt:92},
-  {at:55,name:"3단계 · 정예 호위기",sub:"PHASE 3 · ELITE ESCORT",count:14,elites:2,rams:2,maxTele:3,fire:[2.6,4.4],tele:.75,bolt:100},
-  {at:90,name:"최종 단계 · 지휘기 케르베로스",sub:"FINAL PHASE · SCORE ×2",count:12,elites:2,rams:3,maxTele:4,fire:[2.4,4],tele:.7,bolt:108}];
+  {at:0,name:"1단계 · 선발 정찰대",sub:"PHASE 1 · RECON",count:12,elites:0,rams:0,ms:0,maxTele:2,fire:[4.5,7.5],tele:.9,bolt:85},
+  {at:25,name:"2단계 · 돌격 드론 출현",sub:"PHASE 2 · RAMMERS",count:14,elites:0,rams:2,ms:1,maxTele:3,fire:[3,5],tele:.8,bolt:92},
+  {at:55,name:"3단계 · 정예 호위기",sub:"PHASE 3 · ELITE ESCORT",count:14,elites:2,rams:2,ms:1,maxTele:3,fire:[2.6,4.4],tele:.75,bolt:100},
+  {at:90,name:"최종 단계 · 지휘기 케르베로스",sub:"FINAL PHASE · SCORE ×2",count:12,elites:2,rams:3,ms:2,maxTele:4,fire:[2.4,4],tele:.7,bolt:108}];
 // clean streak: every 15s without a hit adds +0.2 to the score multiplier (max ×2.0); a hit resets it
 const CLEAN_STEP=15;
 function cleanMult(){return Math.min(2,1+Math.floor(G.clean/CLEAN_STEP)*.2)}
@@ -15,7 +15,8 @@ function mult(){return comboMult()*cleanMult()*(G.phase>=3?2:1)}
 function addScore(n,pos,cls){if(S.ended)return 0;const v=Math.round(n*mult());S.score+=v;if(pos&&SCREEN==="play")scorePop(pos,"+"+v.toLocaleString(),cls);return v}
 function onKill(e){if(SCREEN!=="play")return;addSpec(4);G.kc++;G.kcT=KC_WINDOW;G.maxKC=Math.max(G.maxKC,G.kc);
   if(G.kc===5||G.kc===10||G.kc===20||G.kc===35)popText(`콤보 ×${comboMult()}`);
-  if(e.elite){addScore(1500,e.m.position.clone(),"big");popText("정예기 격파")}}
+  if(e.elite){addScore(1500,e.m.position.clone(),"big");popText("정예기 격파")}
+  if(e.ms){addScore(1200,e.m.position.clone(),"big");popText("적 MS 격파")}}
 
 /* ---- floating score numbers ---- */
 const POPS=[];const popWrap=document.createElement("div");popWrap.id="pops";$("hud").appendChild(popWrap);
@@ -45,8 +46,9 @@ function spawnEnemy(pos,elite,ram){
 }
 function aroundPlayer(rMin,rMax,ySpread){const a=Math.random()*Math.PI*2,r=rMin+Math.random()*(rMax-rMin);return new V3(S.pos.x+Math.cos(a)*r,S.pos.y+(Math.random()-.5)*ySpread,S.pos.z+Math.sin(a)*r)}
 function spawnCluster(){const n=2+Math.floor(Math.random()*3),c=aroundPlayer(32,58,12);
-  for(let i=0;i<n;i++)spawnEnemy(c.clone().add(new V3().randomDirection().multiplyScalar(2.2+Math.random()*3)),false)}
-function fillEnemies(){if(VS||S.demo)return;const ph=PHASES[G.phase];let alive=0,el=0,rm=0;for(const e of enemies)if(e.alive&&e.launched<=0&&!e.isBoss&&!e.isWP){alive++;if(e.elite)el++;if(e.ram)rm++}
+  for(let i=0;i<n;i++)spawnEnemy(c.clone().add(new V3().randomDirection().multiplyScalar(5+Math.random()*4)),false)}
+function fillEnemies(){if(VS||S.demo||CINE.on)return;const ph=PHASES[G.phase];let alive=0,el=0,rm=0,ms=0;for(const e of enemies)if(e.alive&&e.launched<=0&&!e.isBoss&&!e.isWP){alive++;if(e.elite)el++;if(e.ram)rm++;if(e.ms)ms++}
+  if(ms<(ph.ms||0)&&SCREEN==="play"&&S.started&&Math.random()<.03&&spawnMS(aroundPlayer(34,46,8)))return;
   if(EN_MESH&&el<ph.elites&&SCREEN==="play"){spawnEnemy(aroundPlayer(30,40,8),true);return}
   if(EN_MESH&&rm<ph.rams&&SCREEN==="play"&&Math.random()<.02){spawnEnemy(aroundPlayer(45,60,10),false,true);return}
   let guard=0;while(alive<ph.count&&guard++<8){spawnCluster();alive+=3}}
@@ -60,13 +62,19 @@ function teleCount(){let n=0;for(const e of enemies)if(e.alive&&e.tele>0)n++;ret
 function enemyAI(e,dt,T){
   if(e.isRemote)return;if(e.isBoss){bossAI(e,dt,T);return}if(e.isWP)return;if(e.ram){ramAI(e,dt,T);return}
   const em=e.m;e.phase+=dt;const to=S.pos.clone().sub(em.position),d=to.length();to.normalize();
+  if(e.ms){if(msMove(e,dt,T))return}else{
   if(d>e.keep)em.position.addScaledVector(to,dt*(e.elite?5:3.4+Math.sin(e.phase)*1.4));
   else if(d<e.keep-6)em.position.addScaledVector(to,-dt*3);
   em.position.y+=Math.sin(e.phase*1.3)*dt*1.1;em.position.x+=Math.cos(e.phase*.9)*dt*1.2;
+  // spread out: keep ~7 m from other drones and slowly circle the player so they surround instead of stacking
+  for(const o of enemies){if(o===e||!o.alive||o.launched>0||o.isBoss||o.isWP||o.isRemote)continue;const dv=em.position.clone().sub(o.m.position),dd=dv.length(),min=(e.rad+o.rad)*1.05;
+    if(dd<min&&dd>1e-3)em.position.addScaledVector(dv.divideScalar(dd),Math.min(min-dd,dt*9))}
+  if(e.orbit===undefined)e.orbit=Math.random()<.5?-1:1;
+  if(d<e.keep+8){const side=new V3(to.z,0,-to.x);em.position.addScaledVector(side,e.orbit*dt*(e.elite?1.2:2.2))}
   const want=Math.atan2(S.pos.x-em.position.x,S.pos.z-em.position.z);
   let dy=Math.atan2(Math.sin(want-e.yaw),Math.cos(want-e.yaw));
   e.yaw+=clamp(dy,-(e.elite?.85:4)*dt,(e.elite?.85:4)*dt);
-  em.rotation.set(0,e.yaw,Math.sin(e.phase*.8)*.08);
+  em.rotation.set(0,e.yaw,Math.sin(e.phase*.8)*.08);}
   const s=em.userData.shield;if(s){s.hit=Math.max(0,s.hit-dt*4);s.fill.material.opacity=.12+s.hit*.5+Math.sin(T*9+e.phase)*.03;s.wire.material.opacity=.2+s.hit*.6}
   const eye=em.userData.eye;
   // firing
@@ -78,7 +86,7 @@ function enemyAI(e,dt,T){
     const tm=e.teleMesh;tm.position.copy(from);tm.lookAt(from.clone().add(e.teleDir));const reach=Math.max(4,S.pos.clone().sub(from).dot(e.teleDir)-1.5);tm.scale.set(e.teleLock?1.8:1,e.teleLock?1.8:1,reach);
     tm.material.opacity=e.teleLock?(.55+.4*((T*30|0)%2)):.12+(1-e.tele/ph.tele)*.3;
     if(eye)eye.scale.setScalar((e.elite?1.6:1.1)*(1.4+Math.sin(T*40)*.3));
-    if(e.tele<=0||!live){if(live)fireEnemyBolt(from,e.teleDir,e.elite,e);clearTele(e)}
+    if(e.tele<=0||!live){if(live){fireEnemyBolt(from,e.teleDir,e.elite,e);if(e.ms){e.burstN=2;e.burstT=.16}}clearTele(e)}
   }else{
     if(eye){eye.material.opacity=.75+Math.sin(T*6+e.phase)*.25;eye.scale.setScalar(e.elite?1.6:1.1)}
     if(live){e.fireT-=dt;

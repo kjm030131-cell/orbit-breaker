@@ -57,7 +57,7 @@ const SHIP_S=300;let SHIP_GLTF=null;
 function attachShipModel(){
   if(!SHIP||SHIP.model||!SHIP_GLTF)return;
   try{(gl=>{let src=null;gl.scene.traverse(o=>{if(o.isMesh&&!src)src=o});if(!src||SHIP.model)return;
-    src.material.envMap=ENV;src.material.envMapIntensity=.3;
+    src.material.envMap=ENV;src.material.envMapIntensity=.3;src.material.side=THREE.DoubleSide; // single-sided hull walls vanish when seen from inside the hangar
     const m=new THREE.Mesh(src.geometry,src.material);m.scale.setScalar(SHIP_S);m.rotation.y=Math.PI/2;
     m.position.set(0,1.95-.085*SHIP_S,HATCH_Z-.22*SHIP_S);SHIP.g.add(m);SHIP.model=m;
     SHIP.proc.forEach(o=>o.visible=false);
