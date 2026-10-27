@@ -51,7 +51,7 @@ function introUpdate(rdt){
     if(m.life<=0)INTRO.meteors.splice(i,1)}
 }
 function introCamera(rdt){const t=INTRO.t,pos=new V3(),lk=new V3();let fov=50;
-  if(t<13){const k=clamp((t-3.5)/9.5,0,1),e=k*k*(3-2*k);pos.set(lerp(-46,-22,e),lerp(26,16,e),lerp(-70,-34,e));lk.set(lerp(-6,8,e),lerp(2,-4,e),95);fov=lerp(46,52,e)}
+  if(t<13){const k=clamp((t-3.5)/9.5,0,1),e=k*k*(3-2*k);pos.set(lerp(-44,-20,e),lerp(24,14,e),lerp(8,36,e));lk.set(lerp(-6,8,e),lerp(2,-4,e),115);fov=lerp(46,52,e)}
   else if(t<19){const k=(t-13)/6;pos.set(lerp(-10,10,k),lerp(70,62,k),lerp(10,30,k));lk.set(0,-60,220);fov=58}
   else{const k=clamp((t-19)/8,0,1),e=k*k*(3-2*k);pos.set(lerp(84,66,e),lerp(20,13,e),lerp(70,40,e));lk.set(0,lerp(8,3,e),lerp(-40,-75,e));fov=44}
   camera.position.copy(pos);camera.lookAt(lk);if(Math.abs(camera.fov-fov)>.01){camera.fov=fov;camera.updateProjectionMatrix()}return true}
