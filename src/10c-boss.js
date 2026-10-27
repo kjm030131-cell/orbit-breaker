@@ -20,7 +20,7 @@ function spawnBoss(){
   const e={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:0,flash:0,elite:false,rad:9,isBoss:true,down:0,yaw:Math.atan2(S.pos.x-from.x,S.pos.z-from.z),tele:0,teleDir:new V3(),fireT:99};
   enemies.push(e);BOSS.e=e;BOSS.atkT=4;BOSS.mode=0;BOSS.down=0;BOSS.introT=3.2;
   buildWPs();
-  sfx("radio");setTimeout(()=>{if(!S.ended){sfx("phase");cutin("KERBEROS","아르고스 지휘기 · MA-09 케르베로스")}},400);
+  sfx("radio");setTimeout(()=>{if(!S.ended){sfx("phase");cutin("케르베로스 출현","아르고스 지휘기")}},400);
   radio("CIC","지휘기 케르베로스 출현! 붉게 빛나는 약점 포드 3개를 먼저 부숴요!");
 }
 function buildWPs(){
@@ -48,7 +48,7 @@ function wpDamage(w,n,at){
     if(!left)bossDown()}
 }
 function bossDown(){const b=BOSS.e;if(!b)return;b.down=6;BOSS.downs++;BOSS.tele=0;clearTele(b);
-  S.slow=.6;flash(.35);sfx("specReady");cutin("SYSTEM DOWN","케르베로스 · 기능 정지 — 베어서 날려라");
+  S.slow=.6;flash(.35);sfx("specReady");cutin("기능 정지","지금 베어서 날려라");
   radio("CIC","지금이에요! 놈을 베어 날리면 주변 드론까지 한꺼번에 쓸어버릴 수 있어요!");
   for(let i=0;i<5;i++)setTimeout(()=>{if(BOSS.e&&b.alive){const p=b.m.position.clone().add(new V3().randomDirection().multiplyScalar(6));fxImpact(p,0xff8040);sparks(p,null,0xffc080,30,.5,20)}},i*260);
 }
@@ -59,7 +59,7 @@ function bossDie(b,chainN){
   addScore(12000,p,"big");if(SCREEN==="play")S.kills=(S.kills||0)+1;onKill(b);
   for(const w of BOSS.wps)if(w.alive){w.alive=false;disposeEnemy(w)}
   setTimeout(()=>{scene.remove(b.m);b.m.traverse(o=>{if(o.material)o.material.dispose()})},50);clearTele(b);
-  cutin("KERBEROS DOWN","지휘기 격파 · +12,000");radio("CIC","케르베로스 격파 확인! 앰버 1, 최고예요!");
+  cutin("지휘기 격파","+12,000");radio("CIC","케르베로스 격파 확인! 앰버 1, 최고예요!");
   BOSS.e=null;
 }
 function bossAI(b,dt,T){

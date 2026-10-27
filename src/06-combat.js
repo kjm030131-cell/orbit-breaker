@@ -3,7 +3,7 @@ const fwd=()=>new V3(Math.sin(S.yaw),0,Math.cos(S.yaw));
 const camFwd=()=>new V3(Math.sin(S.yaw)*Math.cos(S.pitch),Math.sin(S.pitch),Math.cos(S.yaw)*Math.cos(S.pitch));
 function popText(t){const p=$("pop");p.textContent=t;p.classList.remove("on");void p.offsetWidth;p.classList.add("on");clearTimeout(popText.h);popText.h=setTimeout(()=>p.classList.remove("on"),650)}
 function flash(a){const f=$("flash");f.style.transition="none";f.style.opacity=a;requestAnimationFrame(()=>{f.style.transition="opacity .18s";f.style.opacity=0})}
-function cutin(txt,sub){sfx("cutin");$("cutinTxt").textContent=txt||"CHAIN BREAK";$("cutinSub").textContent=sub||"XR-07 MK-II · OVERDRIVE";const c=$("cutin");c.classList.remove("go");void c.offsetWidth;c.classList.add("go")}
+function cutin(txt,sub){sfx("cutin");$("cutinTxt").textContent=txt||"연쇄 폭발";$("cutinSub").textContent=sub||"";const c=$("cutin");c.classList.remove("go");void c.offsetWidth;c.classList.add("go")}
 // targeting: only what sits near the crosshair; E locks a focus that the camera then keeps centred
 const AIM_CONE=Math.cos(13*Math.PI/180),FOCUS_CONE=Math.cos(26*Math.PI/180);
 function targetable(e){return e.alive&&e.launched<=0&&(!e.isBoss||e.down>0)}

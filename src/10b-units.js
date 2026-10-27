@@ -131,12 +131,12 @@ function reflectBolt(b){
 /* ---- F specials by unit ---- */
 function unitSpecial(){
   const u=G.unit;
-  if(u==="boost"){cutin("ORBIT BREAK","OB-3 · 궤도 파쇄");return}
-  if(u==="pods"){cutin("ALL RANGE","RF-6 · 올 레인지");G.podsPull={t:0,c:S.pos.clone().addScaledVector(aimDir(),16)};G.podsOut=2.4;return}
-  if(u==="missile"){cutin("FULL BURST","MP-12 · 풀 버스트");
+  if(u==="boost"){cutin("궤도 파쇄","OB-3");return}
+  if(u==="pods"){cutin("올 레인지","RF-6");G.podsPull={t:0,c:S.pos.clone().addScaledVector(aimDir(),16)};G.podsOut=2.4;return}
+  if(u==="missile"){cutin("풀 버스트","MP-12");
     const list=enemies.filter(e=>targetable(e)&&!e.isBoss&&e.m.position.distanceTo(S.pos)<60).sort((a,b)=>a.m.position.distanceTo(S.pos)-b.m.position.distanceTo(S.pos)).slice(0,14);
     setTimeout(()=>{if(!S.ended)fireMissiles(list,1)},420);return}
-  if(u==="shield"){cutin("COUNTER FIELD","SB-4 · 카운터 필드");G.cfield=4;G.iframe=Math.max(G.iframe,4)}
+  if(u==="shield"){cutin("카운터 필드","SB-4");G.cfield=4;G.iframe=Math.max(G.iframe,4)}
 }
 function unitSpecialBurst(){ // called at the special's strike frame
   const u=G.unit;

@@ -60,7 +60,7 @@ function vsMsg(m){if(!VS)return;const v=VS;
   if(m.t==="skill"){if(m.side===v.side)v.skillInput=null;vsSkillFX(m);return}
   if(m.t==="roundEnd"){if(v.phase==="end")return;v.phase="roundEnd";v.matchDone=m.done;v.wins=m.wins;S.started=false;S.vel.set(0,0,0);S.act=null;S.vsLunge=0;S.dash=0;G.focus=null;vsClearShots();
     for(const b of G.ebolts){scene.remove(b.g);b.g.traverse(o=>{if(o.material)o.material.dispose()})}G.ebolts=[];
-    const mine=m.winner===v.side;cutin(m.winner===null?"DRAW":mine?"ROUND WIN":"ROUND LOST",m.winner===null?"동점 · 같은 라운드 재경기":(m.why==="ko"?"격파":"남은 장갑 비율 판정")+` · ${v.wins[0]} : ${v.wins[1]}`);
+    const mine=m.winner===v.side;cutin(m.winner===null?"DRAW":mine?"라운드 승리":"라운드 패배",m.winner===null?"동점 · 같은 라운드 재경기":(m.why==="ko"?"격파":"남은 장갑 비율 판정")+` · ${v.wins[0]} : ${v.wins[1]}`);
     if(m.done)setTimeout(()=>{if(VS===v)vsEnd("done")},2400);return}
   if(m.t==="left"){if(v.matchDone)return;if(["wait","lobby"].includes(v.phase)){vsClose();duelErr("상대가 나갔습니다. 방을 다시 만들어 주세요.")}else vsEnd("left");}
 }
@@ -123,6 +123,6 @@ function vsTick(rdt){if(!VS)return;const v=VS;vsFlushSkill();if(v.correctTo){con
     if(off){const cx=innerWidth/2,cy=innerHeight/2,dx=x-cx,dy=y-cy,k=Math.min((cx-m)/Math.abs(dx||1e-6),(cy-m)/Math.abs(dy||1e-6));x=cx+dx*k;y=cy+dy*k}
     mk.style.left=x+"px";mk.style.top=y+"px";mk.classList.toggle("edge",off);setT("oppTxt",`${VS.oppName||"상대"} · ${Math.round(R2.position.distanceTo(S.pos))}m`)}}
 
-  setW("vsHpMe",v.hp/v.maxHp*100);setW("vsHpOp",v.oppHp/v.oppMaxHp*100);setT("vsMeN",`${v.name} · ${v.hp}/${v.maxHp}`);setT("vsOpN",`${v.oppName} · ${v.oppHp}/${v.oppMaxHp}`);const mi=v.side==="a"?0:1;setT("vsScore",`${v.wins[mi]} : ${v.wins[1-mi]}`);setT("vsRound",`ROUND ${v.round} · ${Math.round(v.rtt||0)}ms`);
+  setW("vsHpMe",v.hp/v.maxHp*100);setW("vsHpOp",v.oppHp/v.oppMaxHp*100);setT("vsMeN",`${v.name} · ${v.hp}/${v.maxHp}`);setT("vsOpN",`${v.oppName} · ${v.oppHp}/${v.oppMaxHp}`);const mi=v.side==="a"?0:1;setT("vsScore",`${v.wins[mi]} : ${v.wins[1-mi]}`);setT("vsRound",`${v.round}라운드 · ${Math.round(v.rtt||0)}ms`);
 }
 function vsHud(){if(!VS)return;const on=vsSkills();setT("phaseTag",`기체 패시브 ${VS.rules.passives?"ON":"OFF"} · 옵션 ${on?"ON":"OFF"}`);setT("unitName",on?VS_UNIT_TEXT[G.unit].r+(G.unitCd>0?` ${G.unitCd.toFixed(1)}`:""):"옵션 꺼짐");setT("specName",on?VS_UNIT_TEXT[G.unit].f:"필살기 꺼짐");setC("wUnit","off",!on);setC("wSpec","off",!on);setC("wUnit","ready",on&&G.unitCd<=0);setC("wSpec","ready",on&&G.spec>=100);setT("chainNow",S.attackCd>0?"공격 후 빈틈":"18m 이내 돌진");if(S.boost<25)setT("warn","부스트 부족 — 회피 불가");}

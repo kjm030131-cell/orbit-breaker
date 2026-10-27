@@ -412,6 +412,8 @@ body.versus #vsBar{top:55px}
 #scrLoad .previewTag span{font:500 12px var(--f-mono);letter-spacing:.03em;color:var(--amber)}
 @media (max-width:900px){#scrLoad .previewTag{display:none}}
 body{font-variant-numeric:tabular-nums;word-break:keep-all}
+/* HUD declutter: keep what you read mid-fight */
+.hud.tc,.radarBox>.lbl,.plate>.lbl,#pDept,#chainNow,#boostV,#mult,.hud.tl>.lbl:first-child{display:none!important}
 </style>
 
 <div id="stage"></div>
@@ -421,17 +423,17 @@ body{font-variant-numeric:tabular-nums;word-break:keep-all}
 <!-- in-game HUD -->
 <div id="hud" hidden>
   <div class="reticle"></div>
-  <div id="lock"><i></i><i></i><i></i><i></i><span id="lockTxt">LOCK</span></div>
+  <div id="lock"><i></i><i></i><i></i><i></i><span id="lockTxt">록온</span></div>
   <div id="pop"></div>
   <div id="phase"><div id="phaseSub" class="lbl">단계</div><div id="phaseName">—</div></div>
   <div id="bossBar" hidden><div class="bn"><b id="bossName">MA-09 케르베로스</b><span id="bossState">약점 포드 3</span></div><div class="bossTrack"><i><b></b></i><i><b></b></i><i><b></b></i></div></div>
   <div id="duelBar" hidden><div class="me"><span class="lbl">나</span><b id="duMe">0</b></div><div class="vs" id="duLead">VS</div><div class="op"><span class="lbl" id="duOpN">상대</span><b id="duOp">0</b></div></div>
-  <div id="vsBar" hidden><div class="side"><b id="vsMeN">나</b><div class="hp"><i id="vsHpMe" style="width:100%"></i></div></div><div class="mid"><span class="lbl" id="vsRound">ROUND 1</span><b id="vsScore">0 : 0</b></div><div class="side op"><b id="vsOpN">상대</b><div class="hp"><i id="vsHpOp" style="width:100%"></i></div></div></div>
+  <div id="vsBar" hidden><div class="side"><b id="vsMeN">나</b><div class="hp"><i id="vsHpMe" style="width:100%"></i></div></div><div class="mid"><span class="lbl" id="vsRound">1라운드</span><b id="vsScore">0 : 0</b></div><div class="side op"><b id="vsOpN">상대</b><div class="hp"><i id="vsHpOp" style="width:100%"></i></div></div></div>
   <div id="oppMark" hidden><i></i><span id="oppTxt">상대</span></div>
   <div id="radio"><span id="radioWho">CIC</span><span id="radioTxt"></span></div>
   <div id="marks"></div>
   <div id="supplyMark" hidden><i></i><span id="supplyTxt"></span></div>
-  <div id="cutin"><div class="visor"><i></i></div><div><small id="cutinSub">XR-07 MK-II · OVERDRIVE</small><b id="cutinTxt">CHAIN BREAK</b></div></div>
+  <div id="cutin"><div class="visor"><i></i></div><div><small id="cutinSub"></small><b id="cutinTxt">연쇄 폭발</b></div></div>
   <div class="hud tl">
     <div class="lbl">시간</div>
     <div class="clockBox" id="clockBox"><span id="time">2:00</span><span id="timeMs">.0</span></div>
@@ -441,7 +443,7 @@ body{font-variant-numeric:tabular-nums;word-break:keep-all}
     <div class="comboBox" id="comboBox"><div class="kcRow"><b id="kcNum">0</b><span class="lbl">콤보</span><span id="kcMult">×1.0</span></div><div class="kcTrack"><i id="kcBar"></i></div></div>
     <div class="cleanBox" id="cleanBox"><span class="lbl">무피격</span><b id="cleanV">×1.0</b><div class="kcTrack"><i id="cleanF"></i></div></div>
     <div class="phaseTag lbl" id="phaseTag">PHASE 1 / 4</div>
-    <div class="critTag" id="critTag" hidden>CRITICAL READY</div>
+    <div class="critTag" id="critTag" hidden>크리티컬 준비</div>
   </div>
   <div class="hud tc"><div class="killBox"><span>격파<b id="kills">0</b></span><span>최대 연쇄<b id="best">0</b></span></div></div>
   <div class="hud tr radarBox"><canvas class="radar" id="radar" width="272" height="272"></canvas><div class="lbl">레이더</div></div>
