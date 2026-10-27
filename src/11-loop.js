@@ -1,5 +1,12 @@
 /* ================= main loop ================= */
 const clock=new THREE.Clock();
+// Focus camera: eases toward the focused target with a turn-rate cap. Up close (dash / pass-by) the direction
+// to the target flips around, so the camera holds still there instead of whipping 180 degrees.
+function focusCamera(rdt){const d=G.focus.m.position.clone().sub(S.pos),hz=Math.hypot(d.x,d.z),dt=Math.min(rdt,.05);
+  const near=clamp((hz-5)/7,0,1);if(near<=0)return; // inside ~5 m: hold; 5-12 m: fade in
+  const dy=Math.atan2(Math.sin(Math.atan2(d.x,d.z)-S.yaw),Math.cos(Math.atan2(d.x,d.z)-S.yaw));
+  if(Math.abs(dy)>.02){const cap=(S.dash>0||S.vsLunge>0?1.2:3.2)*near*dt;S.yaw+=clamp(dy*(1-Math.exp(-7*dt)),-cap,cap)}
+  const pt=clamp(Math.atan2(d.y-1.5,hz)*.8-.06,-.6,.45);S.pitch+=clamp((pt-S.pitch)*(1-Math.exp(-5*dt)),-1.6*dt,1.6*dt)}
 function update(rdt){
   let dt=Math.min(rdt,.05);
   if(VS){S.hitstop=0;S.slow=0}
@@ -7,9 +14,7 @@ function update(rdt){
   clockT+=rdt;const T=clock.elapsedTime;
   if(S.demo){S.demoT+=rdt;S.yaw=Math.sin(S.demoT*.15)*.9+Math.PI*.15}
   else if(VS&&G.focus&&SCREEN==="play"){vsFocusCamera(rdt)}
-  else if(G.focus&&SCREEN==="play"&&targetable(G.focus)){const d=G.focus.m.position.clone().sub(S.pos),wy=Math.atan2(d.x,d.z),hz=Math.hypot(d.x,d.z);
-    let dy=Math.atan2(Math.sin(wy-S.yaw),Math.cos(wy-S.yaw));S.yaw+=dy*(1-Math.pow(.0004,rdt));
-    S.pitch+=(clamp(Math.atan2(d.y-1.5,hz)*.85-.06,-.7,.5)-S.pitch)*(1-Math.pow(.002,rdt))}
+  else if(G.focus&&SCREEN==="play"&&targetable(G.focus)){focusCamera(rdt)}
   else if(!locked&&!VS){if(Math.abs(mouseX)>.25)S.yaw-=Math.sign(mouseX)*(Math.abs(mouseX)-.25)*1.8*rdt}
   if(!VS&&S.started&&!S.ended&&SCREEN==="play"){S.time-=dt;const sc=Math.ceil(S.time);if(sc!==S.lastSec){S.lastSec=sc;if(sc<=10&&sc>0)sfx("tickLow",null,sc)}if(S.time<30&&MUS.inten===0&&MUS.track==="battle"){MUS.inten=1;MUS.bpm=150}if(S.time<=0){S.time=0;finishRun()}}
 
