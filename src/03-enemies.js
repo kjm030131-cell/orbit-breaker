@@ -1,5 +1,5 @@
 /* ================= enemies ================= */
-let EN_MESH=null;const enemies=[];const E_SCALE=3.6;
+let EN_MESH=null;const enemies=[];const E_SCALE=4.4;
 function buildEnemyTemplate(gltf){let src=null;gltf.scene.traverse(o=>{if(o.isMesh&&!src)src=o});
   src.material.envMap=ENV;src.material.envMapIntensity=.4;EN_MESH=src}
 function hitFlash(e){e.flash=1}

@@ -6,7 +6,7 @@ const WP_HP=6,WP_OFF=[new V3(-1.15,.28,.25),new V3(1.15,.28,.25),new V3(0,.95,-.
 const wpGeo=new THREE.IcosahedronGeometry(1.3,0),wpArmor=new THREE.OctahedronGeometry(2,0);
 function spawnBoss(){
   if(!EN_MESH||BOSS.e||BOSS.dead||SCREEN!=="play")return;
-  const g=new THREE.Group(),sc=E_SCALE*6;
+  const g=new THREE.Group(),sc=3.6*6;
   const mat=EN_MESH.material.clone();mat.color.setRGB(.55,.42,.42);mat.emissive=new THREE.Color(0);
   const body=new THREE.Mesh(EN_MESH.geometry,mat);body.scale.setScalar(sc);body.position.y=-.5*sc;g.add(body);g.userData.mat=mat;
   // carrier ring + spines so the silhouette reads as a different, bigger class
@@ -34,7 +34,7 @@ function buildWPs(){
     enemies.push(w);return w});
   placeWPs(0);
 }
-function placeWPs(T){const b=BOSS.e;if(!b)return;b.m.updateMatrixWorld(true);const sc=E_SCALE*6;
+function placeWPs(T){const b=BOSS.e;if(!b)return;b.m.updateMatrixWorld(true);const sc=3.6*6;
   for(const w of BOSS.wps){if(!w.alive)continue;const o=w.off.clone().multiplyScalar(sc*.55);o.y+=Math.sin(T*2+w.phase)*.4;
     w.m.position.copy(o.applyMatrix4(b.m.matrixWorld));w.m.userData.arm.rotation.y+=.02;w.m.userData.arm.rotation.x+=.013;
     const k=w.hp/WP_HP;w.m.userData.glow.material.opacity=.55+.45*Math.sin(T*(8+(1-k)*14));}

@@ -33,14 +33,15 @@ function spawnEnemy(pos,elite,ram){
   if(EN_MESH){const mat=EN_MESH.material.clone();mat.emissive=new THREE.Color(0);if(elite)mat.color.setRGB(.7,.78,.95);if(ram)mat.color.setRGB(1,.55,.35);
     const m=new THREE.Mesh(EN_MESH.geometry,mat);m.scale.setScalar(sc);m.position.y=-.5*sc;g.add(m);g.userData.mat=mat;
     const eye=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:elite?0x5ad8ff:ram?0xff9a20:0xff2040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
-    eye.position.set(0,(.655-.5)*sc,.2*sc);eye.scale.set(1.1*sc/E_SCALE,1.1*sc/E_SCALE,1);g.add(eye);g.userData.eye=eye}
+    eye.position.set(0,(.655-.5)*sc,.2*sc);eye.scale.set(1.1*sc/E_SCALE,1.1*sc/E_SCALE,1);g.add(eye);g.userData.eye=eye
+    const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:elite?0x1a6cff:ram?0xff7a10:0xff2010,transparent:true,opacity:.42,blending:THREE.AdditiveBlending,depthWrite:false}));halo.scale.setScalar(sc*1.15);g.add(halo)}
   else g.add(new THREE.Mesh(new THREE.OctahedronGeometry(1,0),new THREE.MeshStandardMaterial({color:0x4a1e26,flatShading:true})));
   if(elite){const sh=new THREE.Group();sh.position.set(0,.1*sc,.1*sc);sh.scale.setScalar(sc*.62);
     const fill=new THREE.Mesh(SHIELD_GEO,new THREE.MeshBasicMaterial({color:0x48d8ff,transparent:true,opacity:.14,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
     const wire=new THREE.Mesh(SHIELD_GEO,new THREE.MeshBasicMaterial({color:0x8fe8ff,wireframe:true,transparent:true,opacity:.22,blending:THREE.AdditiveBlending,depthWrite:false}));
     sh.add(fill,wire);g.add(sh);g.userData.shield={fill,wire,hit:0}}
   g.position.copy(pos);const yaw=Math.atan2(S.pos.x-pos.x,S.pos.z-pos.z);g.rotation.y=yaw;scene.add(g);
-  const e={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:Math.random()*10,flash:0,elite:!!elite,rad:elite?5:3.4,
+  const e={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:Math.random()*10,flash:0,elite:!!elite,rad:elite?6:4.1,
     ram:!!ram,rs:"hunt",rt:0,rdir:new V3(),fireT:2+Math.random()*4,tele:0,teleLock:false,teleDir:new V3(),keep:elite?12+Math.random()*4:15+Math.random()*12,yaw,aim:false};
   enemies.push(e);return e;
 }
@@ -81,10 +82,10 @@ function enemyAI(e,dt,T){
   const ph=PHASES[G.phase],live=SCREEN==="play"&&!S.ended&&S.started;
   if(e.tele>0){
     e.tele-=dt;const from=em.position.clone().add(new V3(0,.6,0));
-    if(!e.teleLock){e.teleDir.copy(S.pos).sub(from).normalize();if(e.tele<.32){e.teleLock=true;sfx("tele",em.position,1)}}
+    if(!e.teleLock){const lead=S.pos.distanceTo(from)/((PHASES[G.phase].bolt||85)*(e.elite?1.12:1))*.6;e.teleDir.copy(S.pos).addScaledVector(S.vel,lead).sub(from).normalize();if(e.tele<.32){e.teleLock=true;sfx("tele",em.position,1)}}
     if(!e.teleMesh){const art=FXOK.beam;e.teleMesh=new THREE.Mesh(art?ribbonGeo:teleGeo,new THREE.MeshBasicMaterial({map:art?FXT.beam:null,color:0xff2a2a,transparent:true,opacity:.2,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));e.teleMesh.userData.k=art?6:1;e.teleMesh.frustumCulled=false;scene.add(e.teleMesh)}
     const tm=e.teleMesh;tm.position.copy(from);tm.lookAt(from.clone().add(e.teleDir));const reach=Math.max(4,S.pos.clone().sub(from).dot(e.teleDir)-1.5);{const k=tm.userData.k||1,w=k*(e.teleLock?1.8+Math.sin(T*40)*.25:.7);tm.scale.set(w,w,reach)}
-    tm.material.opacity=e.teleLock?(.55+.4*((T*30|0)%2)):.12+(1-e.tele/ph.tele)*.3;
+    tm.material.opacity=e.teleLock?(.8+.2*((T*30|0)%2)):.28+(1-e.tele/ph.tele)*.4;
     if(eye)eye.scale.setScalar((e.elite?1.6:1.1)*(1.4+Math.sin(T*40)*.3));
     if(e.tele<=0||!live){if(live){fireEnemyBolt(from,e.teleDir,e.elite,e);if(e.ms){e.burstN=2;e.burstT=.16;e.kick=1}}clearTele(e)}
   }else{

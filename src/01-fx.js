@@ -147,7 +147,10 @@ function fireBolt(from,to,target){
 function stepBolts(dt){
   for(let i=BOLTS.length-1;i>=0;i--){const b=BOLTS[i];
     if(b.target&&b.target.alive){const to=b.target.m.position.clone().sub(b.g.position);b.dist=b.trav+to.length();b.dir.lerp(to.normalize(),.25).normalize();b.g.lookAt(b.g.position.clone().add(b.dir))}
-    const step=b.speed*dt;b.g.position.addScaledVector(b.dir,step);b.trav+=step;b.life-=dt;fieldBolt(b);
+    const p0=b.g.position.clone(),step=b.speed*dt;b.g.position.addScaledVector(b.dir,step);b.trav+=step;b.life-=dt;fieldBolt(b);
+    if(!b.target&&b.life>0&&SCREEN==="play"){ // unassisted shot: swept hit test against every drone along this step
+      for(const e of enemies){if(!e.alive||e.launched>0||e.isRemote||(e.isBoss&&!(e.down>0)&&!e.isWP))continue;const c=e.m.position,sg=b.g.position.clone().sub(p0),L=sg.length()||1e-6,u=clamp(c.clone().sub(p0).dot(sg)/(L*L),0,1);
+        if(p0.clone().addScaledVector(sg,u).distanceTo(c)<(e.rad||3.4)*.9){b.target=e;b.g.position.copy(p0).addScaledVector(sg,u);b.dist=b.trav=b.trav-step+L*u;break}}}
     emit(ADD,{pos:b.g.position.clone().addScaledVector(b.dir,-3),color:0x40d8ff,s0:2.2,s1:.2,life:.22,a:.7});
     if(b.trav>=b.dist||b.life<=0){
       fxImpact(b.g.position,0x40e8ff);fxBeamHit(b.g.position,b.dir);sfx("impact",b.g.position);if(b.target&&b.trav>=b.dist-1){S.hitstop=Math.max(S.hitstop,.035);S.shake=Math.max(S.shake,.3)}

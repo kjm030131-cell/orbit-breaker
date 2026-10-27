@@ -47,7 +47,9 @@ function shoot(){
   }
   if(!P||S.over>0||S.shotCd>0||G.stagger>0||G.specT>=0)return;S.shotCd=G.unit==="missile"?.24:.32;
   if(P.bladeLen>.04||S.bladeOn>0){S.bladeOn=0;P.bladeLen=0;S.pending=null;S.dash=0;S.act=null;P.rifleS=1;P.J.rifle.scale.setScalar(1);P.J.rifle.updateMatrixWorld(true)}
-  const t=target;const end=t?t.m.position.clone():camera.position.clone().addScaledVector(aimDir(),120);
+  // aimed rifle: shots fly down the reticle line; only a target sitting right on the reticle (~2.5 deg) gets a light assist
+  const ad=aimDir();let t=null;if(target&&!target.isRemote){const tv=target.m.position.clone().sub(camera.position);if(tv.normalize().dot(ad)>Math.cos(.044))t=target}
+  const end=t?t.m.position.clone():camera.position.clone().addScaledVector(ad,170);
   // raise and square up first (~70 ms), then fire from wherever the muzzle actually ended up
   S.aimPt=end.clone();S.aimT=.75;startAct("shoot");
   setTimeout(()=>{if(!P||SCREEN!=="play"&&SCREEN!=="launch")return;
