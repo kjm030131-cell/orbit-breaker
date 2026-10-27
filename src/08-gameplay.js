@@ -101,7 +101,7 @@ function fireEnemyBolt(from,dir,elite,owner,dmg){
   emit(ADD,{pos:from,tex:TX.flare,color:elite?0x80e0ff:0xff6060,s0:3,s1:5,life:.1});sfx("efire",from);
 }
 function stepEBolts(dt){
-  for(let i=G.ebolts.length-1;i>=0;i--){const b=G.ebolts[i];const p0=b.g.position.clone();b.g.position.addScaledVector(b.dir,b.speed*dt);b.life-=dt;
+  for(let i=G.ebolts.length-1;i>=0;i--){const b=G.ebolts[i];const p0=b.g.position.clone();b.g.position.addScaledVector(b.dir,b.speed*dt);b.life-=dt;if(!b.vsVisual&&!b.refl&&fieldBlock(b.g.position)){b.life=0;b.dead=false}
     b.trailT=(b.trailT||0)-dt;
     if(dt>0&&(!b.vsVisual||b.trailT<=0)){b.trailT=1/30;emit(ADD,{pos:b.g.position.clone().addScaledVector(b.dir,-1.6),color:b.color,s0:1.2,s1:.1,life:.16,a:b.dead?.25:.7});}
     if(b.vsVisual){}

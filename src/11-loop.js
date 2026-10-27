@@ -38,7 +38,7 @@ function update(rdt){
   S.aimT=Math.max(0,(S.aimT||0)-dt);S.camKick=Math.max(0,(S.camKick||0)-rdt*7);
   {let d=S.face-prevFace;d=Math.atan2(Math.sin(d),Math.cos(d));S.faceVel=dt>0?lerp(S.faceVel,d/dt,.2):S.faceVel}
   if(VS&&VS.phase!=="fight")S.vel.set(0,0,0);
-  S.pos.addScaledVector(S.vel,dt);
+  S.pos.addScaledVector(S.vel,dt);fieldPush();
 
   if(CINE.on)cineUpdate(rdt);
 
@@ -99,12 +99,14 @@ function update(rdt){
       for(const o of enemies){if(o===e||!o.alive||(o.isBoss&&!(o.down>0))||o.launched>0&&o.isBoss)continue;
         if(o.m.position.distanceTo(em.position)<Math.max(e.rad,o.elite?4.5:o.isWP?2.6:o.isBoss?8:3.4)){if(o.isWP){wpDamage(o,3,o.m.position.clone());if(!e.isBoss)e.launched=Math.min(e.launched,.001);continue}e.chain++;const n=e.chain;explode(o,n);addScore(chainPts(n),o.m.position.clone(),n>=3?"big":"");S.best=Math.max(S.best,n);popText(`연쇄 ×${n}`);sfx("chain",null,n);
           if(n>=2)S.hitstop=.06;if(n>=3&&n%3===0){cutin();S.slow=.45;flash(.25)}e.v.multiplyScalar(.92)}}
+      fieldCrash(e);
       if(e.launched<=0){explode(e,e.chain);addScore(100,em.position.clone())}
     }else enemyAI(e,dt,T)}
   for(let i=enemies.length-1;i>=0;i--)if(!enemies[i].alive)enemies.splice(i,1);
   fillEnemies();
 
   /* fx */
+  fieldStep(dt,T);
   const fdt=Math.min(rdt,.05);stepShip(rdt,T);stepPool(ADD,fdt);stepPool(NORM,fdt);stepSparks(fdt);stepChunks(fdt);stepLights(fdt);stepBolts(dt);stepStreaks(fdt);
   for(const d of debris){d.rotation.x+=d.userData.spin.x*rdt;d.rotation.y+=d.userData.spin.y*rdt}
 

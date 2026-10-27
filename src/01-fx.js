@@ -40,9 +40,9 @@ function stepSparks(dt){
 const CH=[];const chMat=new THREE.MeshStandardMaterial({color:0x2a2c30,metalness:.7,roughness:.5,flatShading:true,emissive:0x331100});
 for(let i=0;i<60;i++){const m=new THREE.Mesh(new THREE.TetrahedronGeometry(.35+Math.random()*.4,0),chMat);m.visible=false;scene.add(m);CH.push({m,on:false})}
 let chI=0;
-function chunks(pos,n,speed){for(let i=0;i<n;i++){const c=CH[chI];chI=(chI+1)%CH.length;c.on=true;c.t=0;c.life=1+Math.random()*.8;c.v=new V3().randomDirection().multiplyScalar(speed*(.4+Math.random()));c.r=new V3(Math.random()*9,Math.random()*9,0);c.m.position.copy(pos);c.m.visible=true;c.m.scale.setScalar(1)}}
+function chunks(pos,n,speed,size){for(let i=0;i<n;i++){const c=CH[chI];chI=(chI+1)%CH.length;c.on=true;c.t=0;c.life=1+Math.random()*.8;c.v=new V3().randomDirection().multiplyScalar(speed*(.4+Math.random()));c.r=new V3(Math.random()*9,Math.random()*9,0);c.m.position.copy(pos);c.m.visible=true;c.k=size||1;c.m.scale.setScalar(c.k)}}
 function stepChunks(dt){for(const c of CH){if(!c.on)continue;c.t+=dt;if(c.t>c.life){c.on=false;c.m.visible=false;continue}
-  c.m.position.addScaledVector(c.v,dt);c.v.multiplyScalar(Math.exp(-.8*dt));c.m.rotation.x+=c.r.x*dt;c.m.rotation.y+=c.r.y*dt;c.m.scale.setScalar(1-Math.max(0,c.t/c.life-.7)/.3);
+  c.m.position.addScaledVector(c.v,dt);c.v.multiplyScalar(Math.exp(-.8*dt));c.m.rotation.x+=c.r.x*dt;c.m.rotation.y+=c.r.y*dt;c.m.scale.setScalar((c.k||1)*(1-Math.max(0,c.t/c.life-.7)/.3));
   if(Math.random()<.35)emit(ADD,{pos:c.m.position,color:0xff7020,s0:.6,s1:.1,life:.3,a:.7})}}
 // flash lights
 const LIGHTS=[];for(let i=0;i<4;i++){const l=new THREE.PointLight(0xffffff,0,40,2);scene.add(l);LIGHTS.push({l,t:1,life:1,i0:0})}
@@ -146,7 +146,7 @@ function fireBolt(from,to,target){
 function stepBolts(dt){
   for(let i=BOLTS.length-1;i>=0;i--){const b=BOLTS[i];
     if(b.target&&b.target.alive){const to=b.target.m.position.clone().sub(b.g.position);b.dist=b.trav+to.length();b.dir.lerp(to.normalize(),.25).normalize();b.g.lookAt(b.g.position.clone().add(b.dir))}
-    const step=b.speed*dt;b.g.position.addScaledVector(b.dir,step);b.trav+=step;b.life-=dt;
+    const step=b.speed*dt;b.g.position.addScaledVector(b.dir,step);b.trav+=step;b.life-=dt;fieldBolt(b);
     emit(ADD,{pos:b.g.position.clone().addScaledVector(b.dir,-3),color:0x40d8ff,s0:2.2,s1:.2,life:.22,a:.7});
     if(b.trav>=b.dist||b.life<=0){
       fxImpact(b.g.position,0x40e8ff);fxBeamHit(b.g.position,b.dir);sfx("impact",b.g.position);if(b.target&&b.trav>=b.dist-1){S.hitstop=Math.max(S.hitstop,.035);S.shake=Math.max(S.shake,.3)}

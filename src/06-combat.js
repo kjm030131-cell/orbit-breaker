@@ -60,7 +60,7 @@ function shoot(){
 function slashStrike(){ // called on the strike frame of a slash action
   const heavy=S.act==="slash3";if(VS&&!vsCanAct())return;sfx("slash",null,S.combo);
   const e=S.dashT&&S.dashT.alive&&S.dashT.launched<=0&&S.dashT.m.position.distanceTo(S.pos)<7.5?S.dashT:null;
-  if(!e)return;
+  if(!e){fieldSlash(heavy);return}
   const tip=new V3();P.tipObj.getWorldPosition(tip);const at=e.m.position.clone().lerp(tip,.4);
   if(e.isRemote){vsAttackHit(heavy,G.crit>0,at);return}
   if(e.isWP){wpDamage(e,3,at);S.hitstop=.08;S.shake=.6;flash(.18);fxSlashHit(at,0xff8a2a,true);sfx("heavy",at);addSpec(2);S.vel.multiplyScalar(.1);S.dashT=null;return}
@@ -78,7 +78,7 @@ function slashStrike(){ // called on the strike frame of a slash action
 function disposeEnemy(e){clearTele(e);scene.remove(e.m);e.m.traverse(o=>{if(o.material)o.material.dispose()})}
 function chainPts(n){const k=Math.min(n,6);return 200*k*k+Math.max(0,n-6)*1500}
 function explode(e,chainN){if(e.isWP){wpDamage(e,3,e.m.position.clone());return}if(e.isBoss){bossDie(e,chainN);return}e.alive=false;if(SCREEN==="play")S.kills=(S.kills||0)+1;disposeEnemy(e);fxExplosion(e.m.position,(e.elite?1.7:1)+Math.min(chainN,6)*.12);onKill(e);sfx("boom",e.m.position,chainN);S.shake=Math.max(S.shake,.5)}
-function restart(){for(const e of enemies)disposeEnemy(e);enemies.length=0;
+function restart(){for(const e of enemies)disposeEnemy(e);enemies.length=0;fieldReset();
   Object.assign(S,{score:0,best:0,kills:0,time:120,started:false,ended:false,heat:0,over:0,boost:100,act:null,combo:0,dash:0,dashT:null,pending:null,bladeOn:0,hitstop:0,slow:0});
   S.pos.set(0,0,0);S.vel.set(0,0,0);resetGameplay();fillEnemies()}
 

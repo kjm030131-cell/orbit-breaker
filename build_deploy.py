@@ -1,5 +1,5 @@
 # Build the Cloudflare Pages bundle: static game + self-hosted three.js + PWA files
-import os,shutil,re,json
+import os,shutil,re,json,glob
 from PIL import Image
 OUT=os.environ.get('OUT','../orbit-breaker-deploy');D=OUT+'/public';shutil.rmtree(D,ignore_errors=True);os.makedirs(D+'/lib',exist_ok=True);os.makedirs(D+'/icons',exist_ok=True)
 html=open('orbit-breaker.html').read()
@@ -15,7 +15,7 @@ assert 'GLB_BASE' in html and 'mech_glb.js' not in html
 open(D+'/index.html','w').write(html)
 shutil.copy('node_modules/three/examples/js/libs/meshopt_decoder.js',D+'/lib/')
 shutil.copy('rig.js',D+'/rig.js')
-os.makedirs(D+'/models',exist_ok=True);[shutil.copy('models/%s.glb'%n,D+'/models/') for n in ('mech','enemy','ship','swift')]
+os.makedirs(D+'/models',exist_ok=True);[shutil.copy(f,D+'/models/') for f in glob.glob('models/*.glb')]
 Image.open('sky.jpg').convert('RGB').save(D+'/sky.jpg',quality=72,optimize=True,progressive=True)
 shutil.copytree('ui',D+'/ui',dirs_exist_ok=True)
 os.makedirs(D+'/sfx',exist_ok=True)
