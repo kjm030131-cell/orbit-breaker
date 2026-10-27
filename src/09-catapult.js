@@ -69,6 +69,7 @@ function attachShipModel(){
 
 /* ---- overlay text ---- */
 function cineLines(){const n=(PILOT.name||"파일럿"),u=UNITS[G.unit]||UNITS.boost;return[
+  {at:-2.35,who:"아스트라이아 함장",txt:"전 기체 전투 배치. 아르고스 드론군이 낙하 궤도에 들어섰다."},
   {at:.25,who:"아스트라이아 CIC · 한서윤 중위",txt:`앰버 1, ${u.en} 장착 확인. 카타풀트 진로 클리어.`},
   {at:1.95,who:"아스트라이아 CIC · 한서윤 중위",txt:`아르고스 드론군, 궤도 낙하 궤적 진입 중. ${n} 소위, 발진을 허가합니다.`},
   {at:3.05,who:`앰버 1 · ${n}`,txt:`${n}, ${(FRAMES[P&&P.frame]||FRAMES.mk2).name}. 앰버 1, 출격한다!`}]}
@@ -77,7 +78,7 @@ function setSub(i){const L=cineLines()[i];CINE.line=i;CINE.typed=0;$("subWho").t
 /* ---- control ---- */
 function playCatapult(){return new Promise(res=>{
   if(!SHIP)buildShip();
-  Object.assign(CINE,{on:true,t:0,z:START_Z,v:0,thr:.6,crouch:0,pose:POSE.stand,skip:false,done:res,line:-1,flags:{}});
+  Object.assign(CINE,{on:true,t:-2.6,z:START_Z,v:0,thr:.6,crouch:0,pose:POSE.stand,skip:false,done:res,line:-1,flags:{}});
   SHIP.g.position.set(0,0,0);SHIP.g.rotation.set(0,0,0);SHIP.retreat=-1;SHIP.rv=0;
   SHIP.doors[0].position.x=-4.05;SHIP.doors[1].position.x=4.05;SHIP.sled.position.z=START_Z;
   SHIP.guides.forEach(m=>m.material.color.set(0x2a1a08));
@@ -136,14 +137,16 @@ function cineUpdate(rdt){
 // returns true while the cutscene owns the camera
 function cineCamera(rdt){
   const t=CINE.t,p=S.pos,lk=new V3();let pos=new V3(),fov=55;
-  if(t<1.9){const k=t/1.9;pos.set(lerp(-6.2,-4.8,k),lerp(4.4,3.2,k),lerp(-147,-142,k));lk.set(0,1.6,-112);fov=58}
+  if(t<0){const k=(t+2.6)/2.6,e=k*k*(3-2*k); // establishing shot: slow dolly past the carrier's bow, Earth behind
+    pos.set(lerp(120,70,e),lerp(34,16,e),lerp(170,95,e));lk.set(0,lerp(6,-2,e),lerp(-20,-70,e));fov=48}
+  else if(t<1.9){const k=t/1.9;pos.set(lerp(-6.2,-4.8,k),lerp(4.4,3.2,k),lerp(-147,-142,k));lk.set(0,1.6,-112);fov=58}
   else if(t<3.35){const k=(t-1.9)/1.45;pos.set(lerp(1.6,1.0,k),lerp(.7,1.0,k),lerp(-123.6,-125.2,k));lk.set(0,.9,-130);fov=40}
   else if(t<4.25){pos.set(2.4,-.6,-139);lk.set(0,1.5,-96);fov=t>T_LAUNCH?78:60}
   else{if(SHIP&&SHIP.model){pos.set(95,58,100);fov=40}else{pos.set(12,3.4,30);fov=52}lk.copy(p.z<HATCH_Z?new V3(0,1.5,HATCH_Z):p).add(new V3(0,1,0));
     if(t>5.2){const k=clamp((t-5.2)/(T_END-5.2),0,1),s=k*k*(3-2*k);const cf=camFwd();
       const gp=p.clone().addScaledVector(cf,-10).add(new V3(0,2.8,0)),gl=p.clone().addScaledVector(cf,8).add(new V3(0,1.4,0));
       pos.lerp(gp,s);lk.lerp(gl,s);fov=lerp(66,62,s)}}
-  const shot=t<1.9?0:t<3.35?1:t<4.25?2:3,cut=CINE.flags.shot!==shot;CINE.flags.shot=shot;
+  const shot=t<0?-1:t<1.9?0:t<3.35?1:t<4.25?2:3,cut=CINE.flags.shot!==shot;CINE.flags.shot=shot;
   if(cut){CINE.camPos.copy(pos);CINE.camLook.copy(lk)}
   CINE.camPos.lerp(pos,1-Math.pow(.02,rdt));CINE.camLook.lerp(lk,CINE.flags.shot===3&&t<5.2?1-Math.pow(1e-5,rdt):1-Math.pow(.02,rdt));
   camera.position.copy(CINE.camPos);

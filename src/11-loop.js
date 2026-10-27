@@ -5,7 +5,7 @@ const clock=new THREE.Clock();
 function focusCamera(rdt){const d=G.focus.m.position.clone().sub(S.pos),hz=Math.hypot(d.x,d.z),dt=Math.min(rdt,.05);
   const near=clamp((hz-5)/7,0,1);if(near<=0)return; // inside ~5 m: hold; 5-12 m: fade in
   const dy=Math.atan2(Math.sin(Math.atan2(d.x,d.z)-S.yaw),Math.cos(Math.atan2(d.x,d.z)-S.yaw));
-  if(Math.abs(dy)>.02){const cap=(S.dash>0||S.vsLunge>0?1.2:3.2)*near*dt;S.yaw+=clamp(dy*(1-Math.exp(-7*dt)),-cap,cap)}
+  if(Math.abs(dy)>.02){const cap=(S.dash>0||S.vsLunge>0?.9:2.4)*near*dt;S.yaw+=clamp(dy*(1-Math.exp(-7*dt)),-cap,cap)}
   const pt=clamp(Math.atan2(d.y-1.5,hz)*.8-.06,-.6,.45);S.pitch+=clamp((pt-S.pitch)*(1-Math.exp(-5*dt)),-1.6*dt,1.6*dt)}
 function update(rdt){
   let dt=Math.min(rdt,.05);
@@ -112,18 +112,18 @@ function update(rdt){
 
   /* camera */
   if(!(CINE.on&&cineCamera(rdt))){
-  const cf=camFwd(),dist=S.demo?12:10;
-  const want=S.pos.clone().addScaledVector(cf,-dist).add(new V3(0,2.8,0));
+  const cf=camFwd(),dist=S.demo?12:8.6;
+  const want=S.pos.clone().addScaledVector(cf,-dist).add(new V3(0,2.4,0));
   if(S.demo){const pv=SCREEN==="load",a=S.demoT*(pv?.35:.25),r=pv?10.5:11;want.copy(S.pos).add(new V3(Math.sin(a+2.6)*r,(pv?.6:2.2)+Math.sin(a*.7)*(pv?.3:1),Math.cos(a+2.6)*r))}
   camera.position.lerp(want,1-Math.pow(.0005,rdt));
-  if(!VS&&S.camKick>0)camera.position.addScaledVector(camFwd(),-S.camKick*.9).y+=S.camKick*.25;
+  if(!VS&&S.camKick>0)camera.position.addScaledVector(camFwd(),-S.camKick*.45).y+=S.camKick*.12;
   S.shake=Math.max(0,S.shake-rdt*2.4);const sh=VS?0:S.shake*S.shake*.9*(typeof SHAKE_K==='number'?SHAKE_K:1);
   camera.position.add(new V3((Math.random()-.5)*sh,(Math.random()-.5)*sh,(Math.random()-.5)*sh));
   if(S.demo){const toCam=camera.position.clone().sub(S.pos).setY(0).normalize();const R=new V3().crossVectors(new V3(0,1,0),toCam);
     camera.lookAt(S.pos.clone().add(new V3(0,SCREEN==="load"?.2:.9,0)).addScaledVector(R,-(innerWidth>820?(SCREEN==="load"?4.6:4.5):0)))}
   else if(VS)camera.lookAt(camera.position.clone().addScaledVector(cf,18));
   else camera.lookAt(S.pos.clone().addScaledVector(cf,8).add(new V3(0,1.4,0)));
-  const fovT=VS?68:boosting||S.dash>0?74:62;if(Math.abs(fovT-camera.fov)>.01){camera.fov+=(fovT-camera.fov)*(1-Math.exp(-8*rdt));camera.updateProjectionMatrix();}}
+  const fovT=VS?66:boosting||S.dash>0?66:61;if(Math.abs(fovT-camera.fov)>.01){camera.fov+=(fovT-camera.fov)*(1-Math.exp(-8*rdt));camera.updateProjectionMatrix();}}
 
   if(SCREEN==="play"||SCREEN==="launch"){hudUpdate();if(VS)vsHud();}
 }

@@ -1,5 +1,5 @@
 /* ================= settings modal + pause menu ================= */
-var SHAKE_K=1;try{SHAKE_K=+(localStorage.getItem("ob.shake")??1)}catch(e){}
+var SHAKE_K=.6;try{SHAKE_K=+(localStorage.getItem("ob.shake")??.6)}catch(e){}
 let setFromPause=false;
 function segOn(id,v){document.querySelectorAll("#"+id+" button").forEach(b=>b.classList.toggle("on",(b.dataset.q||b.dataset.v)===String(v)))}
 function setFps(on){try{localStorage.setItem("ob.fps",on?"1":"0")}catch(e){}
