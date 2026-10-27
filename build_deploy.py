@@ -41,7 +41,7 @@ self.addEventListener("fetch",e=>{const u=new URL(e.request.url);if(e.request.me
   if(e.request.mode==="navigate"){e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(V).then(k=>k.put("index.html",c));return r}).catch(()=>caches.match("index.html")));return}
   e.respondWith(caches.match(e.request).then(hit=>hit||fetch(e.request).then(r=>{if(r.ok){const c=r.clone();caches.open(V).then(k=>k.put(e.request,c))}return r})))});
 '''%ver)
-open(D+'/_headers','w').write("/models/*\n  Cache-Control: public, max-age=86400\n/*.js\n  Cache-Control: public, max-age=3600\n/ui/*\n  Cache-Control: public, max-age=86400\n/sfx/*\n  Cache-Control: public, max-age=3600\n/sw.js\n  Cache-Control: no-cache\n/index.html\n  Cache-Control: no-cache\n")
+open(D+'/_headers','w').write("/models/*\n  Cache-Control: no-cache\n/*.js\n  Cache-Control: public, max-age=3600\n/ui/*\n  Cache-Control: public, max-age=86400\n/sfx/*\n  Cache-Control: public, max-age=3600\n/sw.js\n  Cache-Control: no-cache\n/index.html\n  Cache-Control: no-cache\n")
 print('libs',len(libs));os.system('du -sh '+D)
 
 shutil.copytree('pvp/src',OUT+'/pvp/src',dirs_exist_ok=True)
