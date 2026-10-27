@@ -6,7 +6,7 @@
 let MS_TPL=null;const MS_H=5.2;
 function msSetTemplate(g,tint){let src=null;g.scene.traverse(o=>{if(o.isMesh&&!src)src=o});if(!src)return;
   if(!src.geometry.attributes.normal)src.geometry.computeVertexNormals();src.geometry.computeBoundingBox();
-  const mat=src.material.clone();if(ENV){mat.envMap=ENV;mat.envMapIntensity=.4}if(tint)mat.color.setRGB(.5,.6,.46);
+  const mat=src.material.clone();if(ENV){mat.envMap=ENV;mat.envMapIntensity=.4}if(tint)mat.color.setRGB(.62,.5,.42);
   MS_TPL={geo:src.geometry,mat,h:src.geometry.boundingBox.getSize(new V3()).y,real:!tint}}
 function msTemplate(){if(MS_TPL)return MS_TPL;const f=FRAMES.mk2&&FRAMES.mk2.gltf;if(f)msSetTemplate(f,true);return MS_TPL}
 (function(){if(!window.GLB_BASE)return;setTimeout(()=>fetch(GLB_BASE+"enemy_ms.glb",{method:"HEAD"}).then(r=>{
@@ -14,15 +14,15 @@ function msTemplate(){if(MS_TPL)return MS_TPL;const f=FRAMES.mk2&&FRAMES.mk2.glt
 
 function spawnMS(pos){const T=msTemplate();if(!T)return null;const k=MS_H/T.h,g=new THREE.Group();
   const mat=T.mat.clone();mat.emissive=new THREE.Color(0);const m=new THREE.Mesh(T.geo,mat);m.scale.setScalar(k);m.position.y=-.5*MS_H;g.add(m);g.userData.mat=mat;
-  const eye=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff3aa8,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
-  eye.position.set(0,.36*MS_H,.08*MS_H);eye.scale.set(1.2,1.2,1);g.add(eye);g.userData.eye=eye;
+  const eye=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0x40e0ff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+  eye.position.set(0,.36*MS_H,.08*MS_H);eye.scale.set(1.6,.5,1);g.add(eye);g.userData.eye=eye;
   const jets=[-1,1].map(sx=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff9a40,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.7}));
     s.position.set(sx*.09*MS_H,.18*MS_H,-.12*MS_H);s.scale.setScalar(1.4);g.add(s);return s});g.userData.jets=jets;
   g.position.copy(pos);const yaw=Math.atan2(S.pos.x-pos.x,S.pos.z-pos.z);g.rotation.y=yaw;scene.add(g);
   const e={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:Math.random()*10,flash:0,elite:false,rad:3.6,ms:true,hp:2,stun:0,push:new V3(),
     dashT:1.5+Math.random()*2,dashV:new V3(),burstN:0,burstT:0,ram:false,rs:"hunt",rt:0,rdir:new V3(),fireT:1.5+Math.random()*2,tele:0,teleLock:false,teleDir:new V3(),
     keep:22+Math.random()*8,yaw,aim:false};
-  enemies.push(e);emit(ADD,{pos,tex:TX.ring,color:0xff3aa8,s0:2,s1:14,life:.5,a:.6});return e}
+  enemies.push(e);emit(ADD,{pos,tex:TX.ring,color:0x40e0ff,s0:2,s1:14,life:.5,a:.6});return e}
 
 // first hit on a full-armor MS: stagger instead of launch
 function msArmor(e,dir){e.hp--;e.flash=1;e.stun=.75;e.push.copy(dir).setY(dir.y*.3).normalize().multiplyScalar(18);clearTele(e);e.burstN=0;
