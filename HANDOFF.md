@@ -114,3 +114,9 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 - 확인 필요: 기체 관절 소프트 스키닝 후 큰 동작에서 어깨 늘어짐 정도, 맵 돌 밀도, 적 MS 난이도.
 - 테스트 학번 99990001("테스트")로 출격 기록 있음 → 마감 전 D1에서 지우기.
 - 기획서 PDF, 시연 영상 (마감 10/30 18:00). AI 사용 내역에 Claude·GPT/Codex·Tripo·나노바나나, 라이선스에 Kenney(CC0) 추가.
+
+## 12. 스위프트 리깅 모델 (10/27 밤, 아직 미연결)
+- `models/swift_rig.glb`: Tripo에서 리토폴로지(1.9만 폴리곤)와 리깅을 마친 스위프트. 스켈레톤은 Mixamo 규격(mixamorig:Hips, Spine1, RightArm, RightForeArm, LeftUpLeg ... 65개). 애니메이션은 없음.
+- 쓰려면 어댑터가 필요함: 우리 관절 11개(hips/torso/head/armR/foreR/armL/foreL/thighR/shinR/thighL/shinL)를 mixamorig 뼈에 연결. 우리 포즈는 "월드 축 기준 회전"이라 변환이 필요함 → local = (P⁻¹·R·P)·restLocal (P는 부모 뼈의 기본 자세 월드 회전).
+- 장점: Tripo AI 애니메이션과 Mixamo 무료 애니메이션(검 베기, 공중제비 등)을 그대로 쓸 수 있음. 지금 자동 리깅보다 관절이 찢어지지 않음.
+- 주의: 게임 판정은 ACT의 strike 시점에 묶여 있음. 애니메이션 클립을 쓸 때 클립의 타격 순간과 맞춰야 함.
