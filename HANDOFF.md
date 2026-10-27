@@ -9,6 +9,8 @@
 - `orbit-breaker-deploy/` : 배포 폴더. 이미 바탕화면에 있음. `public/`, `wrangler.toml`, `pvp/`, `deploy.sh`가 들어 있음.
 
 ## 2. 빌드 & 배포
+> **현재 방식 (10/27~): GitHub `kjm030131-cell/orbit-breaker` main에 push하면 GitHub Actions가 빌드 → 테스트 → 대전 워커 + Pages 배포를 자동으로 함.** 아래 수동 방식은 예비용.
+
 ```
 cd ~/Desktop/orbit-breaker-src
 npm install                  # three@0.147.0 설치 (배포본에 three를 직접 포함하는 데 씀)
@@ -104,3 +106,11 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 - 새 모델은 Tripo 원본을 `gltf-transform weld → simplify(1~2만 폴리곤) → resize 1024 → jpeg → meshopt`으로 줄여서 넣기.
 - 장갑 1회(첫 타격은 경직+밀려남), 두 번째 타격에 날아감. 22~30m 거리 유지, 옆으로 대시, 예고 후 3연사. 격파 1200점.
 - 단계별 등장 수: PHASES의 `ms` (0/1/1/2).
+
+## 11. 다음 세션 할 일 (10/27 밤 기준)
+- 적 MS 애셋(사용자가 Tripo로 제작 중) 받으면 `models/enemy_ms.glb`로 압축해 넣기 (10번 항목 방법).
+- 스토리·컷씬·나레이션은 보류 상태 (사용자가 나중에 정하기로 함). 배경음악도 아직 합성음.
+- 합성음 그대로인 효과음: slash, just, phase, tele.
+- 확인 필요: 기체 관절 소프트 스키닝 후 큰 동작에서 어깨 늘어짐 정도, 맵 돌 밀도, 적 MS 난이도.
+- 테스트 학번 99990001("테스트")로 출격 기록 있음 → 마감 전 D1에서 지우기.
+- 기획서 PDF, 시연 영상 (마감 10/30 18:00). AI 사용 내역에 Claude·GPT/Codex·Tripo·나노바나나, 라이선스에 Kenney(CC0) 추가.
