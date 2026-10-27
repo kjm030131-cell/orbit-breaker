@@ -125,6 +125,20 @@ function update(rdt){
 
   if(SCREEN==="play"||SCREEN==="launch"){hudUpdate();if(VS)vsHud();}
 }
+// auto quality: if frames stay slower than ~45 fps for 2.5 s, drop one level (never raises itself)
+const PERF={ema:1/60,slow:0,gpu:"?",hud:null,n:0,acc:0,worst:0,t:0};
+try{const gl=renderer.getContext(),ext=gl.getExtension("WEBGL_debug_renderer_info");PERF.gpu=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)}catch(e){}
+PERF.soft=/swiftshader|llvmpipe|software|basic render/i.test(PERF.gpu);
+if(PERF.soft)setTimeout(()=>{const n=document.createElement("div");n.style.cssText="position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:99;background:#3a0d0d;color:#ffd7c8;border:1px solid #ff6a4a;padding:10px 16px;font:600 13px system-ui;border-radius:6px;max-width:92vw;text-align:center;pointer-events:none";setTimeout(()=>n.remove(),15000);
+  n.innerHTML="그래픽 가속이 꺼져 있어 게임이 느립니다. 크롬 설정 → 시스템 → <b>그래픽 가속 사용</b>을 켜고 크롬을 다시 시작하세요.";document.body.appendChild(n)},500);
+if(/[?&]perf/.test(location.search)){PERF.hud=document.createElement("div");PERF.hud.style.cssText="position:fixed;right:8px;bottom:8px;z-index:99;background:rgba(0,0,0,.75);color:#9f9;font:12px/1.5 monospace;padding:8px 10px;border-radius:4px;white-space:pre;pointer-events:none";document.body.appendChild(PERF.hud)}
+function perfHud(rdt){if(!PERF.hud)return;PERF.n++;PERF.acc+=rdt;PERF.worst=Math.max(PERF.worst,rdt);if(PERF.acc<.5)return;
+  const i=renderer.info.render;PERF.hud.textContent=`FPS ${(PERF.n/PERF.acc).toFixed(0)}  worst ${(PERF.worst*1000).toFixed(0)}ms\nGPU ${PERF.gpu}\n${innerWidth}x${innerHeight} DPR ${devicePixelRatio} → ${renderer.getPixelRatio()}\n화질 ${QUALITY}/${QLEVEL} bloom ${useBloom()}\ndraw ${i.calls} tri ${(i.triangles/1000).toFixed(0)}k  적 ${enemies.length}`;PERF.n=0;PERF.acc=0;PERF.worst=0}
+function perfWatch(rdt){if(QUALITY!=="auto"||document.hidden||rdt>.25||QLEVEL==="low")return;
+  PERF.ema+=(rdt-PERF.ema)*.05;if(PERF.ema>1/45)PERF.slow+=rdt;else PERF.slow=Math.max(0,PERF.slow-rdt*.5);
+  if(PERF.slow>2.5){QLEVEL=QLEVEL==="high"?"mid":"low";PERF.slow=0;PERF.ema=1/60;try{localStorage.setItem("ob.qauto",QLEVEL)}catch(e){}
+    applyQuality();if(SCREEN==="play")popText("화질 자동 조정 · "+QL[QLEVEL].name)}}
 function frame(){const rdt=clock.getDelta();try{if(!PAUSED||VS)update(rdt)}catch(err){console.error(err)}
-  if(composer&&!VS)composer.render();else renderer.render(scene,camera);requestAnimationFrame(frame)}
-addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);if(composer)composer.setSize(innerWidth,innerHeight)});
+  if(useBloom())composer.render();else renderer.render(scene,camera);perfWatch(rdt);perfHud(rdt);requestAnimationFrame(frame)}
+addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();applyQuality()});
+document.querySelectorAll("[data-quality]").forEach(b=>b.addEventListener("click",()=>{const o=["auto","high","mid","low"];setQuality(o[(o.indexOf(QUALITY)+1)%4]);sfx("ui")}));setTimeout(applyQuality,0);

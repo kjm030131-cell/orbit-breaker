@@ -4,7 +4,12 @@ const V3=THREE.Vector3, clamp=THREE.MathUtils.clamp, lerp=THREE.MathUtils.lerp;
 /* ================= renderer ================= */
 const stage=$("stage");
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+// quality: high = DPR<=1.5 + full bloom, mid = DPR 1 + half-res bloom, low = DPR .75, no bloom.
+// "auto" starts from the last level this browser settled on and steps down when frames drop.
+const QL={high:{pr:1.5,bloom:1,name:"높음"},mid:{pr:1,bloom:.5,name:"중간"},low:{pr:.75,bloom:0,name:"낮음"}};
+let QUALITY="auto",QLEVEL="high";try{QUALITY=localStorage.getItem("ob.quality")||"auto";QLEVEL=QUALITY==="auto"?(localStorage.getItem("ob.qauto")||"high"):QUALITY}catch(e){}
+if(!QL[QLEVEL])QLEVEL="high";
+renderer.setPixelRatio(Math.min(devicePixelRatio,QL[QLEVEL].pr));
 renderer.setSize(innerWidth,innerHeight);
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=1.05;
@@ -14,12 +19,21 @@ const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x020308);
 const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,0.1,4000);
 let ENV=null;try{const pm=new THREE.PMREMGenerator(renderer);ENV=pm.fromScene(new THREE.RoomEnvironment(),0.04).texture}catch(e){}
-let composer=null;
+let composer=null,BLOOM=null;
 try{
   composer=new THREE.EffectComposer(renderer);
   composer.addPass(new THREE.RenderPass(scene,camera));
-  composer.addPass(new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),1.05,0.6,0.84));
+  BLOOM=new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),1.05,0.6,0.84);composer.addPass(BLOOM);
 }catch(e){composer=null}
+function inVS(){try{return !!VS}catch(e){return false}}
+function applyQuality(){const q=QL[QLEVEL],pr=Math.min(devicePixelRatio,inVS()?Math.min(q.pr,1):q.pr);
+  renderer.setPixelRatio(pr);renderer.setSize(innerWidth,innerHeight);
+  if(composer){composer.setPixelRatio(pr);composer.setSize(innerWidth,innerHeight);
+    if(BLOOM&&q.bloom<1)BLOOM.setSize(Math.max(64,Math.round(innerWidth*pr*q.bloom)),Math.max(64,Math.round(innerHeight*pr*q.bloom)))}
+  document.querySelectorAll("[data-quality]").forEach(b=>b.textContent="화질 "+(QUALITY==="auto"?"자동 · "+q.name:q.name))}
+function useBloom(){return !!composer&&!inVS()&&QL[QLEVEL].bloom>0}
+function setQuality(mode){QUALITY=mode;try{localStorage.setItem("ob.quality",mode)}catch(e){}
+  if(mode!=="auto")QLEVEL=mode;else{try{QLEVEL=localStorage.getItem("ob.qauto")||"high"}catch(e){QLEVEL="high"}}applyQuality()}
 
 scene.add(new THREE.HemisphereLight(0x6f8cff,0x150a05,0.45));
 const sun=new THREE.DirectionalLight(0xfff0dc,1.6);sun.position.set(5.3,8.5,49);scene.add(sun);
