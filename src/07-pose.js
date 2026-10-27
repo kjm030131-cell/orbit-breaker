@@ -77,4 +77,4 @@ function bodyMotion(m,dt){if(dt<=0)return;let ty=0,tp=0,tl=0,k=140;
   const sp=BODY.spin;if(sp){sp.t+=dt;const u=Math.min(1,sp.t/sp.dur),e=u*u*(3-2*u);if(sp.axis==="z")m.rotation.z+=sp.sign*e*Math.PI*2;else m.rotation.x+=sp.sign*e*Math.PI*2;
     if(u>=1)BODY.spin=null}}
 function bodyDodge(dir){const l=dir.clone().applyAxisAngle(new V3(0,1,0),-S.face);
-  if(Math.abs(l.x)>=Math.abs(l.z))BODY.spin={axis:"z",sign:l.x>0?-1:1,t:0,dur:.42};else BODY.spin={axis:"x",sign:l.z>0?1:-1,t:0,dur:.48}}
+  if(Math.abs(l.x)>=Math.abs(l.z))BODY.spin={axis:"z",sign:l.x>0?-1:1,t:0,dur:.42};else BODY.pv+=(l.z>0?1:-1)*7.5} // fore/aft: sharp lean that springs back, no flip
