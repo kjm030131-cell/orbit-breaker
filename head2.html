@@ -266,18 +266,21 @@ button{font:inherit;color:inherit}
 .reticle::before,.reticle::after{content:"";position:absolute;background:var(--bone);opacity:.75}
 .reticle::before{left:8px;top:0;width:2px;height:6px;box-shadow:0 12px var(--bone)}
 .reticle::after{top:8px;left:0;height:2px;width:6px;box-shadow:12px 0 var(--bone)}
+#lockWarn{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;box-shadow:inset 0 0 90px 18px rgba(255,30,30,.55);transition:opacity .08s}
+#lockWarn b{position:absolute;left:50%;top:calc(44% + 46px);transform:translateX(-50%);font:700 13px var(--f-mono,monospace);letter-spacing:.12em;color:#ff4038;text-shadow:0 0 8px rgba(255,40,40,.8)}
+#lockWarn.on{opacity:1;animation:lw .22s steps(2) infinite}@keyframes lw{50%{opacity:.35}}
 #hitm{position:fixed;left:50%;top:44%;width:30px;height:30px;transform:translate(-50%,-50%) rotate(45deg);pointer-events:none;z-index:5;opacity:0}
 #hitm::before,#hitm::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(var(--hm,#fff) 0 34%,transparent 34% 66%,var(--hm,#fff) 66%)}
 #hitm::before{width:2px;height:100%}#hitm::after{width:100%;height:2px;background:linear-gradient(90deg,var(--hm,#fff) 0 34%,transparent 34% 66%,var(--hm,#fff) 66%)}
 #hitm.hit{animation:hm .2s ease-out}#hitm.kill{--hm:#ff4a3a;animation:hm .38s ease-out}#hitm.block{--hm:#7fe0ff;animation:hm .25s ease-out}
 @keyframes hm{0%{opacity:1;width:40px;height:40px}100%{opacity:0;width:24px;height:24px}}
 #lock{position:fixed;left:0;top:0;width:54px;height:54px;transform:translate(-50%,-50%);will-change:transform;pointer-events:none;z-index:4;display:none}
-#lock i{position:absolute;width:14px;height:14px;border:2px solid var(--red)}
+#lock i{position:absolute;width:14px;height:14px;border:2px solid #7fe8ff}
 #lock i:nth-child(1){left:0;top:0;border-width:2px 0 0 2px}
 #lock i:nth-child(2){right:0;top:0;border-width:2px 2px 0 0}
 #lock i:nth-child(3){left:0;bottom:0;border-width:0 0 2px 2px}
 #lock i:nth-child(4){right:0;bottom:0;border-width:0 2px 2px 0}
-#lock span{position:absolute;left:62px;top:-2px;font:500 11px var(--f-mono);letter-spacing:.03em;color:var(--red);white-space:nowrap}
+#lock span{position:absolute;left:62px;top:-2px;font:500 11px var(--f-mono);letter-spacing:.03em;color:#7fe8ff;white-space:nowrap}
 #pop{position:fixed;left:50%;top:30%;transform:translate(-50%,-50%);font-family:var(--f-stencil);font-size:54px;color:var(--amber);pointer-events:none;z-index:6;opacity:0;transition:opacity .2s,transform .2s;white-space:nowrap}
 #pop.on{opacity:1;transform:translate(-50%,-62%)}
 #cutin{position:fixed;left:0;right:0;top:58%;height:104px;z-index:7;pointer-events:none;transform:translateX(-110%);background:var(--amber);display:flex;align-items:center;gap:28px;padding-left:12vw;overflow:hidden;clip-path:polygon(0 12%,100% 0,100% 88%,0 100%)}
@@ -457,7 +460,7 @@ body{font-variant-numeric:tabular-nums;word-break:keep-all}
 
 <!-- in-game HUD -->
 <div id="hud" hidden>
-  <div class="reticle"></div><div id="hitm"></div>
+  <div class="reticle"></div><div id="hitm"></div><div id="lockWarn"><b>피격 경고</b></div>
   <div id="lock"><i></i><i></i><i></i><i></i><span id="lockTxt">록온</span></div>
   <div id="pop"></div>
   <div id="phase"><div id="phaseSub" class="lbl">단계</div><div id="phaseName">—</div></div>

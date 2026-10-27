@@ -44,8 +44,8 @@ function duck(amount,time){if(!DUCK)return;const t=AC.currentTime;DUCK.gain.canc
 
 /* ---- recorded samples: sfx/<key>.mp3 replaces the synthesized sound when present ---- */
 const SFX_KEYS=["shot","hit","ignite","slash","heavy","boom","destroyed","chain","efire","tele","block","dash","dodge","just","hurt",
-  "specBurst","specReady","lock","phase","pickup","cataCharge","cataLaunch","radio","uiok","ui","uiback","deny","doors","slash2","slash3","clash","sizzle","humtex"];
-const SAMPLES={},SAMPLE_GAIN={shot:.8,hit:.7,boom:.8,chain:.8,destroyed:.95,ui:.35,uiok:.5,uiback:.45,deny:.5,lock:.6,radio:.6,efire:.6,dash:.75,slash:.62,slash2:.62,slash3:.78,clash:.95,sizzle:.42,dodge:.7,ignite:.7,doors:.7};
+  "specBurst","specReady","lock","phase","pickup","cataCharge","cataLaunch","radio","uiok","ui","uiback","deny","doors","slash2","slash3","clash","sizzle","humtex","tele","telelock"];
+const SAMPLES={},SAMPLE_GAIN={shot:.8,hit:.7,boom:.8,chain:.8,destroyed:.95,ui:.35,uiok:.5,uiback:.45,deny:.5,lock:.6,radio:.6,efire:.6,dash:.75,slash:.62,slash2:.62,slash3:.78,clash:.95,sizzle:.42,tele:.55,telelock:.7,dodge:.7,ignite:.7,doors:.7};
 const SAMPLE_DUCK={heavy:[.7,.25],boom:[.7,.2],destroyed:[.35,.9],specBurst:[.25,1.4],just:[.25,.9],hurt:[.5,.5],clash:[.6,.35],cataLaunch:[.4,1.2],phase:[.55,.6]};
 const SAMPLE_VARY={shot:.05,hit:.07,boom:.08,slash:.04,slash2:.04,slash3:.03,sizzle:.12,clash:.04,efire:.06,chain:.05,block:.05};
 function loadSamples(){const base="sfx/";if(location.protocol==="file:"||!window.GLB_BASE)return; // deploy build only
@@ -58,6 +58,8 @@ function playSample(k,pos,arg){const a=AC,src=a.createBufferSource();src.buffer=
 /* ---- one-shot effects ---- */
 function sfx(k,pos,arg){const a=AC;if(!a||!AUD.ready||a.state!=="running")return;const t=a.currentTime+.005;
  if(k==="slash"){const v=["slash","slash2","slash3"][Math.min(2,arg||0)];if(SAMPLES[v]){playSample(v,pos,0);return}}
+ if(k==="tele"&&arg&&SAMPLES.telelock){if(a.currentTime-(AUD.tlT||0)<.14)return;AUD.tlT=a.currentTime;playSample("telelock",pos,0);return}
+ if(k==="tele"&&SAMPLES.tele&&a.currentTime-(AUD.teT||0)<.12)return;if(k==="tele")AUD.teT=a.currentTime;
  if(k==="clash"&&!SAMPLES.clash)k="block";if(k==="sizzle"&&!SAMPLES.sizzle)return;
  if(SAMPLES[k]){playSample(k,pos,arg);return}
  switch(k){

@@ -54,6 +54,7 @@ function update(rdt){
     if(S.actT>=A.dur&&S.act!=="lunge")S.act=null}
 
   const prevT=target;target=pickTarget();
+  {let lk=false;if(SCREEN==="play"&&!VS)for(const e of enemies)if(e.alive&&e.teleLock&&e.launched<=0){lk=true;break}const w=$("lockWarn");if(w&&w.classList.contains("on")!==lk)w.classList.toggle("on",lk)}
   if(SCREEN==="play"&&target&&target!==prevT&&clockT-(S.lockT||0)>.3){S.lockT=clockT;sfx("lock")}
   gameplayTick(dt,rdt,T);
 
