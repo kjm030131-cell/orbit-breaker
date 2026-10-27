@@ -16,7 +16,7 @@ function audioInit(){
   REV.buffer=ir;const rg=a.createGain();rg.gain.value=.3;REV.connect(rg);rg.connect(COMP);
   NOISE=a.createBuffer(1,a.sampleRate*2,a.sampleRate);const nd=NOISE.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
   CRUSH=new Float32Array(1024);for(let i=0;i<1024;i++)CRUSH[i]=Math.tanh((i/511.5-1)*3.2);
-  loopsInit();AUD.ready=true;
+  loopsInit();AUD.ready=true;loadSamples();
   if(MUS.want!==undefined){const w=MUS.want;MUS.want=undefined;music(w)}
 }
 function setSound(on){AUD.on=on;try{localStorage.setItem("orbitbreaker.sound",on?"on":"off")}catch(e){}
@@ -41,8 +41,23 @@ function bus(pos,vol,wet){ // one sound's output: stereo position, distance fall
 }
 function duck(amount,time){if(!DUCK)return;const t=AC.currentTime;DUCK.gain.cancelScheduledValues(t);DUCK.gain.setValueAtTime(DUCK.gain.value,t);DUCK.gain.linearRampToValueAtTime(amount,t+.02);DUCK.gain.linearRampToValueAtTime(1,t+time)}
 
+
+/* ---- recorded samples: sfx/<key>.mp3 replaces the synthesized sound when present ---- */
+const SFX_KEYS=["shot","hit","ignite","slash","heavy","boom","destroyed","chain","efire","tele","block","dash","dodge","just","hurt",
+  "specBurst","specReady","lock","phase","pickup","cataCharge","cataLaunch","radio","uiok"];
+const SAMPLES={},SAMPLE_GAIN={shot:.85,hit:.8,boom:.9,ui:.5,uiok:.6,radio:.7,tele:.8,efire:.7};
+const SAMPLE_DUCK={heavy:[.7,.25],boom:[.7,.2],destroyed:[.35,.9],specBurst:[.25,1.4],just:[.25,.9],hurt:[.5,.5],cataLaunch:[.4,1.2],phase:[.55,.6]};
+const SAMPLE_VARY={shot:.05,hit:.07,boom:.08,slash:.04,efire:.06,chain:.05,block:.05};
+function loadSamples(){const base="sfx/";if(location.protocol==="file:"||!window.GLB_BASE)return; // deploy build only
+  fetch(base+"list.json",{cache:"no-cache"}).then(r=>r.ok?r.json():[]).catch(()=>[]).then(list=>{for(const k of list)if(SFX_KEYS.includes(k))fetch(base+k+".mp3").then(r=>r.ok?r.arrayBuffer():null).then(b=>b&&AC.decodeAudioData(b)).then(buf=>{if(buf)SAMPLES[k]=buf}).catch(()=>{})})}
+function playSample(k,pos,arg){const a=AC,src=a.createBufferSource();src.buffer=SAMPLES[k];
+  let rate=1+(Math.random()*2-1)*(SAMPLE_VARY[k]||0);if(k==="slash")rate*=1+(arg||0)*.06;src.playbackRate.value=rate;
+  const o=bus(pos,SAMPLE_GAIN[k]||1,k==="destroyed"||k==="specBurst"?.35:.15);src.connect(o);src.start(a.currentTime+.003);
+  const d=SAMPLE_DUCK[k];if(d)duck(d[0],d[1])}
+
 /* ---- one-shot effects ---- */
 function sfx(k,pos,arg){const a=AC;if(!a||!AUD.ready||a.state!=="running")return;const t=a.currentTime+.005;
+ if(SAMPLES[k]){playSample(k,pos,arg);return}
  switch(k){
  case "ignite":{const o=bus(null,.8,.25);osc(a,o,"sawtooth",70,180,t,.35,.09,.02);osc(a,o,"sawtooth",71.5,182,t,.35,.07,.02);nzf(a,o,"bandpass",600,4200,t,.3,.22,2);osc(a,o,"sine",1400,2600,t,.12,.05);break}
  case "slash":{const n=arg||0,o=bus(pos,.9,.2),p=1+n*.12;nzf(a,o,"bandpass",4200*p,380,t,.26,.5,1.2,.02);osc(a,o,"sawtooth",420*p,110,t,.24,.07,.015);osc(a,o,"sine",260*p,90,t+.02,.2,.12);break}
