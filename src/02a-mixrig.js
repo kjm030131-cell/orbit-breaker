@@ -15,7 +15,7 @@ function buildMixRig(gltf,remote){
   const P0={},J={},drv=new THREE.Group();
   for(const [k,p,n] of MIX_ORDER){const m=mixBone(scene,n);P0[k]=m?m.getWorldPosition(new V3()):(p?P0[p].clone():new V3());
     const b=new THREE.Bone();b.name=k;b.position.copy(P0[k]).sub(p?P0[p]:new V3());(p?J[p]:drv).add(b);J[k]=b}
-  const map=[];for(const [k,,n] of MIX_ORDER){if(k==="rifle")continue;const m=mixBone(scene,n);if(m)map.push({k,m,rest:m.getWorldQuaternion(new THREE.Quaternion())})}
+  const map=[];for(const [k,,n] of MIX_ORDER){const m=mixBone(scene,n);if(m)map.push({k,m,rest:m.getWorldQuaternion(new THREE.Quaternion())})}
   // the rifle is part of the hand in Tripo's skin: move its vertices onto an extra bone so it can be hidden while the saber is out
   let gun=null;const hand=mixBone(scene,"RightHand");
   if(skin&&hand&&!skin.userData.gunSplit){const sk=skin.skeleton,hb=new Set();sk.bones.forEach((b,i)=>{if(/(RightHand|RightForeArm)$/.test(b.name))hb.add(i)});

@@ -142,3 +142,12 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
   · wind 중 베기 = 카운터(즉시 격파), 회피로 피하면 간파(rec 1.3s), 서로 베면 칼날 격돌(양쪽 튕김, 적 경직 1.15s), hunt 중 베기 = 막힘(경직 .6s).
   · 빔은 rec/경직 외엔 튕겨냄(bladeDeflect). PHASES.blade 로 단계별 수.
 - 사벨 사운드(10/28): 사용자 ElevenLabs 9종 → sfx/_saber.py 로 slash/slash2/slash3(콤보 단별), ignite, clash(칼날 격돌), sizzle(베기 명중 지글), humtex(대기 험 질감 루프, 05-audio audioFrame LOOP.tex) 생성.
+
+## 16. 빔샤벨 v2 + Mixamo 검술 모션 (10/28)
+- src/01c-saber.js: saberMesh(축 빌보드 플라즈마 셰이더), makeArc/stepArc(캣멀롬 호 잔상). 플레이어 P.saber, 검투기 e.blade.glow/e.arc.
+- Mixamo FBX 6종(Outward/Inward Slash, High Spin, Jump Attack, Blocking, Body Block) → tools/mixamo_bake.mjs(three@0.147 FBXLoader, node) → models/sword.json
+  (프레임별 각 키의 월드 회전 델타 vs Mixamo T포즈). build_deploy가 models/*.json 복사.
+- src/07b-clips.js clipLayer: 우리 리그 rest(팔 내린 포즈)에 뼈 방향 정렬(A_k) 후 드라이버 로컬 회전으로 기록, 상체+힙만, 다리는 비행 포즈 유지.
+  CLIP_MAP: 액트별 클립 구간 w0..w1, 클립의 타격 프레임 hit 을 액트 strike 프레임에 맞춤, 타격 순간 상체가 정면 보게 yaw 보정.
+  손목(rifle) 회전 → 칼날 그룹(P.beam.parent) 회전. mixrig sync 에 RightHand 매핑 추가(기본값 동일).
+- ACT 길이: slash1 .56/.38, slash2 .52/.36, slash3 .86/.52, guard(칼날 격돌 시) 추가.

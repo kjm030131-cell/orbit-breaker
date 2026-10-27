@@ -58,7 +58,7 @@ function bladeClash(e,perfect){const mid=S.pos.clone().lerp(e.m.position,.5).add
   sfx("clash",mid);sfx("sizzle",mid);sfx("heavy",mid);sfx("thud",mid,1);hitMark("block");
   S.hitstop=perfect?.2:.11;S.slow=Math.max(S.slow,perfect?.55:.2);S.shake=Math.max(S.shake,perfect?.9:.6);flash(perfect?.32:.16);impactPunch(perfect?1.3:.7);
   S.vel.copy(dir).multiplyScalar(-30);e.push.copy(dir).multiplyScalar(perfect?30:22);e.stun=perfect?1.15:.6;e.bs="hunt";e.bt=1;e.flash=1;e.dashV.set(0,0,0);
-  S.act=null;S.combo=0;popText(perfect?"칼날 격돌 · 반격 찬스!":"막힘 · 틈을 노려라");addScore(perfect?700:120,mid,perfect?"cyan":"");addSpec(perfect?3:1)}
+  startAct("guard");S.attackCd=.2;S.combo=0;popText(perfect?"칼날 격돌 · 반격 찬스!":"막힘 · 틈을 노려라");addScore(perfect?700:120,mid,perfect?"cyan":"");addSpec(perfect?3:1)}
 // player's slash lands on a duelist: false = let the normal hit (launch) go through
 function bladeParry(e,at){
   if(e.stun>0||e.bs==="rec"){e.hp=1;popText("빈틈 공략");addScore(900,at,"big");return false}

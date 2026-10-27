@@ -22,7 +22,7 @@ html=html.replace('<script src="rig.js"></script>','<script src="rig.js?v='+ver0
 open(D+'/index.html','w').write(html)
 shutil.copy('node_modules/three/examples/js/libs/meshopt_decoder.js',D+'/lib/')
 shutil.copy('rig.js',D+'/rig.js')
-os.makedirs(D+'/models',exist_ok=True);[shutil.copy(f,D+'/models/') for f in glob.glob('models/*.glb')]
+os.makedirs(D+'/models',exist_ok=True);[shutil.copy(f,D+'/models/') for f in glob.glob('models/*.glb')+glob.glob('models/*.json')]
 Image.open('sky.jpg').convert('RGB').save(D+'/sky.jpg',quality=72,optimize=True,progressive=True)
 shutil.copytree('ui',D+'/ui',dirs_exist_ok=True)
 os.makedirs(D+'/sfx',exist_ok=True)

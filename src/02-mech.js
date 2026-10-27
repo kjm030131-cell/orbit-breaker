@@ -44,7 +44,7 @@ function buildPlayer(gltf,frame,remote){
   // springs for every joint axis
   const SP={};const cfg={hips:[150,.75],torso:[190,.62],head:[230,.6],armR:[260,.5],foreR:[300,.55],armL:[260,.48],foreL:[300,.52],thighR:[140,.58],shinR:[150,.55],thighL:[140,.58],shinL:[150,.55]};
   for(const k in cfg){SP[k]={k:cfg[k][0],z:cfg[k][1],x:[0,0,0],v:[0,0,0]}}
-  return {root,J,mat,flames,eye,beam,inner,outer,saber:saber.material,tipObj,baseObj,hiltGlow,muzzle,SP,bladeLen:0,rifleS:1,frame,sync:mix?mix.sync:null};
+  return {root,J,mat,flames,eye,beam,inner,outer,saber:saber.material,mixP0:mix?mix.P0:null,tipObj,baseObj,hiltGlow,muzzle,SP,bladeLen:0,rifleS:1,frame,sync:mix?mix.sync:null};
 }
 function setFrame(k){const F=FRAMES[k];if(!F||!F.obj||(P&&P.frame===k))return false;
   let pos=null,rot=0;if(P){pos=P.root.position.clone();rot=P.root.rotation.y;scene.remove(P.root)}
@@ -65,21 +65,22 @@ const POSE={
 };
 // actions: keyframes [time 0..1, pose, stiffness multiplier]
 const ACT={
-  slash1:{dur:.46,strike:.3,keys:[
+  slash1:{dur:.56,strike:.38,keys:[
     [0,{armL:[-2.55,0,.75],foreL:[-.7,0,0],torso:[-.06,.6,.08],head:[0,-.25,0],armR:[-.25,0,-.3],hips:[0,.15,0],thighL:[-.4,0,.05],shinL:[.6,0,0]},1.6],
     [.3,{armL:[-.35,0,-.95],foreL:[-.05,0,0],torso:[.2,-.75,-.12],head:[.05,.2,0],armR:[-.55,0,.05],hips:[0,-.2,0],thighL:[.3,0,0],shinL:[.4,0,0],thighR:[-.35,0,0]},5],
     [.42,{armL:[-.2,0,-1.25],foreL:[-.05,0,0],torso:[.24,-.95,-.14],head:[.05,.3,0],hips:[0,-.3,0]},3.2],
     [.62,{armL:[-.55,0,-.8],foreL:[-.35,0,0],torso:[.14,-.6,-.06],armR:[-.5,0,0]},1.4]]},
-  slash2:{dur:.42,strike:.28,keys:[
+  slash2:{dur:.52,strike:.36,keys:[
     [0,{armL:[-1.35,0,-1.05],foreL:[-1.25,0,0],torso:[.02,-.7,0],head:[0,.3,0],armR:[-.4,0,.1],hips:[0,-.2,0]},1.6],
     [.28,{armL:[-1.55,0,1.05],foreL:[-.12,0,0],torso:[.08,.75,.05],head:[0,-.2,0],armR:[-.2,0,-.45],hips:[0,.25,0],thighL:[-.3,0,.25],thighR:[.25,0,-.1]},5.5],
     [.4,{armL:[-1.75,0,1.3],foreL:[-.05,0,0],torso:[.1,.95,.08],head:[0,-.3,0],hips:[0,.32,0]},3.2],
     [.6,{armL:[-1.3,0,1.15],foreL:[-.3,0,0],torso:[.05,.65,0]},1.4]]},
-  slash3:{dur:.62,strike:.42,keys:[
+  slash3:{dur:.86,strike:.52,keys:[
     [0,{armL:[-3.05,0,.25],foreL:[-.25,0,0],torso:[-.32,0,0],head:[-.3,0,0],armR:[-.9,0,-.35],thighL:[.35,0,0],thighR:[.3,0,0],shinL:[.9,0,0],shinR:[.8,0,0]},1.3],
     [.42,{armL:[-.15,0,-.05],foreL:[0,0,0],torso:[.55,0,0],head:[.2,0,0],armR:[.1,0,-.35],thighL:[-.75,0,0],shinL:[1.05,0,0],thighR:[.45,0,0],shinR:[.3,0,0]},6],
     [.62,{armL:[-.25,0,-.1],torso:[.45,0,0],thighL:[-.6,0,0],shinL:[.95,0,0]},1.2]]},
   lunge:{dur:.3,strike:1,keys:[[0,{armL:[-1.05,0,.45],foreL:[-.3,0,0],torso:[.38,.35,0],head:[-.25,-.2,0],armR:[.45,0,-.25],thighR:[.65,0,0],thighL:[.5,0,0],shinR:[.8,0,0],shinL:[1,0,0]},2]]},
+  guard:{dur:.5,strike:9,keys:[[0,{torso:[.2,0,0],armR:[-1.2,0,.3],foreR:[-1,0,0]},2]]},
   shoot:{dur:.38,strike:0,keys:[[0,{armR:[-1.58,0,.06],foreR:[-.05,0,0],torso:[0,-.3,0],head:[0,-.22,0]},4],[.4,{armR:[-1.5,0,.04],foreR:[-.08,0,0],torso:[0,-.26,0],head:[0,-.2,0]},1.5]]},
 };
 // melee is right-handed: mirror the authored left-hand swings, keep the shield arm in a forward guard

@@ -58,6 +58,7 @@ function solvePose(dt,localV,boosting,T){
     for(let i=0;i<steps;i++)for(let a=0;a<3;a++){s.v[a]+=(kk*(t[a]-s.x[a])-c*s.v[a])*h;s.x[a]+=s.v[a]*h}
     const l=LIM[k];if(l)for(let a=0;a<3;a++){const lo=l[a][0]-.12,hi=l[a][1]+.12;if(s.x[a]<lo){s.x[a]=lo;s.v[a]=Math.max(0,s.v[a])}else if(s.x[a]>hi){s.x[a]=hi;s.v[a]=Math.min(0,s.v[a])}}
     const b=J[k];if(b){b.rotation.set(s.x[0],s.x[1],s.x[2])}}
+  clipLayer(P,dt);
   if(P.sync)P.sync();
 }
 
