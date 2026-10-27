@@ -55,7 +55,7 @@ function tutFrame(dt){if(!TUT.on||SCREEN!=="play"||TUT.step<0)return;const s=TUT
 function tutHurt(b){if(G.iframe>0)return;G.iframe=1.4;fxImpact(S.pos.clone().add(new V3(0,.8,0)),0xff4030);sfx("hurt");S.shake=.7;S.vel.addScaledVector(b.dir||new V3(0,0,-1),18);
   const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");popText("피격 — 실전이었다면 격추예요")}
 async function startTutorial(){if(TUT.on||!P)return;sfx("uiok");lock();
-  TUT.on=true;TUT.step=-1;TUT.c={};TUT.busy=false;restart();S.yaw=S.face;S.pitch=-.08;G.lives=99;
+  TUT.on=true;TUT.step=-1;TUT.c={};TUT.busy=false;restart();S.yaw=S.face;S.pitch=-.08;
   const U=UNITS[G.unit];document.documentElement.style.setProperty("--uc",U.css);$("unitName").textContent=U.r;$("specName").textContent=U.f;$("uIconR").src=`ui/r_${G.unit}.webp`;$("uIconF").src=`ui/f_${G.unit}.webp`;buildBits(G.unit);
   $("pName").textContent=PILOT.name||"앰버 1";$("pDept").textContent="첫 출격";$("pSortie").textContent="—";
   document.body.classList.add("tut");show("launch");

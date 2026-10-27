@@ -23,18 +23,20 @@ function introClear(){for(const o of INTRO.props){scene.remove(o.m);o.m.material
 function endIntro(){INTRO.on=false;introClear();$("intro").hidden=true;if(P)P.root.visible=true;const r=INTRO.done;INTRO.done=null;if(r)r()}
 function introType(el,txt,t0,cps){const n=Math.max(0,Math.min(txt.length,((INTRO.t-t0)*(cps||26))|0));if(el.textContent.length!==n)el.textContent=txt.slice(0,n)}
 function introUpdate(rdt){
-  const t0=INTRO.t;INTRO.t+=rdt;const t=INTRO.t,cross=a=>t0<a&&t>=a,o=$("intro");
+  rdt=Math.min(rdt,.1);const t0=INTRO.t;INTRO.t+=rdt;const t=INTRO.t,cross=a=>t0<a&&t>=a,o=$("intro");
   if(INTRO.skip||t>=INTRO_END){endIntro();return}
   // overlay text
   const L0=INTRO_LINES[0];if(t>=L0.at&&t<3.7){introType($("inCard"),L0.card,L0.at,14);if(t>2.1)introType($("inSub"),L0.sub,2.1,30)}
-  if(cross(3.7)){o.className="on";$("inCard").textContent="";$("inSub").textContent=""}
+  // overlay state is derived from t (robust to long frames / skipping); cross() only fires sounds
+  const black=t<3.7||t>=27.2,cls="on"+(black?" black":"");if(o.className!==cls)o.className=cls;if(t>=3.7&&$("inCard").textContent){$("inCard").textContent="";$("inSub").textContent=""}
+  const mc=t>=19.2&&t<27.2?(t>=23.6?"on reply":"on"):"";if($("inMsg").className!==mc)$("inMsg").className=mc;const tc=t>=27.2?"on":"";if($("inTitle").className!==tc)$("inTitle").className=tc;
   for(let i=1;i<INTRO_LINES.length;i++){const L=INTRO_LINES[i],nx=INTRO_LINES[i+1];if(t>=L.at&&(!nx||t<nx.at))introType($("inLine"),L.txt,L.at,22)}
   // the sister's message, and the reply
-  if(cross(19.2)){$("inMsg").className="on";sfx("uiok")}
+  if(cross(19.2))sfx("uiok");
   if(t>19.5)introType($("inMsgA"),"오빠!! 오늘 밤 서울에 유성우 예보 떴어 ㅎㅎ 거기서도 보여?",19.5,24);
-  if(cross(23.6)){$("inMsg").className="on reply";sfx("ui")}
+  if(cross(23.6))sfx("ui");
   if(t>24)introType($("inMsgB"),"…응. 잘 보여.",24,9);
-  if(cross(27.2)){$("inMsg").className="";o.className="on black";$("inTitle").className="on";sfx("phase")}
+  if(cross(27.2))sfx("phase");
   // battle: wrecks blow up and start falling, burning
   for(const p of INTRO.props){p.m.position.addScaledVector(p.v,rdt);p.m.rotation.z+=rdt*.3}
   if(t>4&&t<19&&t>=INTRO.nextBoom&&INTRO.props.length){INTRO.nextBoom=t+.9+Math.random()*1.2;const i=(Math.random()*INTRO.props.length)|0,p=INTRO.props[i];
