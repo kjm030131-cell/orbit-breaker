@@ -35,9 +35,8 @@ function buildPlayer(gltf,frame,remote){
   const core=new THREE.Mesh(g1,new THREE.MeshBasicMaterial({color:0xffffff}));
   const inner=new THREE.Mesh(g2,new THREE.MeshBasicMaterial({color:0xff7a1a,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
   const outer=new THREE.Mesh(g3,new THREE.MeshBasicMaterial({color:0xff4a10,transparent:true,opacity:.28,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
-  beam.add(core,inner,outer);beam.scale.z=.001;
-  {const gm=new THREE.PlaneGeometry(1,1);gm.rotateX(Math.PI/2);gm.translate(0,0,.5);const mt=new THREE.MeshBasicMaterial({map:FXT.saber,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
-   for(const rz of [0,Math.PI/2]){const pl=new THREE.Mesh(gm,mt);pl.rotation.z=rz;pl.scale.set(.11,1,L+.06);pl.frustumCulled=false;beam.add(pl)}}
+  beam.add(core,inner,outer);beam.scale.z=.001;core.visible=inner.visible=outer.visible=false; // kept only as colour/opacity holders
+  const saber=saberMesh(0xff7a1a,.075,L+.03);beam.add(saber);
   const tipObj=new THREE.Object3D();tipObj.position.z=L;beam.add(tipObj);
   const baseObj=new THREE.Object3D();baseObj.position.z=L*.18;beam.add(baseObj);
   const hiltGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff8a30,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0}));hiltGlow.scale.set(.16,.16,1);blade.add(hiltGlow);
@@ -45,7 +44,7 @@ function buildPlayer(gltf,frame,remote){
   // springs for every joint axis
   const SP={};const cfg={hips:[150,.75],torso:[190,.62],head:[230,.6],armR:[260,.5],foreR:[300,.55],armL:[260,.48],foreL:[300,.52],thighR:[140,.58],shinR:[150,.55],thighL:[140,.58],shinL:[150,.55]};
   for(const k in cfg){SP[k]={k:cfg[k][0],z:cfg[k][1],x:[0,0,0],v:[0,0,0]}}
-  return {root,J,mat,flames,eye,beam,inner,outer,tipObj,baseObj,hiltGlow,muzzle,SP,bladeLen:0,rifleS:1,frame,sync:mix?mix.sync:null};
+  return {root,J,mat,flames,eye,beam,inner,outer,saber:saber.material,tipObj,baseObj,hiltGlow,muzzle,SP,bladeLen:0,rifleS:1,frame,sync:mix?mix.sync:null};
 }
 function setFrame(k){const F=FRAMES[k];if(!F||!F.obj||(P&&P.frame===k))return false;
   let pos=null,rot=0;if(P){pos=P.root.position.clone();rot=P.root.rotation.y;scene.remove(P.root)}

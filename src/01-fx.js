@@ -108,7 +108,7 @@ const trail={pts:[],geo:new THREE.BufferGeometry()};
   trail.geo.setAttribute("position",new THREE.BufferAttribute(pos,3));trail.geo.setAttribute("color",new THREE.BufferAttribute(col,3));trail.geo.setIndex(idx);
   trail.mesh=new THREE.Mesh(trail.geo,new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
   trail.mesh.frustumCulled=false;scene.add(trail.mesh)})();
-function stepTrail(dt,base,tip,active,color){
+function stepTrail(dt,base,tip,active,color){trail.mesh.visible=false;if(!trail.arc)trail.arc=makeArc(96);stepArc(trail.arc,dt,base,tip,active,color,.24);return;
   for(const p of trail.pts)p.age+=dt;
   if(active)trail.pts.unshift({b:base.clone(),t:tip.clone(),age:0});
   while(trail.pts.length>TRAIL_N||(trail.pts.length&&trail.pts[trail.pts.length-1].age>.16))trail.pts.pop();

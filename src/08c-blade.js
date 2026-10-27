@@ -5,10 +5,9 @@
 //   strike : lunge + swing; contact kills unless the player dodges (opening) or is slashing too (blade clash)
 //   rec    : 0.8 s (1.3 s after a read dodge) wide open → any slash launches it
 function bladeBuild(e){const piv=new THREE.Group();
-  const core=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,4.6,6),new THREE.MeshBasicMaterial({color:0xffffff}));core.position.y=2.75;
-  const glow=new THREE.Mesh(new THREE.CylinderGeometry(.34,.22,5,10,1,true),new THREE.MeshBasicMaterial({color:0xff2a3a,transparent:true,opacity:.75,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));glow.position.y=2.75;
+  const glow=saberMesh(0xff2a4a,.8,5.2);glow.rotation.x=-Math.PI/2;glow.position.y=.45;
   const hilt=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,.8,6),new THREE.MeshStandardMaterial({color:0x26282c,metalness:.8,roughness:.4}));hilt.position.y=.1;
-  piv.add(core,glow,hilt);piv.position.set(-.21*MS_H,.16*MS_H,.14*MS_H);e.m.add(piv);e.blade={piv,glow,rx:.6,rz:-.3}}
+  piv.add(glow,hilt);piv.position.set(-.21*MS_H,.16*MS_H,.14*MS_H);e.m.add(piv);e.blade={piv,glow,rx:.6,rz:-.3};e.arc=makeArc(64)}
 function bladeTip(e){return e.blade.piv.localToWorld(new V3(0,5,0))}
 function bladeArms(e){const J=e.J;if(!J)return;const s=e.bs,u=s==="strike"?1-Math.max(0,e.bt)/.22:0;
   if(s==="wind"){J.armR.rotation.set(-2.7,0,.5);J.foreR.rotation.set(-.7,0,0);J.armL.rotation.set(-2.3,0,-.5);J.foreL.rotation.set(-.8,0,0);J.torso.rotation.set(-.15,.35,0)}
@@ -18,8 +17,9 @@ function bladeArms(e){const J=e.J;if(!J)return;const s=e.bs,u=s==="strike"?1-Mat
 function bladePose(e,dt,T){const B=e.blade;let rx=.6,rz=-.3;
   if(e.bs==="wind"){rx=-2.3+Math.sin(T*40)*.03;rz=-.5}else if(e.bs==="strike"){const u=1-Math.max(0,e.bt)/.22;rx=-2.3+u*4.2;rz=-.5+u*1.1}else if(e.bs==="rec"||e.stun>0){rx=1.9;rz=.5}
   const k=e.bs==="strike"?1:Math.min(1,dt*12);B.rx+=(rx-B.rx)*k;B.rz+=(rz-B.rz)*k;B.piv.rotation.set(B.rx,0,B.rz);
-  const blink=e.bs==="wind"&&((T*16|0)%2);B.glow.material.color.setHex(blink?0xffffff:0xff2a3a);B.glow.scale.set(blink?1.5:1,1,blink?1.5:1);
-  if(e.bs==="strike")emit(ADD,{pos:bladeTip(e),tex:TX.streak,color:0xff4050,s0:3.5,s1:.4,life:.18,a:.7})}
+  const blink=e.bs==="wind"&&((T*16|0)%2);const u=B.glow.material.uniforms;u.uColor.value.setHex(blink?0xff9ab0:0xff2a4a);u.uW.value=blink?1.15:.8;
+  stepArc(e.arc,dt,B.piv.localToWorld(new V3(0,1.6,0)),B.piv.localToWorld(new V3(0,5.6,0)),e.bs==="strike",_arcC,.26)}
+const _arcC=new THREE.Color(0xff2a4a);
 function bladeWarn(e){emit(ADD,{pos:e.m.position.clone().add(new V3(0,1,0)),tex:TX.ring,color:0xff2030,s0:16,s1:3,life:e.windT,a:.9});
   const eye=e.m.userData.eye;if(eye)eye.scale.set(2.4,1.4,1)}
 function bladeMove(e,dt,T){const em=e.m,to=S.pos.clone().sub(em.position),d=to.length();to.normalize();const side=new V3(to.z,0,-to.x);

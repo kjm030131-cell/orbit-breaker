@@ -64,7 +64,7 @@ function update(rdt){
     if(CINE.on){m.rotation.x=0;m.rotation.z=0}else{attitude(m,localV,dt,T);bodyMotion(m,dt)}
     solvePose(dt,localV,boosting,T);
     const heatC=new THREE.Color().setHSL(.07-S.heat/100*.07,1,.55+S.heat/400);
-    P.inner.material.color.copy(S.over>0?new THREE.Color(0xff2030):heatC);
+    P.inner.material.color.copy(S.over>0?new THREE.Color(0xff2030):heatC);SABER_T.value=T;if(P.saber)P.saber.uniforms.uColor.value.copy(P.inner.material.color);
     P.eye.material.color.setHSL(.02,1,.45+Math.sin(T*3)*.05+S.heat/400);
     const want=(S.bladeOn>0&&S.over<=0)?1:0;
     P.bladeLen+=(want-P.bladeLen)*(1-Math.pow(want?1e-7:1e-4,rdt));

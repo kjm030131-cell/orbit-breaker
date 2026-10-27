@@ -78,7 +78,7 @@ function slashStrike(){ // called on the strike frame of a slash action
   if(crit)popText("크리티컬");addSpec(2);
   addScore((heavy?260:150)*(crit?2:1),at,crit?"cyan":"");S.heat=Math.min(100,S.heat+3);S.vel.multiplyScalar(.1);S.dashT=null;
 }
-function disposeEnemy(e){clearTele(e);scene.remove(e.m);e.m.traverse(o=>{if(o.material)o.material.dispose()})}
+function disposeEnemy(e){clearTele(e);if(e.arc){scene.remove(e.arc.mesh);e.arc.mat.dispose();e.arc.geo.dispose();e.arc=null}scene.remove(e.m);e.m.traverse(o=>{if(o.material)o.material.dispose()})}
 function chainPts(n){const k=Math.min(n,6);return 200*k*k+Math.max(0,n-6)*1500}
 function explode(e,chainN){if(e.isWP){wpDamage(e,3,e.m.position.clone());return}if(e.isBoss){bossDie(e,chainN);return}e.alive=false;if(SCREEN==="play")S.kills=(S.kills||0)+1;disposeEnemy(e);fxExplosion(e.m.position,(e.elite?1.7:1)+Math.min(chainN,6)*.12);onKill(e);sfx("boom",e.m.position,chainN);S.shake=Math.max(S.shake,.5)}
 function restart(){for(const e of enemies)disposeEnemy(e);enemies.length=0;fieldReset();
