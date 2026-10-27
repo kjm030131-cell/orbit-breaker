@@ -48,7 +48,7 @@ export class Arena {
    if(inRange&&(x.kind==='pulse'||x.kind==='dash'||dot(norm(d),x.dir||f)>0)){let dmg=x.dmg;if(x.kind==='melee'&&p.crit>=now){dmg=Math.round(dmg*1.2);p.crit=0;}this.damage(other(x.side),dmg,norm(d),x.kind==='pulse'?'skill':'melee',now,x.side,!!x.heavy);}
   }
   for(const b of [...s.shots]){if(s.phase!=='fight')break;const q=s.players[other(b.side)];if(!q)continue;const elapsed=Math.min(2.4,(now-b.at)/1000),end=add(b.from,b.dir,elapsed*b.speed),start=b.last||b.from;b.last=end;
-   if(segment(add(q.p,[0,.4,0]),start,end)<2.3){s.shots=s.shots.filter(x=>x!==b);
+   if(segment(add(q.p,[0,.4,0]),start,end)<2.6){s.shots=s.shots.filter(x=>x!==b);
     if(s.rules.skills&&now<q.reflect){this.emit({t:'block',side:other(b.side),kind:'reflect'});this.projectile(other(b.side),end,b.dir.map(x=>-x),b.dmg,b.speed,now,0x8dff7a);continue;}
     if(s.rules.skills&&q.unit==='pods'&&now>=q.podAt){q.podAt=now+20000;this.emit({t:'block',side:other(b.side),kind:'pod'});continue;}
     if(q.guard&&dot([Math.sin(q.f),0,Math.cos(q.f)],b.dir.map(v=>-v))>.3){q.gp-=12;q.gpHit=now;if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;q.stun=now+900;this.emit({t:'guardBreak',side:other(b.side)});}else this.emit({t:'block',side:other(b.side),kind:'guardShot',gp:Math.round(q.gp),at:end});this.status();continue;}
@@ -71,7 +71,7 @@ export class Arena {
    const elapsed=Math.max(0,(now-p.poseAt)/1000),maxMove=Math.min(60,(p.moveCredit??8)+115*elapsed),travel=len(sub(m.p,p.p));
    if(s.phase==='fight'&&travel<=maxMove){p.p=m.p;p.moveCredit=maxMove-travel;}else if(travel>maxMove){p.moveCredit=maxMove;this.emit({t:'position',p:p.p},side);}
    p.poseAt=now;p.f=m.f;p.boosting=m.boosting===true&&p.boost>0;
-   this.emit({t:'pose',p:p.p,f:p.f,j:m.j,bl:Math.max(0,Math.min(1,m.bl||0)),r:m.r===.001?.001:1,g:p.guard},other(side));return;
+   this.emit({t:'pose',p:p.p,f:p.f,j:m.j,bl:Math.max(0,Math.min(1,m.bl||0)),r:m.r===.001?.001:1,g:p.guard,v:vec(m.v)&&len(m.v)<220?m.v:[0,0,0],st:now},other(side));return;
   }
   const reject=(reason,retryAt=0)=>{if(m.t==='skill')this.emit({t:'actionRejected',action:'skill',seq:m.seq,reason,retryAt},side);};
   if(s.phase!=='fight'||now<s.startAt||now>=s.endAt){reject('phase');return;}

@@ -46,7 +46,7 @@ function vsMsg(m){if(!VS)return;const v=VS;
   if(m.t==="roundStart"){v.rules=m.rules;v.players=m.players;v.wins=m.wins;v.round=m.round;v.roundAt=m.startAt;v.endAt=m.endAt;v.off=m.now-Date.now();v.phase="count";v.rs=null;v.lastT=0;v.ready=true;v.matchDone=false;
     const me=m.players[v.side],op=m.players[v.side==="a"?"b":"a"];v.maxHp=me.maxHp;v.oppMaxHp=op.maxHp;v.hp=me.hp;v.oppHp=op.hp;v.oppFrame=op.frame;G.unit=me.unit;setFrame(me.frame);vsSpawn();show("play");document.body.classList.add("versus");PAUSED=false;$("pause").hidden=true;$("vsBar").hidden=false;vsLobby();return}
   if(m.t==="state"){if(m.round!==v.round)return;const me=m.players[v.side],op=m.players[v.side==="a"?"b":"a"];if(me){v.hp=me.hp;v.maxHp=me.maxHp;S.boost=me.boost;G.spec=me.spec;G.crit=Math.max(0,(me.crit-vsNow())/1000);G.unitCd=Math.max(0,(me.skillAt-vsNow())/1000);G.barrier=Math.max(0,(me.barrier-vsNow())/1000);G.armor=me.armor?1:0;v.gp=me.gp??100;if(me.guard===false&&S.guard&&!keys.KeyQ)S.guard=false;}if(op){v.oppHp=op.hp;v.oppMaxHp=op.maxHp;}return}
-  if(m.t==="pose"){v.rs=m;return}
+  if(m.t==="pose"){v.rs=m;m.rx=vsNow();v.rvel=new V3(...(m.v||[0,0,0]));return}
   if(m.t==="position"){const p=new V3(...m.p);if(p.distanceTo(S.pos)>30)S.pos.copy(p);else v.correctTo=p.sub(S.pos);return}
   if(m.t==="projectile"){if(v.phase!=="fight")return;const from=new V3(...m.from),dir=new V3(...m.dir);fireEnemyBolt(from,dir,false,v.tgt,m.dmg);const b=G.ebolts[G.ebolts.length-1];b.vsVisual=true;b.speed=m.speed;b.life=2.4;b.color=m.color;b.g.children[1].material.color.set(m.color);return}
   if(m.t==="swing"){if(m.side!==v.side){if(v.remote){v.remote.act="slash"+((m.combo??(m.heavy?2:0))+1);v.remote.actT=0;v.remote.guard=false}if(m.heavy)popText("상대 강공격 · 가드 또는 회피")}return}
@@ -106,7 +106,7 @@ function vsFocusCamera(rdt){if(!G.focus||!targetable(G.focus))return;const d=G.f
   const pitch=clamp(Math.atan2(d.y-1.5,hz)*.65-.04,-.35,.3);S.pitch+=clamp((pitch-S.pitch)*(1-Math.exp(-2*dt)),-.3*dt,.3*dt);
 }
 function vsSkillFX(m){const mine=m.side===VS.side,pos=mine?S.pos:VS.tgt&&VS.tgt.m.position;if(!pos)return;emit(ADD,{pos:pos.clone(),tex:TX.ring,color:UNITS[m.unit].color,s0:2,s1:m.special?24:12,life:.45});sfx(m.special?"specCharge":"throw",pos);if(mine){popText(VS_UNIT_TEXT[m.unit][m.special?"f":"r"]);if(m.unit==="boost"){S.vsLunge=.24;S.vsDir=new V3(...m.dir).multiplyScalar(95);S.bladeOn=.7;startAct("slash3")}}}
-function vsSpawn(){const v=VS,a=v.side==="a";S.guard=false;v.gp=100;const i=enemies.indexOf(v.tgt);if(i>=0)enemies.splice(i,1);vsClearShots();restart();S.vsLunge=0;S.shotCd=S.attackCd=0;S.aimT=0;S.face=S.yaw=a?0:Math.PI;S.pitch=-.05;S.pos.set(0,0,a?-26:26);S.vel.set(0,0,0);S.time=99;G.focus=null;target=null;v.shotToken=(v.shotToken||0)+1;v.skillInput=null;v.correctTo=null;P.root.visible=true;camera.position.copy(S.pos).addScaledVector(camFwd(),-10).add(new V3(0,2.8,0));camera.fov=68;camera.updateProjectionMatrix();applyQuality();
+function vsSpawn(){const v=VS,a=v.side==="a";S.guard=false;v.gp=100;v.rdisp=null;v.rvel=null;v.rs=null;const i=enemies.indexOf(v.tgt);if(i>=0)enemies.splice(i,1);vsClearShots();restart();S.vsLunge=0;S.shotCd=S.attackCd=0;S.aimT=0;S.face=S.yaw=a?0:Math.PI;S.pitch=-.05;S.pos.set(0,0,a?-26:26);S.vel.set(0,0,0);S.time=99;G.focus=null;target=null;v.shotToken=(v.shotToken||0)+1;v.skillInput=null;v.correctTo=null;P.root.visible=true;camera.position.copy(S.pos).addScaledVector(camFwd(),-10).add(new V3(0,2.8,0));camera.fov=68;camera.updateProjectionMatrix();applyQuality();
   const want=FRAMES[v.oppFrame]&&FRAMES[v.oppFrame].gltf?v.oppFrame:"mk2";if(v.remote&&v.remote.frame!==want){scene.remove(v.remote.root);v.remote=null}if(!v.remote)v.remote=buildPlayer(FRAMES[want].gltf,want,true);
   scene.add(v.remote.root);v.remote.root.visible=true;v.remote.root.position.set(0,0,a?26:-26);v.remote.root.rotation.y=a?Math.PI:0;
   v.remote.act=null;v.remote.guard=false;v.tgt={m:v.remote.root,v:new V3(),spin:new V3(),alive:true,launched:0,isRemote:true,rad:3,tele:0,flash:0,fireT:99};enemies.push(v.tgt);buildBits(G.unit);
@@ -121,11 +121,14 @@ function vsTick(rdt){if(!VS)return;const v=VS;vsFlushSkill();if(v.correctTo){con
   if(v.phase==="count"){const left=v.roundAt-vsNow(),t=Math.ceil(left/1000);if(t>0&&t<=3&&t!==v.lastT){v.lastT=t;phaseBanner({name:String(t),sub:`라운드 ${v.round} · 화면 클릭으로 마우스 고정`});sfx("tick")}if(left<=0){v.phase="fight";S.started=true;G.focus=null;sfx("go");popText("FIGHT · Q 길게: 사벨 가드 · 맞기 직전 가드 = 패리");music("battle")}}
   if(v.phase==="fight")S.time=Math.max(0,(v.endAt-vsNow())/1000);
   if(!v.remote||SCREEN!=="play")return;
-  v.sendT-=rdt;if(v.sendT<=0&&P&&["fight","count"].includes(v.phase)){v.sendT=1/15;const j=[];for(const k in P.SP)j.push(...P.SP[k].x.map(x=>+x.toFixed(3)));vsSend({t:"pose",p:S.pos.toArray().map(x=>+x.toFixed(2)),f:+S.face.toFixed(3),j,bl:P.bladeLen,r:P.rifleS,boosting:vsCanAct()&&S.over<=0&&S.boost>0&&(keys.ShiftLeft||keys.ShiftRight)&&["KeyW","KeyA","KeyS","KeyD","Space","KeyC"].some(k=>keys[k])})}
+  v.sendT-=rdt;if(v.sendT<=0&&P&&["fight","count"].includes(v.phase)){v.sendT=1/30;const j=[];for(const k in P.SP)j.push(...P.SP[k].x.map(x=>+x.toFixed(3)));vsSend({t:"pose",p:S.pos.toArray().map(x=>+x.toFixed(2)),v:S.vel.toArray().map(x=>+x.toFixed(1)),f:+S.face.toFixed(3),j,bl:P.bladeLen,r:P.rifleS,boosting:vsCanAct()&&S.over<=0&&S.boost>0&&(keys.ShiftLeft||keys.ShiftRight)&&["KeyW","KeyA","KeyS","KeyD","Space","KeyC"].some(k=>keys[k])})}
   // follow the remote state
   const R=VS.remote,s=VS.rs;
   if(s){if(s.fr&&s.fr!==VS.oppFrame){VS.oppFrame=s.fr}
-    const k=1-Math.exp(-14*rdt);R.root.position.lerp(new V3(s.p[0],s.p[1]+Math.sin(clockT*1.6)*.12,s.p[2]),k);
+    const k=1-Math.exp(-14*rdt),age=clamp((vsNow()-(s.st||s.rx||vsNow()))/1000,0,.22),vel=v.rvel||new V3();
+    const want=new V3(s.p[0],s.p[1],s.p[2]).addScaledVector(vel,age);v.rdisp=v.rdisp||want.clone();
+    v.rdisp.addScaledVector(vel,rdt*.9);const err=want.sub(v.rdisp);if(err.length()>25)v.rdisp.add(err);else v.rdisp.addScaledVector(err,1-Math.exp(-12*rdt));
+    R.root.position.set(v.rdisp.x,v.rdisp.y+Math.sin(clockT*1.6)*.12,v.rdisp.z);
     let d=s.f-R.root.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));R.root.rotation.y+=d*k;
     let i=0;for(const key in R.SP){const b=R.J[key];if(b&&s.j.length>=i+3){b.rotation.x+=(s.j[i]-b.rotation.x)*k;b.rotation.y+=(s.j[i+1]-b.rotation.y)*k;b.rotation.z+=(s.j[i+2]-b.rotation.z)*k}i+=3}R.guard=s.g===true||(R.guard&&s.g===undefined);if(R.act){R.actT=(R.actT||0)+rdt;if(R.actT>=ACT[R.act].dur)R.act=null}clipDrive(R,R.act,R.actT||0,R.guard,rdt);if(R.sync)R.sync();
     R.beam.scale.z=Math.max(.001,s.bl);R.beam.visible=s.bl>.02;R.J.rifle.scale.setScalar(s.r||1);
