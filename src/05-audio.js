@@ -128,10 +128,15 @@ function sfx(k,pos,arg){const a=AC;if(!a||!AUD.ready||a.state!=="running")return
 
 /* ---- continuous layers: saber hum, thrusters, cockpit drone ---- */
 function loopsInit(){const a=AC;
-  const hg=a.createGain();hg.gain.value=0;const hf=a.createBiquadFilter();hf.type="lowpass";hf.frequency.value=700;hf.Q.value=4;
-  const trem=a.createGain();trem.gain.value=1;const lfo=a.createOscillator(),lg=a.createGain();lfo.frequency.value=31;lg.gain.value=.18;lfo.connect(lg);lg.connect(trem.gain);lfo.start();
-  const ho=[["sawtooth",92],["sawtooth",93.3],["sine",46]].map(([ty,f])=>{const o=a.createOscillator();o.type=ty;o.frequency.value=f;o.connect(hf);o.start();return o});
-  hf.connect(trem);trem.connect(hg);hg.connect(SFXB);LOOP.hum={g:hg,f:hf,o:ho};
+  // beam saber hum: deep, smooth "vwoom" (detuned low sines + a softly filtered saw), slow shimmer instead of a 31 Hz buzz
+  const hg=a.createGain();hg.gain.value=0;const hf=a.createBiquadFilter();hf.type="lowpass";hf.frequency.value=380;hf.Q.value=.7;
+  const trem=a.createGain();trem.gain.value=1;const lfo=a.createOscillator(),lg=a.createGain();lfo.frequency.value=6.5;lg.gain.value=.07;lfo.connect(lg);lg.connect(trem.gain);lfo.start();
+  const ho=[["triangle",55],["sine",55.7],["sawtooth",110]].map(([ty,f],i)=>{const o=a.createOscillator();o.type=ty;o.frequency.value=f;const og=a.createGain();og.gain.value=i===2?.35:1;o.connect(og);og.connect(hf);o.start();return o});
+  hf.connect(trem);trem.connect(hg);hg.connect(SFXB);
+  // swing: band-passed air whoosh rides on top of the hum
+  const ws=a.createBufferSource();ws.buffer=NOISE;ws.loop=true;const wf=a.createBiquadFilter();wf.type="bandpass";wf.frequency.value=700;wf.Q.value=.9;const wg=a.createGain();wg.gain.value=0;
+  ws.connect(wf);wf.connect(wg);wg.connect(SFXB);ws.start();
+  LOOP.hum={g:hg,f:hf,o:ho,wg,wf};
   const ts=a.createBufferSource();ts.buffer=NOISE;ts.loop=true;const tf=a.createBiquadFilter();tf.type="lowpass";tf.frequency.value=500;const tg=a.createGain();tg.gain.value=0;
   const tr=a.createOscillator();tr.type="sawtooth";tr.frequency.value=38;const trf=a.createBiquadFilter();trf.type="lowpass";trf.frequency.value=120;
   ts.connect(tf);tr.connect(trf);trf.connect(tf);tf.connect(tg);tg.connect(SFXB);ts.start();tr.start();LOOP.thr={g:tg,f:tf};
@@ -139,8 +144,9 @@ function loopsInit(){const a=AC;
   [55,55.4,82.5].forEach(f=>{const o=a.createOscillator();o.type="sawtooth";o.frequency.value=f;o.connect(af);o.start()});af.connect(ag);ag.connect(AMBB);LOOP.amb={g:ag};
 }
 function audioFrame(st){if(!AUD.ready)return;
-  setP(LOOP.hum.g.gain,st.hum*.11,.03);const sw=clamp(st.swing/60,0,1);
-  setP(LOOP.hum.f.frequency,700+sw*3200,.02);LOOP.hum.o.forEach((o,i)=>setP(o.frequency,(i===2?46:92+i*1.3)*(1+sw*.35),.03));
+  setP(LOOP.hum.g.gain,st.hum*.13,.04);const sw=clamp(st.swing/60,0,1);
+  setP(LOOP.hum.f.frequency,380+sw*520,.03);LOOP.hum.o.forEach((o,i)=>setP(o.frequency,[55,55.7,110][i]*(1+sw*.12),.04));
+  setP(LOOP.hum.wg.gain,st.hum*sw*.32,.02);setP(LOOP.hum.wf.frequency,600+sw*1400,.03);
   setP(LOOP.thr.g.gain,st.thrust*.2,.08);setP(LOOP.thr.f.frequency,350+st.thrust*1600,.1);
   setP(LOOP.amb.g.gain,st.amb*.05,.5);
 }

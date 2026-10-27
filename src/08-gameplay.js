@@ -82,8 +82,8 @@ function enemyAI(e,dt,T){
   if(e.tele>0){
     e.tele-=dt;const from=em.position.clone().add(new V3(0,.6,0));
     if(!e.teleLock){e.teleDir.copy(S.pos).sub(from).normalize();if(e.tele<.32){e.teleLock=true;sfx("tele",em.position,1)}}
-    if(!e.teleMesh){e.teleMesh=new THREE.Mesh(teleGeo,new THREE.MeshBasicMaterial({color:0xff2a2a,transparent:true,opacity:.2,blending:THREE.AdditiveBlending,depthWrite:false}));scene.add(e.teleMesh)}
-    const tm=e.teleMesh;tm.position.copy(from);tm.lookAt(from.clone().add(e.teleDir));const reach=Math.max(4,S.pos.clone().sub(from).dot(e.teleDir)-1.5);tm.scale.set(e.teleLock?1.8:1,e.teleLock?1.8:1,reach);
+    if(!e.teleMesh){const art=FXOK.beam;e.teleMesh=new THREE.Mesh(art?ribbonGeo:teleGeo,new THREE.MeshBasicMaterial({map:art?FXT.beam:null,color:0xff2a2a,transparent:true,opacity:.2,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));e.teleMesh.userData.k=art?6:1;e.teleMesh.frustumCulled=false;scene.add(e.teleMesh)}
+    const tm=e.teleMesh;tm.position.copy(from);tm.lookAt(from.clone().add(e.teleDir));const reach=Math.max(4,S.pos.clone().sub(from).dot(e.teleDir)-1.5);{const k=tm.userData.k||1,w=k*(e.teleLock?1.8+Math.sin(T*40)*.25:.7);tm.scale.set(w,w,reach)}
     tm.material.opacity=e.teleLock?(.55+.4*((T*30|0)%2)):.12+(1-e.tele/ph.tele)*.3;
     if(eye)eye.scale.setScalar((e.elite?1.6:1.1)*(1.4+Math.sin(T*40)*.3));
     if(e.tele<=0||!live){if(live){fireEnemyBolt(from,e.teleDir,e.elite,e);if(e.ms){e.burstN=2;e.burstT=.16;e.kick=1}}clearTele(e)}
@@ -104,6 +104,8 @@ const eOuter=new THREE.CylinderGeometry(.42,.25,4.4,10,1,true);eOuter.rotateX(Ma
 function fireEnemyBolt(from,dir,elite,owner,dmg){
   const g=new THREE.Group();g.add(new THREE.Mesh(eCore,new THREE.MeshBasicMaterial({color:0xfff0f0})));
   g.add(new THREE.Mesh(eOuter,new THREE.MeshBasicMaterial({color:elite?0x40c8ff:0xff2a2a,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide})));
+  if(FXOK.beam){const c=elite?0x40c8ff:0xff3a2a,tr=new THREE.Mesh(ribbonGeo,new THREE.MeshBasicMaterial({map:FXT.beam,color:c,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
+    tr.scale.set(2.2,2.2,-9);tr.frustumCulled=false;g.add(tr);const hd=new THREE.Sprite(new THREE.SpriteMaterial({map:FXOK.hit?FXT.hit:TX.glow,color:c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));hd.scale.setScalar(3.4);g.add(hd)}
   g.position.copy(from);g.lookAt(from.clone().add(dir));scene.add(g);
   G.ebolts.push({g,dir:dir.clone(),speed:(PHASES[G.phase].bolt||85)*(elite?1.12:1),life:1.6,dead:false,color:elite?0x40c8ff:0xff3030,owner:owner||null,dmg:dmg||(elite?40:34),refl:false});
   emit(ADD,{pos:from,tex:TX.flare,color:elite?0x80e0ff:0xff6060,s0:3,s1:5,life:.1});sfx("efire",from);
