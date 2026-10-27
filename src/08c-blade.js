@@ -55,7 +55,7 @@ function bladeContact(e,to){
 function bladeClash(e,perfect){const mid=S.pos.clone().lerp(e.m.position,.5).add(new V3(0,1.2,0)),dir=e.m.position.clone().sub(S.pos).normalize();
   sparks(mid,dir,0xffe0a0,38,.6,40);sparks(mid,dir.clone().negate(),0x9fe8ff,38,.6,30);fxImpact(mid,0xffd080);if(typeof fxElectric==="function")fxElectric(mid,1.6);
   emit(ADD,{pos:mid,tex:TX.ring,color:0xffe0a0,s0:2,s1:perfect?22:14,life:.35,a:.9});
-  sfx("block",mid);sfx("heavy",mid);sfx("thud",mid,1);hitMark("block");
+  sfx("clash",mid);sfx("sizzle",mid);sfx("heavy",mid);sfx("thud",mid,1);hitMark("block");
   S.hitstop=perfect?.2:.11;S.slow=Math.max(S.slow,perfect?.55:.2);S.shake=Math.max(S.shake,perfect?.9:.6);flash(perfect?.32:.16);impactPunch(perfect?1.3:.7);
   S.vel.copy(dir).multiplyScalar(-30);e.push.copy(dir).multiplyScalar(perfect?30:22);e.stun=perfect?1.15:.6;e.bs="hunt";e.bt=1;e.flash=1;e.dashV.set(0,0,0);
   S.act=null;S.combo=0;popText(perfect?"칼날 격돌 · 반격 찬스!":"막힘 · 틈을 노려라");addScore(perfect?700:120,mid,perfect?"cyan":"");addSpec(perfect?3:1)}
@@ -64,6 +64,6 @@ function bladeParry(e,at){
   if(e.stun>0||e.bs==="rec"){e.hp=1;popText("빈틈 공략");addScore(900,at,"big");return false}
   if(e.bs==="wind"){e.hp=1;popText("카운터!");addScore(1600,at,"big");S.slow=Math.max(S.slow,.4);addSpec(3);return false}
   bladeClash(e,e.bs==="strike");S.dashT=null;return true}
-let _deflT=0;function bladeDeflect(e,at){sparks(at,null,0xff8a80,26,.35,14);fxImpact(at,0xff5060);sfx("block",at);hitMark("block");
+let _deflT=0;function bladeDeflect(e,at){sparks(at,null,0xff8a80,26,.35,14);fxImpact(at,0xff5060);sfx("block",at);sfx("sizzle",at);hitMark("block");
   if(T_NOW()-_deflT>2.5){_deflT=T_NOW();popText("빔 튕겨냄 · 근접으로 베어라")}}
 function T_NOW(){return performance.now()/1000}
