@@ -19,6 +19,8 @@ function buildPlayer(gltf,frame,remote){
     pv.add(new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xff7a22,transparent:true,opacity:.75,blending:THREE.AdditiveBlending,depthWrite:false})));
     const c=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0xfff2dc,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));c.scale.set(.35,.45,.35);pv.add(c);
     const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff8a30,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:.8}));glow.scale.set(.12,.12,1);pv.add(glow);
+    {const gm=new THREE.PlaneGeometry(1,1);gm.translate(0,-.5,0);const mt=new THREE.MeshBasicMaterial({map:FXT.thruster,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
+     for(const ry of [0,Math.PI/2]){const pl=new THREE.Mesh(gm,mt);pl.rotation.y=ry;pl.scale.set(.07,.2,1);pl.frustumCulled=false;pv.add(pl)}}
     flames.push(pv)});
   const eye=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff4a2a,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
   eye.position.set(0,.022,.05);eye.scale.set(.05,.03,1);J.head.add(eye);
@@ -34,6 +36,8 @@ function buildPlayer(gltf,frame,remote){
   const inner=new THREE.Mesh(g2,new THREE.MeshBasicMaterial({color:0xff7a1a,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
   const outer=new THREE.Mesh(g3,new THREE.MeshBasicMaterial({color:0xff4a10,transparent:true,opacity:.28,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
   beam.add(core,inner,outer);beam.scale.z=.001;
+  {const gm=new THREE.PlaneGeometry(1,1);gm.rotateX(Math.PI/2);gm.translate(0,0,.5);const mt=new THREE.MeshBasicMaterial({map:FXT.saber,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
+   for(const rz of [0,Math.PI/2]){const pl=new THREE.Mesh(gm,mt);pl.rotation.z=rz;pl.scale.set(.11,1,L+.06);pl.frustumCulled=false;beam.add(pl)}}
   const tipObj=new THREE.Object3D();tipObj.position.z=L;beam.add(tipObj);
   const baseObj=new THREE.Object3D();baseObj.position.z=L*.18;beam.add(baseObj);
   const hiltGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff8a30,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0}));hiltGlow.scale.set(.16,.16,1);blade.add(hiltGlow);

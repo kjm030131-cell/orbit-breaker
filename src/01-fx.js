@@ -68,7 +68,7 @@ function fxBeamHit(pos,dir){ // splash of beam energy along the shot direction
   for(let i=0;i<10;i++){const d=dir.clone().negate().add(new V3().randomDirection().multiplyScalar(.9)).normalize();emit(ADD,{pos:pos.clone(),tex:TX.streak,color:0x8ff4ff,vel:d.multiplyScalar(40+Math.random()*30),s0:1.4,s1:.4,sx:3,life:.25,a:.9,drag:3})}
   sparks(pos,dir.clone().negate(),0xc8fbff,40,.45,26);flashLight(pos,0x40d8ff,9,45,.16);
 }
-function fxMuzzle(pos,dir,color){
+function fxMuzzle(pos,dir,color){fxMuzzleArt(pos,dir);
   emit(ADD,{pos,tex:TX.flare,color:0xeafcff,s0:7,s1:11,life:.08,a:1});
   emit(ADD,{pos:pos.clone().addScaledVector(dir,2.5),tex:TX.ring,color,s0:1,s1:7,life:.16,a:.9});
   for(let i=0;i<6;i++){emit(ADD,{pos:pos.clone(),tex:TX.streak,color:0x9ff6ff,vel:dir.clone().add(new V3().randomDirection().multiplyScalar(.35)).normalize().multiplyScalar(50),s0:1.6,s1:.3,sx:3,life:.12,a:.8,drag:4})}
@@ -87,7 +87,7 @@ function fxImpact(pos,color){
   flashLight(pos,color,5,30,.14);
 }
 function fxExplosion(pos,size){
-  const k=size||1;
+  const k=size||1;fxFlip(pos,13*k,.8+.15*k);
   emit(ADD,{pos,tex:TX.flare,color:0xffe6c0,s0:7*k,s1:12*k,life:.11});
   emit(ADD,{pos,tex:TX.ring,color:0xffb060,s0:2,s1:26*k,life:.5,a:.85});
   emit(ADD,{pos,tex:TX.ring,color:0xffffff,s0:1,s1:14*k,life:.25,a:.7});
@@ -139,8 +139,9 @@ function fireBolt(from,to,target){
   g.position.copy(from);g.lookAt(to);scene.add(g);
   const dir=to.clone().sub(from).normalize(),dist=from.distanceTo(to);
   // instant ionised trail from muzzle to target: sells the "hit-scan" weight of a beam rifle
+  if(!fxBeam(from,to,3.4)){
   const st=new THREE.Mesh(streakGeo,new THREE.MeshBasicMaterial({color:0xbff8ff,transparent:true,opacity:.9,blending:THREE.AdditiveBlending,depthWrite:false}));
-  st.position.copy(from);st.lookAt(to);st.scale.z=Math.min(dist,140);scene.add(st);STREAKS.push({m:st,t:0,life:.16});
+  st.position.copy(from);st.lookAt(to);st.scale.z=Math.min(dist,140);scene.add(st);STREAKS.push({m:st,t:0,life:.16});}
   BOLTS.push({g,dir,speed:340,dist,trav:0,target,life:1});
 }
 function stepBolts(dt){

@@ -54,7 +54,7 @@ function fillEnemies(){if(VS||S.demo||CINE.on)return;const ph=PHASES[G.phase];le
   let guard=0;while(alive<ph.count&&guard++<8){spawnCluster();alive+=3}}
 function eliteBlocks(e,from){if(!e.elite)return false;const to=from.clone().sub(e.m.position).setY(0).normalize();
   return to.dot(new V3(Math.sin(e.yaw),0,Math.cos(e.yaw)))>.3}
-function shieldFlash(e){const s=e.m.userData.shield;if(s)s.hit=1}
+function shieldFlash(e){const s=e.m.userData.shield;if(s)s.hit=1;fxElectric(e.m.position.clone().add(new V3(0,1,0)),6)}
 
 /* ---- enemy AI: approach, hover, telegraph, fire ---- */
 const teleGeo=new THREE.CylinderGeometry(.05,.05,1,6,1,true);teleGeo.rotateX(Math.PI/2);teleGeo.translate(0,0,.5);

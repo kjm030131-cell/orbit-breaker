@@ -58,7 +58,7 @@ function shoot(){
     S.heat=Math.min(100,S.heat+4);S.shake=Math.max(S.shake,.32);S.vel.addScaledVector(dir,-6)},70);
 }
 function slashStrike(){ // called on the strike frame of a slash action
-  const heavy=S.act==="slash3";if(VS&&!vsCanAct())return;sfx("slash",null,S.combo);
+  const heavy=S.act==="slash3";if(VS&&!vsCanAct())return;sfx("slash",null,S.combo);{const f=new V3(Math.sin(S.face),0,Math.cos(S.face)),r=new V3(Math.cos(S.face),0,-Math.sin(S.face));fxSlashArt(S.pos.clone().addScaledVector(f,4.5).add(new V3(0,1.4,0)),S.combo===1?r.clone().negate():r,heavy,S.combo)}
   const e=S.dashT&&S.dashT.alive&&S.dashT.launched<=0&&S.dashT.m.position.distanceTo(S.pos)<7.5?S.dashT:null;
   if(!e){fieldSlash(heavy);return}
   const tip=new V3();P.tipObj.getWorldPosition(tip);const at=e.m.position.clone().lerp(tip,.4);

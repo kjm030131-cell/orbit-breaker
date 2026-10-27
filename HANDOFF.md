@@ -129,3 +129,7 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 - UI 아트(ui/): ic_*.webp 아이콘, btn_pri/btn_sec(버튼 border-image), radio(무전창), medal1~3(랭킹), grade_S~C(결과 등급: 25만/15만/7만 기준), bossbar, reticle/lockon.
 - 무전 얼굴: ui/face_op.webp(CIC), face_ace.webp(적), face_cap.webp(함장) 파일만 넣으면 radio()가 자동 표시.
 - 최적화: 패널 backdrop-filter(blur) 제거.
+
+## 14. 이펙트 아트 (src/01b-fxart.js)
+- ui/fx_*.webp: expl(4x4 폭발 연속 프레임, 알파), beam(빔 라이플 띠), saber(빔 사벨), slash(베기 궤적), muzzle, hit(→TX.flare), ring(→TX.ring), smoke(→TX.smoke), thruster(추진기), charge(필살기), electric(실드 방어).
+- 로딩 성공한 것만 교체(FXOK), 실패하면 기존 절차적 이펙트 유지.
