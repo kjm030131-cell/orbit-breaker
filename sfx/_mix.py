@@ -36,7 +36,7 @@ mix('dodge',[L('thruster_fire_002',0,1,1.35,.5,.35)],.5,fin=.01,bass=2)
 mix('hurt',[L('impact_plate_heavy_000',0,1,.8),L('impact_metal_heavy_003',0,.9,.6),L('error_004',.05,.5,1)],.8,bass=5)
 mix('specBurst',[L('force_field_004',0,.8,.6),L('low_frequency_explosion_001',.15,1,1),L('explosion_crunch_003',.15,.8,.7)],2.2,bass=6,fout=.6)
 mix('cataCharge',[L('engine_circular_000',0,1,.9,2.4,.3),L('force_field_000',1.4,.5,.7)],2.4,fin=1.4,bass=3)
-mix('cataLaunch',[L('impact_metal_heavy_000',0,1,.45),L('low_frequency_explosion_000',0,1,1),L('space_engine_large_000',0,.8,1.2,1.8,1.0)],1.9,bass=6,fout=.6)
+# cataLaunch: 합성음이 더 나아서 제외
 mix('lock',[L('select_001',0,1,1)],.35)
 mix('uiok',[L('confirmation_001',0,1,1)],.5)
 mix('ui',[L('click_002',0,1,1)],.2)
