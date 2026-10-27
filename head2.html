@@ -294,6 +294,9 @@ body.tut #clockBox{visibility:hidden}
 .reticle::before,.reticle::after{content:"";position:absolute;background:var(--bone);opacity:.75}
 .reticle::before{left:8px;top:0;width:2px;height:6px;box-shadow:0 12px var(--bone)}
 .reticle::after{top:8px;left:0;height:2px;width:6px;box-shadow:12px 0 var(--bone)}
+#vsBar .gp{height:4px;margin-top:3px;background:rgba(255,255,255,.12)}#vsBar .gp i{display:block;height:100%;background:#7fe8ff;transition:width .15s}#vsBar .gp i.low{background:#ff8a40}
+#tutHint{margin:12px 0 0;padding:10px 14px;border-left:3px solid #ffb21a;background:rgba(255,178,26,.09);color:#e9e5dc;font-size:14px;line-height:1.5;max-width:440px}#tutHint[hidden]{display:none}#tutHint b{color:#ffb21a;margin-right:6px}
+#tutBtn.hot{border-left-color:#ffb21a;animation:tbp 1.6s ease-in-out infinite}#tutBtn.hot .t::after{content:"추천";margin-left:10px;font-size:11px;padding:2px 7px;background:#ffb21a;color:#1a1408;border-radius:3px;vertical-align:2px}@keyframes tbp{50%{background:rgba(255,178,26,.12)}}
 #lockWarn{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;visibility:hidden;background:radial-gradient(ellipse at center,transparent 58%,rgba(255,30,30,.42) 100%)}
 #lockWarn.on{visibility:visible}
 #lockWarn b{position:absolute;left:50%;top:calc(44% + 46px);transform:translateX(-50%);font:700 13px var(--f-mono,monospace);letter-spacing:.12em;color:#ff4038;text-shadow:0 0 8px rgba(255,40,40,.8)}
@@ -496,7 +499,7 @@ body{font-variant-numeric:tabular-nums;word-break:keep-all}
   <div id="phase"><div id="phaseSub" class="lbl">단계</div><div id="phaseName">—</div></div>
   <div id="bossBar" hidden><div class="bn"><b id="bossName">MA-09 케르베로스</b><span id="bossState">약점 포드 3</span></div><div class="bossTrack"><i><b></b></i><i><b></b></i><i><b></b></i></div></div>
   <div id="duelBar" hidden><div class="me"><span class="lbl">나</span><b id="duMe">0</b></div><div class="vs" id="duLead">VS</div><div class="op"><span class="lbl" id="duOpN">상대</span><b id="duOp">0</b></div></div>
-  <div id="vsBar" hidden><div class="side"><b id="vsMeN">나</b><div class="hp"><i id="vsHpMe" style="width:100%"></i></div></div><div class="mid"><span class="lbl" id="vsRound">1라운드</span><b id="vsScore">0 : 0</b></div><div class="side op"><b id="vsOpN">상대</b><div class="hp"><i id="vsHpOp" style="width:100%"></i></div></div></div>
+  <div id="vsBar" hidden><div class="side"><b id="vsMeN">나</b><div class="hp"><i id="vsHpMe" style="width:100%"></i></div><div class="gp"><i id="vsGpMe" style="width:100%"></i></div></div><div class="mid"><span class="lbl" id="vsRound">1라운드</span><b id="vsScore">0 : 0</b></div><div class="side op"><b id="vsOpN">상대</b><div class="hp"><i id="vsHpOp" style="width:100%"></i></div></div></div>
   <div id="oppMark" hidden><i></i><span id="oppTxt">상대</span></div>
   <div id="radio"><i id="radioFace"></i><span id="radioWho">CIC</span><span id="radioTxt"></span></div>
   <div id="marks"></div>
@@ -547,6 +550,7 @@ body{font-variant-numeric:tabular-nums;word-break:keep-all}
       <button class="mi" data-go="brief" type="button"><span class="k"><img class="ico" src="ui/ic_quality.webp" alt=""></span><span class="t">조작 교본</span></button>
       <button class="mi" data-settings type="button"><span class="k"><img class="ico" src="ui/ic_gear.webp" alt=""></span><span class="t">설정</span></button>
     </nav>
+    <div id="tutHint" hidden><b>처음이신가요?</b> 튜토리얼부터 해보세요. 조작과 이야기를 3분 만에 익힐 수 있어요.</div>
   </div>
   <div class="tFoot">
     <div class="frame miniBoard"><h3 class="lbl"><span>상위 파일럿</span><span id="miniCount"></span></h3><div id="miniBoard"></div></div>

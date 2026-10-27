@@ -7,7 +7,8 @@ function vsCanAct(){return !!VS&&VS.phase==="fight"&&!S.ended&&!PAUSED&&S.starte
 function vsSkills(){return !!VS&&VS.rules.skills}
 function vsSpeed(){return VS&&VS.rules.passives&&P&&P.frame==="swift"?1.15:1}
 function vsRegen(){return (VS&&VS.rules.passives&&P&&P.frame==="swift"?1.1:1)*(vsSkills()&&G.unit==="boost"?1.3:1)}
-function vsSend(o){if(VS&&VS.ws&&VS.ws.readyState===1)VS.ws.send(JSON.stringify(o))}
+function vsSend(o){if(["swing","shot","skill","dodge"].includes(o.t))S.guard=false;if(VS&&VS.ws&&VS.ws.readyState===1)VS.ws.send(JSON.stringify(o))}
+addEventListener("blur",()=>{if(VS&&S.guard)vsGuard(false)});
 function vsLoadout(){vsSend({t:"loadout",frame:P?P.frame:"mk2",unit:G.unit})}
 function vsLobby(){
   const v=VS;$("vsRules").hidden=DMODE!=="vs";
@@ -29,7 +30,7 @@ for(const id of ["vsPassives","vsSkills"])$(id).addEventListener("change",()=>{i
 function vsOpen(code,name,create=false){
   if(VS)vsClose();VS={code,name,side:null,phase:"wait",hp:100,maxHp:100,oppHp:100,oppMaxHp:100,rules:{passives:false,skills:false},players:{},wins:[0,0],round:0,oppName:"",remote:null,tgt:null,sendT:0,pingT:0,off:0,ready:false};const v=VS;
   const base=window.PVP_URL||((location.protocol==="https:"?"wss://":"ws://")+location.host+"/pvp");
-  try{v.ws=new WebSocket(base+"?room="+code+"&name="+encodeURIComponent(name)+"&v=3&create="+(create?1:0))}catch(e){VS=null;duelErr("대전 서버에 연결할 수 없습니다.");return}
+  try{v.ws=new WebSocket(base+"?room="+code+"&name="+encodeURIComponent(name)+"&v=4&create="+(create?1:0))}catch(e){VS=null;duelErr("대전 서버에 연결할 수 없습니다.");return}
   v.ws.onmessage=e=>{if(VS!==v)return;let m;try{m=JSON.parse(e.data)}catch{return}vsMsg(m)};
   v.ws.onclose=()=>{if(VS!==v)return;if(["wait","lobby"].includes(v.phase)){vsClose();duelErr("대전 서버 연결이 종료됐습니다. 방을 다시 만들어 주세요.")}else if(v.phase!=="end"&&!v.matchDone)vsEnd("disconnect")};
   v.ws.onerror=()=>{if(VS===v)duelErr("대전 서버에 연결할 수 없습니다.")};
@@ -44,13 +45,22 @@ function vsMsg(m){if(!VS)return;const v=VS;
   if(m.t==="lobby"){v.phase="lobby";v.players=m.players;v.rules=m.rules;v.ready=!!(m.players[v.side]&&m.players[v.side].ready);const op=m.players[v.side==="a"?"b":"a"];v.oppName=op?op.name:"";v.oppFrame=op?op.frame:"mk2";v.off=m.now-Date.now();vsLobby();return}
   if(m.t==="roundStart"){v.rules=m.rules;v.players=m.players;v.wins=m.wins;v.round=m.round;v.roundAt=m.startAt;v.endAt=m.endAt;v.off=m.now-Date.now();v.phase="count";v.rs=null;v.lastT=0;v.ready=true;v.matchDone=false;
     const me=m.players[v.side],op=m.players[v.side==="a"?"b":"a"];v.maxHp=me.maxHp;v.oppMaxHp=op.maxHp;v.hp=me.hp;v.oppHp=op.hp;v.oppFrame=op.frame;G.unit=me.unit;setFrame(me.frame);vsSpawn();show("play");document.body.classList.add("versus");PAUSED=false;$("pause").hidden=true;$("vsBar").hidden=false;vsLobby();return}
-  if(m.t==="state"){if(m.round!==v.round)return;const me=m.players[v.side],op=m.players[v.side==="a"?"b":"a"];if(me){v.hp=me.hp;v.maxHp=me.maxHp;S.boost=me.boost;G.spec=me.spec;G.crit=Math.max(0,(me.crit-vsNow())/1000);G.unitCd=Math.max(0,(me.skillAt-vsNow())/1000);G.barrier=Math.max(0,(me.barrier-vsNow())/1000);G.armor=me.armor?1:0;}if(op){v.oppHp=op.hp;v.oppMaxHp=op.maxHp;}return}
+  if(m.t==="state"){if(m.round!==v.round)return;const me=m.players[v.side],op=m.players[v.side==="a"?"b":"a"];if(me){v.hp=me.hp;v.maxHp=me.maxHp;S.boost=me.boost;G.spec=me.spec;G.crit=Math.max(0,(me.crit-vsNow())/1000);G.unitCd=Math.max(0,(me.skillAt-vsNow())/1000);G.barrier=Math.max(0,(me.barrier-vsNow())/1000);G.armor=me.armor?1:0;v.gp=me.gp??100;if(me.guard===false&&S.guard&&!keys.KeyQ)S.guard=false;}if(op){v.oppHp=op.hp;v.oppMaxHp=op.maxHp;}return}
   if(m.t==="pose"){v.rs=m;return}
   if(m.t==="position"){const p=new V3(...m.p);if(p.distanceTo(S.pos)>30)S.pos.copy(p);else v.correctTo=p.sub(S.pos);return}
   if(m.t==="projectile"){if(v.phase!=="fight")return;const from=new V3(...m.from),dir=new V3(...m.dir);fireEnemyBolt(from,dir,false,v.tgt,m.dmg);const b=G.ebolts[G.ebolts.length-1];b.vsVisual=true;b.speed=m.speed;b.life=2.4;b.color=m.color;b.g.children[1].material.color.set(m.color);return}
-  if(m.t==="swing"){if(m.side!==v.side)popText(m.heavy?"상대 강공격 · 회피 후 반격":"상대 베기");return}
-  if(m.t==="damage"){if(m.side===v.side){v.hp=m.hp;vsDamageFX(new V3(...m.dir),m.kind==="melee")}else{v.oppHp=m.hp;sfx("hit",v.tgt&&v.tgt.m.position);if(v.tgt)fxImpact(v.tgt.m.position,0x40d8ff)}return}
-  if(m.t==="block"){if(m.side===v.side){popText(m.kind==="reflect"?"저스트 반사":m.kind==="pod"?"포드 요격":"반응 장갑");sfx("block")}return}
+  if(m.t==="swing"){if(m.side!==v.side){if(v.remote){v.remote.act="slash"+((m.combo??(m.heavy?2:0))+1);v.remote.actT=0;v.remote.guard=false}if(m.heavy)popText("상대 강공격 · 가드 또는 회피")}return}
+  if(m.t==="guard"){if(m.side===v.side){S.guard=m.on}else if(v.remote)v.remote.guard=m.on;return}
+  if(m.t==="clash"){vsClashFX(m.at?new V3(...m.at):null);return}
+  if(m.t==="parry"){const mine=m.side===v.side;if(mine){popText("패리! 지금 반격");sfx("clash");sfx("just");flash(.3);S.slow=.4;G.crit=1.2;impactPunch(1.1);emit(ADD,{pos:S.pos.clone().add(new V3(0,1,0)),tex:TX.ring,color:0x7fe0ff,s0:2,s1:22,life:.45,a:.9})}
+    else{popText("패리당함 · 경직!");G.stagger=.75;S.act=null;S.vsLunge=0;sfx("clash");sfx("deny");S.shake=.6}vsSparks(.9);return}
+  if(m.t==="guardBreak"){const mine=m.side===v.side;sfx("heavy");sfx("clash");vsSparks(1.2);if(mine){S.guard=false;G.stagger=.9;popText("가드 브레이크!");const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on")}else{popText("가드 브레이크! 몰아쳐요");S.hitstop=.1;impactPunch(.9);hitMark("kill")}return}
+  if(m.t==="damage"){if(m.side===v.side){v.hp=m.hp;vsDamageFX(new V3(...m.dir),m.kind==="melee")}else{v.oppHp=m.hp;const at=v.tgt&&v.tgt.m.position.clone().add(new V3(0,.8,0));if(m.kind==="chip")return;
+      const mel=m.kind==="melee";sfx(mel?(m.heavy?"heavy":"hit"):"hit",at);sfx("thud",at,m.heavy?1:0);if(mel)sfx("sizzle",at);if(at){fxImpact(at,mel?0xff8a2a:0x40d8ff);if(mel)fxSlashHit(at,0xff8a2a,!!m.heavy)}
+      hitMark(m.heavy?"kill":"hit");impactPunch(mel?(m.heavy?1:.55):.2);if(mel)S.hitstop=m.heavy?.11:.065;if(v.remote&&mel){v.remote.act=null;v.remote.hitT=.25}}return}
+  if(m.t==="block"){const mine=m.side===v.side;
+    if(m.kind==="guard"||m.kind==="guardShot"){sfx(m.kind==="guard"?"clash":"block");vsSparks(m.heavy?.8:.5);if(mine){popText(`가드 · ${m.gp}%`);S.hitstop=.05;S.vel.addScaledVector(vsAway(),m.heavy?16:9)}else{hitMark("block");popText(m.kind==="guard"?"막힘 · 가드를 깎아요":"빔 막힘");S.hitstop=.04}return}
+    if(mine){popText(m.kind==="reflect"?"저스트 반사":m.kind==="pod"?"포드 요격":"반응 장갑");sfx("block")}return}
   if(m.t==="dodge"){if(m.side===v.side&&m.just){G.crit=1;popText("저스트 회피 · 1초 안에 반격!");sfx("just");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:18,life:.45,a:.9})}return}
   if(m.t==="actionRejected"){
     const q=v.skillInput;if(!q||q.seq!==m.seq)return;
@@ -64,7 +74,13 @@ function vsMsg(m){if(!VS)return;const v=VS;
     if(m.done)setTimeout(()=>{if(VS===v)vsEnd("done")},2400);return}
   if(m.t==="left"){if(v.matchDone)return;if(["wait","lobby"].includes(v.phase)){vsClose();duelErr("상대가 나갔습니다. 방을 다시 만들어 주세요.")}else vsEnd("left");}
 }
-function vsDamageFX(dir,melee){G.iframe=melee?.7:.12;G.stagger=melee?.3:.08;S.vel.addScaledVector(dir,melee?22:8);S.act=null;S.dash=0;S.vsLunge=0;S.dashT=null;S.pending=null;VS.shotToken=(VS.shotToken||0)+1;
+function vsAway(){const R=VS&&VS.remote;return R?S.pos.clone().sub(R.root.position).setY(0).normalize():new V3(0,0,-1)}
+function vsMid(){const R=VS&&VS.remote;return R?S.pos.clone().lerp(R.root.position,.5).add(new V3(0,1.2,0)):S.pos.clone()}
+function vsSparks(k){const at=vsMid(),d=vsAway();sparks(at,d,0xffe0a0,34,.55,Math.round(30*k));sparks(at,d.clone().negate(),0x9fe8ff,34,.55,Math.round(22*k));fxImpact(at,0xffd080);if(typeof fxElectric==="function")fxElectric(at,1+k*.5)}
+function vsClashFX(at){vsSparks(1.2);sfx("clash");sfx("sizzle");S.hitstop=.12;impactPunch(1);flash(.2);S.vel.copy(vsAway().multiplyScalar(26));S.act=null;S.vsLunge=0;S.combo=0;hitMark("block");popText("칼날 격돌!");
+  emit(ADD,{pos:at||vsMid(),tex:TX.ring,color:0xffe0a0,s0:2,s1:20,life:.4,a:.9})}
+function vsGuard(on){if(!VS||VS.phase!=="fight")return;if(on){if(S.guard||G.stagger>0||S.attackCd>0)return;S.guard=true;S.act=null;S.vsLunge=0}else{if(!S.guard)return;S.guard=false}vsSend({t:"guard",on})}
+function vsDamageFX(dir,melee){S.guard=false;G.iframe=melee?.7:.12;G.stagger=melee?.3:.08;S.vel.addScaledVector(dir,melee?22:8);S.act=null;S.dash=0;S.vsLunge=0;S.dashT=null;S.pending=null;VS.shotToken=(VS.shotToken||0)+1;
   fxImpact(S.pos.clone().add(new V3(0,.8,0)),0xff4030);sfx(melee?"heavy":"hurt");S.shake=melee?.7:.3;const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");}
 function vsAttackHit(heavy,crit,at){fxSlashHit(at,crit?0x7fe0ff:0xff8a2a,heavy||crit);sfx(heavy?"heavy":"slash",at);S.dashT=null;}
 function vsSkill(special=false){
@@ -90,10 +106,10 @@ function vsFocusCamera(rdt){if(!G.focus||!targetable(G.focus))return;const d=G.f
   const pitch=clamp(Math.atan2(d.y-1.5,hz)*.65-.04,-.35,.3);S.pitch+=clamp((pitch-S.pitch)*(1-Math.exp(-2*dt)),-.3*dt,.3*dt);
 }
 function vsSkillFX(m){const mine=m.side===VS.side,pos=mine?S.pos:VS.tgt&&VS.tgt.m.position;if(!pos)return;emit(ADD,{pos:pos.clone(),tex:TX.ring,color:UNITS[m.unit].color,s0:2,s1:m.special?24:12,life:.45});sfx(m.special?"specCharge":"throw",pos);if(mine){popText(VS_UNIT_TEXT[m.unit][m.special?"f":"r"]);if(m.unit==="boost"){S.vsLunge=.24;S.vsDir=new V3(...m.dir).multiplyScalar(95);S.bladeOn=.7;startAct("slash3")}}}
-function vsSpawn(){const v=VS,a=v.side==="a";const i=enemies.indexOf(v.tgt);if(i>=0)enemies.splice(i,1);vsClearShots();restart();S.vsLunge=0;S.shotCd=S.attackCd=0;S.aimT=0;S.face=S.yaw=a?0:Math.PI;S.pitch=-.05;S.pos.set(0,0,a?-26:26);S.vel.set(0,0,0);S.time=99;G.focus=null;target=null;v.shotToken=(v.shotToken||0)+1;v.skillInput=null;v.correctTo=null;P.root.visible=true;camera.position.copy(S.pos).addScaledVector(camFwd(),-10).add(new V3(0,2.8,0));camera.fov=68;camera.updateProjectionMatrix();applyQuality();
+function vsSpawn(){const v=VS,a=v.side==="a";S.guard=false;v.gp=100;const i=enemies.indexOf(v.tgt);if(i>=0)enemies.splice(i,1);vsClearShots();restart();S.vsLunge=0;S.shotCd=S.attackCd=0;S.aimT=0;S.face=S.yaw=a?0:Math.PI;S.pitch=-.05;S.pos.set(0,0,a?-26:26);S.vel.set(0,0,0);S.time=99;G.focus=null;target=null;v.shotToken=(v.shotToken||0)+1;v.skillInput=null;v.correctTo=null;P.root.visible=true;camera.position.copy(S.pos).addScaledVector(camFwd(),-10).add(new V3(0,2.8,0));camera.fov=68;camera.updateProjectionMatrix();applyQuality();
   const want=FRAMES[v.oppFrame]&&FRAMES[v.oppFrame].gltf?v.oppFrame:"mk2";if(v.remote&&v.remote.frame!==want){scene.remove(v.remote.root);v.remote=null}if(!v.remote)v.remote=buildPlayer(FRAMES[want].gltf,want,true);
   scene.add(v.remote.root);v.remote.root.visible=true;v.remote.root.position.set(0,0,a?26:-26);v.remote.root.rotation.y=a?Math.PI:0;
-  v.tgt={m:v.remote.root,v:new V3(),spin:new V3(),alive:true,launched:0,isRemote:true,rad:3,tele:0,flash:0,fireT:99};enemies.push(v.tgt);buildBits(G.unit);
+  v.remote.act=null;v.remote.guard=false;v.tgt={m:v.remote.root,v:new V3(),spin:new V3(),alive:true,launched:0,isRemote:true,rad:3,tele:0,flash:0,fireT:99};enemies.push(v.tgt);buildBits(G.unit);
   $("pName").textContent=v.name;$("pDept").textContent="1:1 기체 대전";$("pSortie").textContent="비순위";$("uIconR").src=`ui/r_${G.unit}.webp`;$("uIconF").src=`ui/f_${G.unit}.webp`;
 }
 function vsEnd(why){const v=VS;if(!v||v.phase==="end")return;v.phase="end";S.started=false;S.ended=true;PAUSED=false;$("pause").hidden=true;const mi=v.side==="a"?0:1,me=v.wins[mi],op=v.wins[1-mi],win=why==="left"||me>op;
@@ -102,7 +118,7 @@ function vsEnd(why){const v=VS;if(!v||v.phase==="end")return;v.phase="end";S.sta
   $("rPb").textContent=why==="disconnect"?"연결 종료 · 결과 미확정":(win?"승리":"패배")+" · "+v.name+" vs "+v.oppName+(why==="left"?" · 상대 이탈":"");const ag=$("againBtn");ag.disabled=false;ag.firstChild.textContent="쇼다운 로비로 ";DUELDONE=true;show("result");vsClose();}
 function vsTimeUp(){if(VS)S.time=0;}
 function vsTick(rdt){if(!VS)return;const v=VS;vsFlushSkill();if(v.correctTo){const delta=v.correctTo.clone().multiplyScalar(1-Math.exp(-10*Math.min(rdt,.05)));S.pos.add(delta);v.correctTo.sub(delta);if(v.correctTo.length()<.1)v.correctTo=null;}v.pingT-=rdt;if(v.pingT<=0){v.pingT=2;vsSend({t:"ping",sent:Date.now()})}
-  if(v.phase==="count"){const left=v.roundAt-vsNow(),t=Math.ceil(left/1000);if(t>0&&t<=3&&t!==v.lastT){v.lastT=t;phaseBanner({name:String(t),sub:`라운드 ${v.round} · 화면 클릭으로 마우스 고정`});sfx("tick")}if(left<=0){v.phase="fight";S.started=true;G.focus=null;sfx("go");popText("FIGHT · 마우스로 시점 / E로 추적 켜기");music("battle")}}
+  if(v.phase==="count"){const left=v.roundAt-vsNow(),t=Math.ceil(left/1000);if(t>0&&t<=3&&t!==v.lastT){v.lastT=t;phaseBanner({name:String(t),sub:`라운드 ${v.round} · 화면 클릭으로 마우스 고정`});sfx("tick")}if(left<=0){v.phase="fight";S.started=true;G.focus=null;sfx("go");popText("FIGHT · Q 길게: 사벨 가드 · 맞기 직전 가드 = 패리");music("battle")}}
   if(v.phase==="fight")S.time=Math.max(0,(v.endAt-vsNow())/1000);
   if(!v.remote||SCREEN!=="play")return;
   v.sendT-=rdt;if(v.sendT<=0&&P&&["fight","count"].includes(v.phase)){v.sendT=1/15;const j=[];for(const k in P.SP)j.push(...P.SP[k].x.map(x=>+x.toFixed(3)));vsSend({t:"pose",p:S.pos.toArray().map(x=>+x.toFixed(2)),f:+S.face.toFixed(3),j,bl:P.bladeLen,r:P.rifleS,boosting:vsCanAct()&&S.over<=0&&S.boost>0&&(keys.ShiftLeft||keys.ShiftRight)&&["KeyW","KeyA","KeyS","KeyD","Space","KeyC"].some(k=>keys[k])})}
@@ -111,7 +127,7 @@ function vsTick(rdt){if(!VS)return;const v=VS;vsFlushSkill();if(v.correctTo){con
   if(s){if(s.fr&&s.fr!==VS.oppFrame){VS.oppFrame=s.fr}
     const k=1-Math.exp(-14*rdt);R.root.position.lerp(new V3(s.p[0],s.p[1]+Math.sin(clockT*1.6)*.12,s.p[2]),k);
     let d=s.f-R.root.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));R.root.rotation.y+=d*k;
-    let i=0;for(const key in R.SP){const b=R.J[key];if(b&&s.j.length>=i+3){b.rotation.x+=(s.j[i]-b.rotation.x)*k;b.rotation.y+=(s.j[i+1]-b.rotation.y)*k;b.rotation.z+=(s.j[i+2]-b.rotation.z)*k}i+=3}if(R.sync)R.sync();
+    let i=0;for(const key in R.SP){const b=R.J[key];if(b&&s.j.length>=i+3){b.rotation.x+=(s.j[i]-b.rotation.x)*k;b.rotation.y+=(s.j[i+1]-b.rotation.y)*k;b.rotation.z+=(s.j[i+2]-b.rotation.z)*k}i+=3}R.guard=s.g===true||(R.guard&&s.g===undefined);if(R.act){R.actT=(R.actT||0)+rdt;if(R.actT>=ACT[R.act].dur)R.act=null}clipDrive(R,R.act,R.actT||0,R.guard,rdt);if(R.sync)R.sync();
     R.beam.scale.z=Math.max(.001,s.bl);R.beam.visible=s.bl>.02;R.J.rifle.scale.setScalar(s.r||1);
     R.flames.forEach(g=>g.scale.set(1,1+Math.sin(clockT*40)*.1,1))}
   // soft arena boundary
@@ -123,6 +139,6 @@ function vsTick(rdt){if(!VS)return;const v=VS;vsFlushSkill();if(v.correctTo){con
     if(off){const cx=innerWidth/2,cy=innerHeight/2,dx=x-cx,dy=y-cy,k=Math.min((cx-m)/Math.abs(dx||1e-6),(cy-m)/Math.abs(dy||1e-6));x=cx+dx*k;y=cy+dy*k}
     mk.style.left=x+"px";mk.style.top=y+"px";mk.classList.toggle("edge",off);setT("oppTxt",`${VS.oppName||"상대"} · ${Math.round(R2.position.distanceTo(S.pos))}m`)}}
 
-  setW("vsHpMe",v.hp/v.maxHp*100);setW("vsHpOp",v.oppHp/v.oppMaxHp*100);setT("vsMeN",`${v.name} · ${v.hp}/${v.maxHp}`);setT("vsOpN",`${v.oppName} · ${v.oppHp}/${v.oppMaxHp}`);const mi=v.side==="a"?0:1;setT("vsScore",`${v.wins[mi]} : ${v.wins[1-mi]}`);setT("vsRound",`${v.round}라운드 · ${Math.round(v.rtt||0)}ms`);
+  setW("vsHpMe",v.hp/v.maxHp*100);setW("vsGpMe",v.gp??100);setC("vsGpMe","low",(v.gp??100)<35);setW("vsHpOp",v.oppHp/v.oppMaxHp*100);setT("vsMeN",`${v.name} · ${v.hp}/${v.maxHp}`);setT("vsOpN",`${v.oppName} · ${v.oppHp}/${v.oppMaxHp}`);const mi=v.side==="a"?0:1;setT("vsScore",`${v.wins[mi]} : ${v.wins[1-mi]}`);setT("vsRound",`${v.round}라운드 · ${Math.round(v.rtt||0)}ms`);
 }
-function vsHud(){if(!VS)return;const on=vsSkills();setT("phaseTag",`기체 패시브 ${VS.rules.passives?"ON":"OFF"} · 옵션 ${on?"ON":"OFF"}`);setT("unitName",on?VS_UNIT_TEXT[G.unit].r+(G.unitCd>0?` ${G.unitCd.toFixed(1)}`:""):"옵션 꺼짐");setT("specName",on?VS_UNIT_TEXT[G.unit].f:"필살기 꺼짐");setC("wUnit","off",!on);setC("wSpec","off",!on);setC("wUnit","ready",on&&G.unitCd<=0);setC("wSpec","ready",on&&G.spec>=100);setT("chainNow",S.attackCd>0?"공격 후 빈틈":"18m 이내 돌진");if(S.boost<25)setT("warn","부스트 부족 — 회피 불가");}
+function vsHud(){if(!VS)return;const on=vsSkills();setT("phaseTag",`기체 패시브 ${VS.rules.passives?"ON":"OFF"} · 옵션 ${on?"ON":"OFF"}`);setT("unitName",on?VS_UNIT_TEXT[G.unit].r+(G.unitCd>0?` ${G.unitCd.toFixed(1)}`:""):"옵션 꺼짐");setT("specName",on?VS_UNIT_TEXT[G.unit].f:"필살기 꺼짐");setC("wUnit","off",!on);setC("wSpec","off",!on);setC("wUnit","ready",on&&G.unitCd<=0);setC("wSpec","ready",on&&G.spec>=100);setT("chainNow",S.guard?"가드 중 · Q 떼면 해제":S.attackCd>0?"공격 후 빈틈":"18m 이내 돌진 · Q 가드");if(S.boost<25)setT("warn","부스트 부족 — 회피 불가");}

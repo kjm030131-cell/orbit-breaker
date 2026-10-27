@@ -21,14 +21,22 @@ function clipAlign(P,dirs){if(P._clipA)return P._clipA;const P0=P.mixP0,v=(a,b)=
   for(const k in own)if(dirs[k])A[k].setFromUnitVectors(own[k],D(k));
   if(dirs.rifle){const z=new V3(0,0,1);A.rifle=_basisQ(D("rifle"),z).multiply(_basisQ(fr,z).invert())} // keep the blade on the thumb side
   return P._clipA=A}
-function clipLayer(P,dt){const blade=P.beam&&P.beam.parent,J=P.J,act=S.act,m=act&&CLIP_MAP[act],c=m&&CLIPS&&CLIPS.clips[m.c];
-  if(!c||!P.mixP0||S.over>0){const k=Math.min(1,dt*12);J.rifle.quaternion.slerp(_cI,k);if(blade)blade.quaternion.slerp(_cI,k);return}
-  const A=ACT[act],t=S.actT,st=act==="lunge"?A.dur:A.strike*A.dur,K=CLIPS.keys;
-  const tc=t<st?m.w0+(m.hit-m.w0)*(t/st):m.hit+(m.w1-m.hit)*Math.min(1,(t-st)/Math.max(.01,A.dur-st));
-  const f=clamp(tc*CLIPS.fps,0,c.n-1),i0=Math.floor(f),i1=Math.min(c.n-1,i0+1),u=f-i0,AL=clipAlign(P,c.dirs);
+// write clip map m at clip time tc into rig R with weight w
+function clipApply(R,m,tc,w){const c=CLIPS&&CLIPS.clips[m.c];if(!c||!R.mixP0||w<=0)return false;const J=R.J,K=CLIPS.keys;
+  const f=clamp(tc*CLIPS.fps,0,c.n-1),i0=Math.floor(f),i1=Math.min(c.n-1,i0+1),u=f-i0,AL=clipAlign(R,c.dirs);
   if(m.yaw===undefined){const v=new V3(0,0,1).applyQuaternion(c.q[Math.round(m.hit*CLIPS.fps)][K.indexOf("torso")]);m.yaw=-Math.atan2(v.x,v.z)}
   const ry=_cq.setFromAxisAngle(_cy,m.yaw),D={};
   for(const k in CK_PARENT){const ki=K.indexOf(k);D[k]=ry.clone().multiply(c.q[i0][ki].clone().slerp(c.q[i1][ki],u)).multiply(AL[k])}
-  const w=Math.min(1,t/.05)*clamp((A.dur-t)/.12,0,1)*(act==="lunge"?1:1);
   for(const k in CK_PARENT){const p=CK_PARENT[k],loc=p?D[p].clone().invert().multiply(D[k]):D[k];J[k].quaternion.slerp(loc,k==="hips"?w*.85:w)}
-  if(blade)blade.quaternion.copy(J.rifle.quaternion)}
+  const blade=R.beam&&R.beam.parent;if(blade)blade.quaternion.copy(J.rifle.quaternion);return true}
+// strike time of an act (PvP uses the server's fixed windups)
+function clipStrike(act,A){return act==="lunge"?A.dur:VS&&act.startsWith("slash")?(act==="slash3"?.3:.18):A.strike*A.dur}
+// generic driver: act/time + held guard; used for the local mech and the PvP opponent
+function clipDrive(R,act,t,guard,dt){const blade=R.beam&&R.beam.parent,J=R.J;R._gw=(R._gw||0)+((guard&&!act?1:0)-(R._gw||0))*Math.min(1,dt*14);
+  const m=act&&CLIP_MAP[act];let used=false;
+  if(m&&CLIPS&&CLIPS.clips[m.c]){const A=ACT[act],st=clipStrike(act,A);
+    const tc=t<st?m.w0+(m.hit-m.w0)*(t/st):m.hit+(m.w1-m.hit)*Math.min(1,(t-st)/Math.max(.01,A.dur-st));
+    used=clipApply(R,m,tc,Math.min(1,t/.05)*clamp((A.dur-t)/.12,0,1))}
+  if(R._gw>.01)used=clipApply(R,CLIP_MAP.guard,.45,R._gw)||used;
+  if(!used){const k=Math.min(1,dt*12);J.rifle.quaternion.slerp(_cI,k);if(blade)blade.quaternion.slerp(_cI,k)}}
+function clipLayer(P,dt){if(S.over>0){clipDrive(P,null,0,false,dt);return}clipDrive(P,S.act,S.actT,!!S.guard,dt)}

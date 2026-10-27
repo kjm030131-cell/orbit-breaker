@@ -79,7 +79,7 @@ document.querySelectorAll("[data-sound]").forEach(b=>b.addEventListener("click",
 UI.key=function(e){
   if(SCREEN==="launch"){if(!e.repeat&&["Space","Enter","Escape"].includes(e.code)){e.preventDefault();skipCine()}return}
   if(SCREEN==="title"){
-    if(e.code==="ArrowDown"||e.code==="ArrowUp"){menuSel=(menuSel+(e.code==="ArrowDown"?1:3))%4;markMenu();sfx("ui");e.preventDefault()}
+    if(e.code==="ArrowDown"||e.code==="ArrowUp"){menuSel=(menuSel+(e.code==="ArrowDown"?1:menuItems.length-1))%menuItems.length;markMenu();sfx("ui");e.preventDefault()}
     else if(e.code==="Enter"){menuItems[menuSel].click();e.preventDefault()}
     else if(/^Digit[1234]$/.test(e.code)){menuItems[+e.code.slice(5)-1].click()}
   }else if(SCREEN==="load"&&/^(Arrow(Left|Right|Up|Down)|Digit[1-4])$/.test(e.code)){e.preventDefault();

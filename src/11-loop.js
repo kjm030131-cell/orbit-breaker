@@ -11,7 +11,7 @@ function focusCamera(rdt){const d=G.focus.m.position.clone().sub(S.pos),hz=Math.
   const pt=clamp(Math.atan2(d.y-1.5,hz)*.8-.06,-.6,.45);S.pitch+=clamp((pt-S.pitch)*(1-Math.exp(-5*dt)),-1.6*dt,1.6*dt)}
 function update(rdt){
   let dt=Math.min(rdt,.05);
-  if(VS){S.hitstop=0;S.slow=0}
+  if(VS){S.hitstop=Math.min(S.hitstop,.12);S.slow=Math.min(S.slow,.4)}
   if(S.hitstop>0){S.hitstop-=rdt;dt=0}else if(S.slow>0){S.slow-=rdt;dt*=.3}
   clockT+=rdt;const T=clock.elapsedTime;
   if(S.demo){S.demoT+=rdt;S.yaw=Math.sin(S.demoT*.15)*.9+Math.PI*.15}
@@ -25,7 +25,7 @@ function update(rdt){
   const f=fwd(),right=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw)),acc=new V3();
   if(SCREEN==="play"&&!S.ended&&S.over<=0&&G.stagger<=0&&!G.ob&&(!VS||vsCanAct())){if(keys.KeyW)acc.add(f);if(keys.KeyS)acc.sub(f);if(keys.KeyA)acc.add(right);if(keys.KeyD)acc.sub(right);if(keys.Space)acc.y+=1;if(keys.KeyC)acc.y-=1}
   const boosting=(keys.ShiftLeft||keys.ShiftRight)&&S.boost>0&&acc.lengthSq()>0&&SCREEN==="play";
-  if(acc.lengthSq()>0)acc.normalize().multiplyScalar((boosting?62:26)*(VS?vsSpeed():1));
+  if(acc.lengthSq()>0)acc.normalize().multiplyScalar((boosting&&!S.guard?62:26)*(VS?vsSpeed()*(S.guard?.45:1):1));
   S.boost=clamp(S.boost+(boosting?-38:22*(VS?vsRegen():(G.unit==="boost"?1.3:1)))*dt,0,100);
   S.vel.addScaledVector(acc,dt);S.vel.multiplyScalar(Math.pow(.18,dt));
   const prevFace=S.face;
@@ -124,7 +124,7 @@ function update(rdt){
   if(S.demo){const pv=SCREEN==="load",a=S.demoT*(pv?.35:.25),r=pv?10.5:11;want.copy(S.pos).add(new V3(Math.sin(a+2.6)*r,(pv?.6:2.2)+Math.sin(a*.7)*(pv?.3:1),Math.cos(a+2.6)*r))}
   camera.position.lerp(want,1-Math.pow(.0005,rdt));
   if(!VS&&S.camKick>0)camera.position.addScaledVector(camFwd(),-S.camKick*.45).y+=S.camKick*.12;
-  S.shake=Math.max(0,S.shake-rdt*2.4);const sh=VS?0:S.shake*S.shake*.9*(typeof SHAKE_K==='number'?SHAKE_K:1);
+  S.shake=Math.max(0,S.shake-rdt*2.4);const sh=(VS?.45:1)*S.shake*S.shake*.9*(typeof SHAKE_K==='number'?SHAKE_K:1);
   camera.position.add(new V3((Math.random()-.5)*sh,(Math.random()-.5)*sh,(Math.random()-.5)*sh));
   if(S.demo){const toCam=camera.position.clone().sub(S.pos).setY(0).normalize();const R=new V3().crossVectors(new V3(0,1,0),toCam);
     camera.lookAt(S.pos.clone().add(new V3(0,SCREEN==="load"?.2:.9,0)).addScaledVector(R,-(innerWidth>820?(SCREEN==="load"?4.6:4.5):0)))}

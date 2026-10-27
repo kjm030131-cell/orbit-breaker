@@ -67,12 +67,16 @@ async function startTutorial(){if(TUT.on||!P)return;sfx("uiok");lock();
   document.body.classList.add("tut");show("launch");
   await playIntro();if(!TUT.on)return;await playCatapult();if(!TUT.on)return;
   show("play");S.started=true;tutStep(0)}
-function tutEnding(){if(!TUT.on)return;const n=Math.max(1,(S.kills||0)+(TUT.c.kill||0)*0);$("tutObj").hidden=true;if(document.pointerLockElement)document.exitPointerLock();
+function tutEnding(){if(!TUT.on)return;try{localStorage.setItem("ob.tutDone","1")}catch(e){}const n=Math.max(1,(S.kills||0)+(TUT.c.kill||0)*0);$("tutObj").hidden=true;if(document.pointerLockElement)document.exitPointerLock();
   const e=$("tutEnd");$("tutEndA").textContent=`그날 밤, 서울 하늘에는 유성 ${n}개가 내렸다.`;$("tutEndB").textContent="동생은 그중 하나에 소원을 빌었다.";e.hidden=false;e.classList.remove("on");void e.offsetWidth;e.classList.add("on");sfx("phase");
   setTimeout(()=>$("tutGo").focus(),2600)}
 function tutExit(to){TUT.on=false;TUT.step=-1;tutWaypoint(null);$("tutObj").hidden=true;$("tutEnd").hidden=true;document.body.classList.remove("tut");
   if(INTRO.on){INTRO.done=null;INTRO.on=false;introClear();$("intro").hidden=true;if(P)P.root.visible=true}
-  if(CINE.on){CINE.done=null;endCine()}if(document.pointerLockElement)document.exitPointerLock();restart();show(to||"title")}
+  if(CINE.on){CINE.done=null;endCine()}if(document.pointerLockElement)document.exitPointerLock();restart();show(to||"title");tutHintRefresh()}
 $("tutGo").addEventListener("click",()=>{sfx("uiok");tutExit("form")});
 $("tutBack").addEventListener("click",()=>{sfx("uiback");tutExit("title")});
 $("tutBtn").addEventListener("click",startTutorial);
+// first visit: point new players at the tutorial
+function tutDone(){try{return localStorage.getItem("ob.tutDone")==="1"}catch(e){return true}}
+function tutHintRefresh(){const d=tutDone();$("tutHint").hidden=d;$("tutBtn").classList.toggle("hot",!d);if(!d&&SCREEN==="title"){const i=menuItems.indexOf($("tutBtn"));if(i>=0&&menuSel!==i){menuSel=i;markMenu()}}}
+tutHintRefresh();

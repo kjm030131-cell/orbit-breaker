@@ -163,3 +163,12 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
   카운터 훅: dodge, justDodge, onKill, slashStrike(slash3), special, unitSkill, throwGrav, bladeParry.
 - 롤백용: origin/stable-pre-tutorial (튜토리얼 이전 main).
 - 튜토리얼 수정(10/28 아침): 단계별 keep{n,passive,d} 로 표적 자동 보충(tutKeep), 에이스 사라지면 재등장. 3연속 베기는 3타 스윙 자체로 인정. 렉 완화: 목표/조준선/경고 DOM은 변경 시에만, 경고 테두리 box-shadow→radial-gradient, 조준선 drop-shadow 필터 제거.
+
+## 18. 1:1 쇼다운 근접전 개편 (PvP 프로토콜 v4, 10/28)
+- 서버(pvp/src/arena.js): guard {t:'guard',on} · 가드 게이지 gp(100, 미사용 0.8초 후 30/s 회복). 정면 가드 시 근접 칩 12%·게이지 -24(강 -50), 0이면 가드 브레이크(0.9초 경직, 1.6초 가드 불가).
+  가드 올린 지 180ms 안에 맞으면 패리(공격자 0.75초 경직, 방어자 크리 1.2초). 양쪽 베기가 150ms 안에 겹치면 칼날 격돌(피해 없음, 둘 다 0.45초 경직).
+  콤보: 약공격 피격 경직 650ms/무적 60ms(연결됨), 강공격 경직 900ms/무적 800ms(다운). 공격 후 딜레이 520/950ms. 사거리 10/11. 정면 빔은 가드로 막힘(게이지 -12).
+  swing 이벤트에 combo 인덱스, pose 릴레이에 g(가드), state 에 gp/guard/gb. 테스트 6개 추가.
+- 클라: Q 길게 = 가드(대전만, 솔로 Q는 중력탄), 가드 중 이동 45%. 07b clipDrive 로 상대 기체도 Mixamo 모션(swing combo → slash1~3, 가드 홀드 포즈) 재생.
+  대전에서도 짧은 히트스톱·슬로우·약한 흔들림·히트마커·FOV 펀치·쿵/지글 사운드. 격돌·패리·가드 브레이크 연출. HP 바 아래 가드 게이지.
+- 메인: 튜토리얼 안 한 사람에게 안내 문구 + 튜토리얼 버튼 '추천' 강조(localStorage ob.tutDone, 엔딩 카드에서 기록).
