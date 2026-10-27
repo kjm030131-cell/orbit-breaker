@@ -59,6 +59,7 @@ function playSample(k,pos,arg){const a=AC,src=a.createBufferSource();src.buffer=
 function sfx(k,pos,arg){const a=AC;if(!a||!AUD.ready||a.state!=="running")return;const t=a.currentTime+.005;
  if(SAMPLES[k]){playSample(k,pos,arg);return}
  switch(k){
+ case "thud":{const H=arg?1:0,o=bus(pos,1,.12);osc(a,o,"sine",H?150:120,H?30:40,t,H?.34:.2,H?.8:.45);osc(a,o,"triangle",H?230:180,55,t,.09,.3);nzf(a,o,"lowpass",1100,110,t,.13,H?.55:.3,.7);break}
  case "ignite":{const o=bus(null,.8,.25);osc(a,o,"sawtooth",70,180,t,.35,.09,.02);osc(a,o,"sawtooth",71.5,182,t,.35,.07,.02);nzf(a,o,"bandpass",600,4200,t,.3,.22,2);osc(a,o,"sine",1400,2600,t,.12,.05);break}
  case "slash":{const n=arg||0,o=bus(pos,.9,.2),p=1+n*.12;nzf(a,o,"bandpass",4200*p,380,t,.26,.5,1.2,.02);osc(a,o,"sawtooth",420*p,110,t,.24,.07,.015);osc(a,o,"sine",260*p,90,t+.02,.2,.12);break}
  case "hit":case "heavy":{const H=k==="heavy",o=bus(pos,1,H?.45:.3),d=shaper(a);d.connect(o);

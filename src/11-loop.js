@@ -123,7 +123,8 @@ function update(rdt){
     camera.lookAt(S.pos.clone().add(new V3(0,SCREEN==="load"?.2:.9,0)).addScaledVector(R,-(innerWidth>820?(SCREEN==="load"?4.6:4.5):0)))}
   else if(VS)camera.lookAt(camera.position.clone().addScaledVector(cf,18));
   else camera.lookAt(S.pos.clone().addScaledVector(cf,8).add(new V3(0,1.4,0)));
-  const fovT=VS?66:boosting||S.dash>0?66:61;if(Math.abs(fovT-camera.fov)>.01){camera.fov+=(fovT-camera.fov)*(1-Math.exp(-8*rdt));camera.updateProjectionMatrix();}}
+  const fovT=VS?66:boosting||S.dash>0?66:61;S.fovB=S.fovB||fovT;S.fovB+=(fovT-S.fovB)*(1-Math.exp(-8*rdt));if(!(S.hitstop>0))S.punch=Math.max(0,(S.punch||0)-rdt*4.5);
+  const fv=S.fovB-(S.punch||0)*4.5;if(Math.abs(fv-camera.fov)>.01){camera.fov=fv;camera.updateProjectionMatrix();}}
 
   if(SCREEN==="play"||SCREEN==="launch"){hudUpdate();if(VS)vsHud();}
 }

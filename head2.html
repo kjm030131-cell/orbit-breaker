@@ -266,6 +266,11 @@ button{font:inherit;color:inherit}
 .reticle::before,.reticle::after{content:"";position:absolute;background:var(--bone);opacity:.75}
 .reticle::before{left:8px;top:0;width:2px;height:6px;box-shadow:0 12px var(--bone)}
 .reticle::after{top:8px;left:0;height:2px;width:6px;box-shadow:12px 0 var(--bone)}
+#hitm{position:fixed;left:50%;top:44%;width:30px;height:30px;transform:translate(-50%,-50%) rotate(45deg);pointer-events:none;z-index:5;opacity:0}
+#hitm::before,#hitm::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(var(--hm,#fff) 0 34%,transparent 34% 66%,var(--hm,#fff) 66%)}
+#hitm::before{width:2px;height:100%}#hitm::after{width:100%;height:2px;background:linear-gradient(90deg,var(--hm,#fff) 0 34%,transparent 34% 66%,var(--hm,#fff) 66%)}
+#hitm.hit{animation:hm .2s ease-out}#hitm.kill{--hm:#ff4a3a;animation:hm .38s ease-out}#hitm.block{--hm:#7fe0ff;animation:hm .25s ease-out}
+@keyframes hm{0%{opacity:1;width:40px;height:40px}100%{opacity:0;width:24px;height:24px}}
 #lock{position:fixed;left:0;top:0;width:54px;height:54px;transform:translate(-50%,-50%);will-change:transform;pointer-events:none;z-index:4;display:none}
 #lock i{position:absolute;width:14px;height:14px;border:2px solid var(--red)}
 #lock i:nth-child(1){left:0;top:0;border-width:2px 0 0 2px}
@@ -452,7 +457,7 @@ body{font-variant-numeric:tabular-nums;word-break:keep-all}
 
 <!-- in-game HUD -->
 <div id="hud" hidden>
-  <div class="reticle"></div>
+  <div class="reticle"></div><div id="hitm"></div>
   <div id="lock"><i></i><i></i><i></i><i></i><span id="lockTxt">록온</span></div>
   <div id="pop"></div>
   <div id="phase"><div id="phaseSub" class="lbl">단계</div><div id="phaseName">—</div></div>

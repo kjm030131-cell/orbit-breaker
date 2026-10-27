@@ -133,3 +133,11 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 ## 14. 이펙트 아트 (src/01b-fxart.js)
 - ui/fx_*.webp: expl(4x4 폭발 연속 프레임, 알파), beam(빔 라이플 띠), saber(빔 사벨), slash(베기 궤적), muzzle, hit(→TX.flare), ring(→TX.ring), smoke(→TX.smoke), thruster(추진기), charge(필살기), electric(실드 방어).
 - 로딩 성공한 것만 교체(FXOK), 실패하면 기존 절차적 이펙트 유지.
+
+## 15. 타격감 레이어 + 근접 검투기 (10/28)
+- src/06b-impact.js: `impactPunch(k)` FOV 펀치(히트스톱 동안 유지 후 복귀, 11-loop S.fovB/S.punch), `hitMark(kind)` 레티클 히트마커(#hitm .hit/.kill/.block), `sfx("thud",pos,heavy)` 저역 쿵 레이어.
+- 베기 히트스톱 .085/.13/.17, 사격 명중·MS 장갑·처치에도 마커/펀치/쿵.
+- 사격: 조준선 직진 + 스윕 판정(01-fx stepBolts), 2.5° 안만 보조. 적 조준은 고정 순간 플레이어 이동 리드(0.6).
+- src/08c-blade.js: `spawnMS(pos,true)` = 검투기. hunt→wind(0.6s, 붉은 링 수축)→strike(돌진 베기)→rec(빈틈).
+  · wind 중 베기 = 카운터(즉시 격파), 회피로 피하면 간파(rec 1.3s), 서로 베면 칼날 격돌(양쪽 튕김, 적 경직 1.15s), hunt 중 베기 = 막힘(경직 .6s).
+  · 빔은 rec/경직 외엔 튕겨냄(bladeDeflect). PHASES.blade 로 단계별 수.

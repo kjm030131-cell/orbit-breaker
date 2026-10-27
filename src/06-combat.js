@@ -64,7 +64,8 @@ function slashStrike(){ // called on the strike frame of a slash action
   const e=S.dashT&&S.dashT.alive&&S.dashT.launched<=0&&S.dashT.m.position.distanceTo(S.pos)<7.5?S.dashT:null;
   if(!e){fieldSlash(heavy);return}
   const tip=new V3();P.tipObj.getWorldPosition(tip);const at=e.m.position.clone().lerp(tip,.4);
-  if(e.isRemote){vsAttackHit(heavy,G.crit>0,at);return}
+  if(e.isRemote){vsAttackHit(heavy,G.crit>0,at);hitMark(heavy?"kill":"hit");impactPunch(heavy?.8:.45);sfx("thud",at,heavy?1:0);return}
+  if(e.blade&&bladeParry(e,at))return;
   if(e.isWP){wpDamage(e,3,at);S.hitstop=.08;S.shake=.6;flash(.18);fxSlashHit(at,0xff8a2a,true);sfx("heavy",at);addSpec(2);S.vel.multiplyScalar(.1);S.dashT=null;return}
   if(eliteBlocks(e,S.pos)){shieldFlash(e);fxImpact(at,0x48d8ff);sparks(at,null,0xbff4ff,24,.4,26);sfx("block",at);
     S.vel.copy(S.pos.clone().sub(e.m.position).normalize().multiplyScalar(30));G.stagger=.3;S.hitstop=.06;S.shake=.6;S.act=null;S.dashT=null;S.combo=0;
@@ -72,7 +73,7 @@ function slashStrike(){ // called on the strike frame of a slash action
   const crit=G.crit>0,big=heavy||crit,idx=S.act==="slash2"?1:heavy?2:0;
   const dir=launchDir(idx);
   knock(e,dir,crit?62:heavy?52:36,big?2.2:1.8);hitFlash(e);if(crit){e.rad=Math.max(e.rad,4.8);G.crit=0}
-  S.hitstop=crit?.16:heavy?.12:.075;S.shake=big?.85:.55;flash(big?.28:.16);
+  S.hitstop=crit?.17:heavy?.13:.085;S.shake=big?.85:.55;flash(big?.28:.16);impactPunch(crit?1.4:heavy?1:.6);hitMark(big?"kill":"hit");sfx("thud",at,big?1:0);
   fxSlashHit(at,crit?0x7fe0ff:0xff8a2a,big);sfx(big?"heavy":"hit",at);
   if(crit)popText("크리티컬");addSpec(2);
   addScore((heavy?260:150)*(crit?2:1),at,crit?"cyan":"");S.heat=Math.min(100,S.heat+3);S.vel.multiplyScalar(.1);S.dashT=null;

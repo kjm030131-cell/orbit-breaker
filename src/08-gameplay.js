@@ -1,9 +1,9 @@
 /* ================= gameplay systems ================= */
 const PHASES=[
   {at:0,name:"1단계 · 선발 정찰대",sub:"",count:12,elites:0,rams:0,ms:0,maxTele:2,fire:[4.5,7.5],tele:.9,bolt:85},
-  {at:25,name:"2단계 · 돌격 드론 출현",sub:"",count:14,elites:0,rams:2,ms:1,maxTele:3,fire:[3,5],tele:.8,bolt:92},
-  {at:55,name:"3단계 · 정예 호위기",sub:"",count:14,elites:2,rams:2,ms:1,maxTele:3,fire:[2.6,4.4],tele:.75,bolt:100},
-  {at:90,name:"최종 단계 · 지휘기 케르베로스",sub:"",count:12,elites:2,rams:3,ms:2,maxTele:4,fire:[2.4,4],tele:.7,bolt:108}];
+  {at:25,name:"2단계 · 돌격 드론 출현",sub:"",count:14,elites:0,rams:2,ms:1,blade:1,maxTele:3,fire:[3,5],tele:.8,bolt:92},
+  {at:55,name:"3단계 · 정예 호위기",sub:"",count:14,elites:2,rams:2,ms:1,blade:1,maxTele:3,fire:[2.6,4.4],tele:.75,bolt:100},
+  {at:90,name:"최종 단계 · 지휘기 케르베로스",sub:"",count:12,elites:2,rams:3,ms:1,blade:1,maxTele:4,fire:[2.4,4],tele:.7,bolt:108}];
 // clean streak: every 15s without a hit adds +0.2 to the score multiplier (max ×2.0); a hit resets it
 const CLEAN_STEP=15;
 function cleanMult(){return Math.min(2,1+Math.floor(G.clean/CLEAN_STEP)*.2)}
@@ -13,10 +13,10 @@ const KC_WINDOW=3.5;
 function comboMult(){const k=G.kc;return k>=35?3:k>=20?2.5:k>=10?2:k>=5?1.5:1}
 function mult(){return comboMult()*cleanMult()*(G.phase>=3?2:1)}
 function addScore(n,pos,cls){if(S.ended)return 0;const v=Math.round(n*mult());S.score+=v;if(pos&&SCREEN==="play")scorePop(pos,"+"+v.toLocaleString(),cls);return v}
-function onKill(e){if(SCREEN!=="play")return;addSpec(4);G.kc++;G.kcT=KC_WINDOW;G.maxKC=Math.max(G.maxKC,G.kc);
+function onKill(e){if(SCREEN!=="play")return;hitMark("kill");impactPunch(.35);addSpec(4);G.kc++;G.kcT=KC_WINDOW;G.maxKC=Math.max(G.maxKC,G.kc);
   if(G.kc===5||G.kc===10||G.kc===20||G.kc===35)popText(`콤보 ×${comboMult()}`);
   if(e.elite){addScore(1500,e.m.position.clone(),"big");popText("정예기 격파")}
-  if(e.ms){addScore(1200,e.m.position.clone(),"big");popText("적 MS 격파")}}
+  if(e.ms){addScore(e.blade?1800:1200,e.m.position.clone(),"big");popText(e.blade?"검투기 격파":"적 MS 격파")}}
 
 /* ---- floating score numbers ---- */
 const POPS=[];const popWrap=document.createElement("div");popWrap.id="pops";$("hud").appendChild(popWrap);
@@ -48,7 +48,8 @@ function spawnEnemy(pos,elite,ram){
 function aroundPlayer(rMin,rMax,ySpread){const a=Math.random()*Math.PI*2,r=rMin+Math.random()*(rMax-rMin);return new V3(S.pos.x+Math.cos(a)*r,S.pos.y+(Math.random()-.5)*ySpread,S.pos.z+Math.sin(a)*r)}
 function spawnCluster(){const n=2+Math.floor(Math.random()*3),c=aroundPlayer(32,58,12);
   for(let i=0;i<n;i++)spawnEnemy(c.clone().add(new V3().randomDirection().multiplyScalar(5+Math.random()*4)),false)}
-function fillEnemies(){if(VS||S.demo||CINE.on)return;const ph=PHASES[G.phase];let alive=0,el=0,rm=0,ms=0;for(const e of enemies)if(e.alive&&e.launched<=0&&!e.isBoss&&!e.isWP){alive++;if(e.elite)el++;if(e.ram)rm++;if(e.ms)ms++}
+function fillEnemies(){if(VS||S.demo||CINE.on)return;const ph=PHASES[G.phase];let alive=0,el=0,rm=0,ms=0,bl=0;for(const e of enemies)if(e.alive&&e.launched<=0&&!e.isBoss&&!e.isWP){alive++;if(e.elite)el++;if(e.ram)rm++;if(e.blade)bl++;else if(e.ms)ms++}
+  if(bl<(ph.blade||0)&&SCREEN==="play"&&S.started&&Math.random()<.03&&spawnMS(aroundPlayer(38,50,6),true))return;
   if(ms<(ph.ms||0)&&SCREEN==="play"&&S.started&&Math.random()<.03&&spawnMS(aroundPlayer(34,46,8)))return;
   if(EN_MESH&&el<ph.elites&&SCREEN==="play"){spawnEnemy(aroundPlayer(30,40,8),true);return}
   if(EN_MESH&&rm<ph.rams&&SCREEN==="play"&&Math.random()<.02){spawnEnemy(aroundPlayer(45,60,10),false,true);return}

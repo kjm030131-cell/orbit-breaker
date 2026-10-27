@@ -15,7 +15,7 @@ function msTemplate(){if(MS_TPL)return MS_TPL;const f=FRAMES.mk2&&FRAMES.mk2.glt
 (function(){if(!window.GLB_BASE)return;setTimeout(()=>fetch(GLB_BASE+"enemy_ms.glb",{method:"HEAD"}).then(r=>{
   const t=r.headers.get("content-type")||"";if(r.ok&&!/html/.test(t))glb("enemy_ms",null,g=>msSetTemplate(g,false))}).catch(()=>{}),1500)})();
 
-function spawnMS(pos){const T=msTemplate();if(!T)return null;const k=MS_H/T.h,g=new THREE.Group();
+function spawnMS(pos,blade){const T=msTemplate();if(!T)return null;const k=MS_H/T.h,g=new THREE.Group();
   const mat=T.mat.clone();mat.emissive=new THREE.Color(0);let m,J=null;
   if(T.rigged){const rg=MechRig.build({geometry:T.geo,material:mat},"ms");m=rg.mesh;J=rg.J;m.frustumCulled=false}else m=new THREE.Mesh(T.geo,mat);
   m.scale.setScalar(k);m.position.y=-.5*MS_H;g.add(m);g.userData.mat=mat;
@@ -27,11 +27,12 @@ function spawnMS(pos){const T=msTemplate();if(!T)return null;const k=MS_H/T.h,g=
   const e={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:Math.random()*10,flash:0,elite:false,rad:3.6,ms:true,hp:2,stun:0,push:new V3(),
     dashT:1.5+Math.random()*2,dashV:new V3(),burstN:0,burstT:0,ram:false,rs:"hunt",rt:0,rdir:new V3(),fireT:1.5+Math.random()*2,tele:0,teleLock:false,teleDir:new V3(),
     keep:22+Math.random()*8,yaw,aim:false,J,aimK:0,orbit2:Math.random()<.5?-1:1,dashK:0,kick:0,roll:null};if(J)msPose(e,0);
+  if(blade){e.bs="hunt";e.bt=1.2;e.windT=.6;e.dashT=.3;mat.color.multiply(new THREE.Color(1.15,.72,.72));bladeBuild(e)}
   enemies.push(e);emit(ADD,{pos,tex:TX.ring,color:0xff2a2a,s0:2,s1:14,life:.5,a:.6});return e}
 
 // first hit on a full-armor MS: stagger instead of launch
 function msArmor(e,dir){e.hp--;e.flash=1;e.stun=.75;e.push.copy(dir).setY(dir.y*.3).normalize().multiplyScalar(18);clearTele(e);e.burstN=0;
-  sparks(e.m.position,dir,0xffc080,30,.5,22);fxImpact(e.m.position.clone(),0xffb060);sfx("heavy",e.m.position);S.hitstop=Math.max(S.hitstop,.05);
+  sparks(e.m.position,dir,0xffc080,30,.5,22);fxImpact(e.m.position.clone(),0xffb060);sfx("heavy",e.m.position);S.hitstop=Math.max(S.hitstop,.07);impactPunch(.55);hitMark("hit");sfx("thud",e.m.position,1);
   addScore(200,e.m.position.clone());popText("장갑 파손 · 한 번 더!")}
 
 // combat stance: knees tucked like a mech in flight, torso leaning in, gun arm half raised and fully up while firing
@@ -41,7 +42,7 @@ function msPose(e,T){const J=e.J;if(!J)return;const a=Math.max(.35,e.aimK),sw=Ma
   J.armL.rotation.set(-.55+ds*.6-sw,0,-1.2);J.foreL.rotation.set(-.9+ds*.4,0,0);
   const leg=Math.sin(T*1.6+e.phase)*.08;J.thighR.rotation.set(.45-ds*.55+leg,0,-.08);J.thighL.rotation.set(.3-ds*.65-leg,0,.08);
   J.shinR.rotation.set(.95-ds*.5,0,0);J.shinL.rotation.set(1.15-ds*.6,0,0)}
-function msMove(e,dt,T){if(e.J){e.aimK+=((e.tele>0||e.burstN>0?1:0)-e.aimK)*Math.min(1,dt*8);msPose(e,T)}const em=e.m,to=S.pos.clone().sub(em.position),d=to.length();to.normalize();const side=new V3(to.z,0,-to.x);let lean=0;
+function msMove(e,dt,T){if(e.blade)return bladeMove(e,dt,T);if(e.J){e.aimK+=((e.tele>0||e.burstN>0?1:0)-e.aimK)*Math.min(1,dt*8);msPose(e,T)}const em=e.m,to=S.pos.clone().sub(em.position),d=to.length();to.normalize();const side=new V3(to.z,0,-to.x);let lean=0;
   if(e.stun>0){e.stun-=dt;em.position.addScaledVector(e.push,dt);e.push.multiplyScalar(Math.exp(-4*dt));em.rotation.set(-.35*(e.stun/.75),e.yaw,Math.sin(T*30)*.06);return true}
   if(d>e.keep+3)em.position.addScaledVector(to,dt*8);else if(d<e.keep-5)em.position.addScaledVector(to,-dt*7);
   em.position.addScaledVector(side,e.orbit2*(d<e.keep+10?7:2)*dt); // circle strafe
