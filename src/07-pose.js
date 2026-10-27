@@ -24,7 +24,11 @@ function solvePose(dt,localV,boosting,T){
   const wF=clamp(n.z,0,1)*intensity,wB=clamp(-n.z,0,1)*intensity,wL=clamp(n.x,0,1)*intensity,wR=clamp(-n.x,0,1)*intensity,wU=clamp(n.y,0,1)*intensity,wD=clamp(-n.y,0,1)*intensity;
   const delta=(src,w)=>{for(const k in src){const o=out[k],b=idle[k]||[0,0,0];o[0]+=(src[k][0]-b[0])*w;o[1]+=(src[k][1]-b[1])*w;o[2]+=(src[k][2]-b[2])*w}};
   // boosting forward: superhero flight line (torso down, arms swept back, legs trailing)
-  const wDash=boosting?clamp(n.z,0,1)*clamp(sp/40,0,1):0;S.boostLean=wDash;
+  // dodge (Shift tap) and boost (Shift held) read differently: a tucked 0.3 s flash-step first,
+  // then the flight line eases in only while the boost keeps going
+  const dodging=(S.dodgeT||0)>0;S.boostRamp=boosting&&!dodging?Math.min(1,(S.boostRamp||0)+dt/.35):0;
+  if(dodging)delta({torso:[.3,0,0],head:[-.2,0,0],armR:[-.15,0,-.35],foreR:[-1.1,0,0],armL:[-.2,0,.4],foreL:[-1.2,0,0],thighR:[.85,0,-.1],shinR:[1.35,0,0],thighL:[.75,0,.1],shinL:[1.45,0,0]},Math.min(1,S.dodgeT/.08));
+  const wDash=boosting?clamp(n.z,0,1)*clamp(sp/40,0,1)*S.boostRamp:0;S.boostLean=wDash;
   if(wDash>0)delta({torso:[.6,0,0],head:[-.55,0,0],armR:[.65,0,-.25],foreR:[-.2,0,0],armL:[.7,0,.3],foreL:[-.25,0,0],thighR:[-.2,0,-.05],shinR:[.3,0,0],thighL:[-.35,0,.06],shinL:[.5,0,0]},wDash);
   delta(POSE.fwd,wF*(1-wDash));delta(POSE.back,Math.min(1,wB+(ATT.brake||0)*.8));delta(POSE.left,wL);delta(POSE.right,wR);delta(POSE.up,wU);delta(POSE.down,wD);
   // turning: upper body leads the turn
@@ -62,7 +66,7 @@ function solvePose(dt,localV,boosting,T){
 // the strike and overshoot, flip into the heavy chop, barrel-roll on dodges, kick back on shots.
 const BODY={yaw:0,yv:0,pitch:0,pv:0,lift:0,lv:0,spin:null,kick:0};
 function bodySpring(cur,vel,target,k,z,dt){const c=2*Math.sqrt(k)*z;vel+=(k*(target-cur)-c*vel)*dt;return [cur+vel*dt,vel]}
-function bodyMotion(m,dt){if(dt<=0)return;let ty=0,tp=0,tl=0,k=140;
+function bodyMotion(m,dt){if(dt<=0)return;S.dodgeT=Math.max(0,(S.dodgeT||0)-dt);let ty=0,tp=0,tl=0,k=140;
   if(S.act&&ACT[S.act]&&S.over<=0){const A=ACT[S.act],kt=S.actT/A.dur,s=A.strike;
     if(S.act==="slash1"||S.act==="slash2"){const sg=S.act==="slash1"?1:-1;
       if(kt<s){ty=-sg*.55*Math.min(1,kt/s*1.6);tp=-.06}else{ty=sg*.7*Math.exp(-(kt-s)*5);tp=.12*Math.exp(-(kt-s)*6);k=420}}
@@ -76,5 +80,5 @@ function bodyMotion(m,dt){if(dt<=0)return;let ty=0,tp=0,tl=0,k=140;
   // dodge barrel roll / flip (full turn, eased)
   const sp=BODY.spin;if(sp){sp.t+=dt;const u=Math.min(1,sp.t/sp.dur),e=u*u*(3-2*u);if(sp.axis==="z")m.rotation.z+=sp.sign*e*Math.PI*2;else m.rotation.x+=sp.sign*e*Math.PI*2;
     if(u>=1)BODY.spin=null}}
-function bodyDodge(dir){const l=dir.clone().applyAxisAngle(new V3(0,1,0),-S.face);
-  if(Math.abs(l.x)>=Math.abs(l.z))BODY.spin={axis:"z",sign:l.x>0?-1:1,t:0,dur:.42};else BODY.pv+=(l.z>0?1:-1)*7.5} // fore/aft: sharp lean that springs back, no flip
+function bodyDodge(dir){const l=dir.clone().applyAxisAngle(new V3(0,1,0),-S.face);S.dodgeT=.32;S.boostRamp=0;
+  if(Math.abs(l.x)>=Math.abs(l.z))BODY.spin={axis:"z",sign:l.x>0?-1:1,t:0,dur:.42};else BODY.pv+=(l.z>0?1:-1)*4} // fore/aft: sharp lean that springs back, no flip
