@@ -14,7 +14,7 @@ let SENS=1;try{SENS=clamp(+localStorage.getItem("ob.sens")||1,.3,2.5)}catch(e){}
 function setSens(v){SENS=clamp(+v||1,.3,2.5);try{localStorage.setItem("ob.sens",SENS)}catch(e){}document.querySelectorAll(".sensIn").forEach(i=>{i.value=SENS});document.querySelectorAll(".sensV").forEach(s=>s.textContent=SENS.toFixed(2))}
 document.querySelectorAll(".sens").forEach(l=>{l.addEventListener("click",e=>e.stopPropagation());l.addEventListener("pointerdown",e=>e.stopPropagation())});
 document.querySelectorAll(".sensIn").forEach(i=>i.addEventListener("input",()=>setSens(i.value)));setSens(SENS);
-addEventListener("mousemove",e=>{if(SCREEN!=="play")return;if(locked){if(G.focus&&targetable(G.focus))return;S.yaw-=e.movementX*.0026*SENS;S.pitch=clamp(S.pitch-e.movementY*.002*SENS,-.7,.5)}else mouseX=(e.clientX/innerWidth-.5)*2});
+addEventListener("mousemove",e=>{if(SCREEN!=="play")return;if(locked){if(G.focus&&targetable(G.focus))return;const mx=e.movementX,my=e.movementY;if(Math.abs(mx)>260||Math.abs(my)>260)return; /* Chrome pointer-lock spike */S.yaw-=clamp(mx,-120,120)*.0026*SENS;S.pitch=clamp(S.pitch-clamp(my,-120,120)*.002*SENS,-.7,.5)}else mouseX=(e.clientX/innerWidth-.5)*2});
 document.addEventListener("pointerdown",()=>{const a=ac();if(a&&a.state!=="running")a.resume().catch(()=>{})});
 $("pause").addEventListener("click",()=>{PAUSED=false;$("pause").hidden=true;muffle(false);lock()});
 const UI={key(){}};
