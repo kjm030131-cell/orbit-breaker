@@ -1,0 +1,88 @@
+# ORBIT BREAKER — 작업 인수인계 문서
+
+2026 SCHU AI·SW Festival 게임개발 경진대회(E-Sports 부문) 출품작.
+마감 **10/30(금) 18:00**. 제출물은 웹 링크, 5분 시연영상, 10쪽 기획서 PDF.
+라이브 주소: **https://orbitbreaker.pages.dev** (Cloudflare Pages + D1 + Durable Object)
+
+## 1. 폴더 (두 폴더를 ~/Desktop 에 나란히 두기)
+- `orbit-breaker-src/` : 이 폴더. 소스 코드.
+- `orbit-breaker-deploy/` : 배포 폴더. 이미 바탕화면에 있음. `public/`, `wrangler.toml`, `pvp/`, `deploy.sh`가 들어 있음.
+
+## 2. 빌드 & 배포
+```
+cd ~/Desktop/orbit-breaker-src
+npm install                  # three@0.147.0 설치 (배포본에 three를 직접 포함하는 데 씀)
+python3 build.py             # src/*.js + head2.html → orbit-breaker.html (한 파일로 합침)
+node --check game.js         # 문법 검사
+python3 build_deploy.py      # → ../orbit-breaker-deploy/public 을 새로 생성
+cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages 사이트 배포
+```
+- `build.py`가 만드는 html은 Claude 아티팩트용이라 base64 모델(mech_glb.js 등)을 참조함. 배포본은 `build_deploy.py`가 이 참조를 지우고, `models/*.glb`(meshopt 압축)를 fetch로 불러오게 바꿈.
+- 배포 후 브라우저에서 Cmd+Shift+R로 새로고침해야 함 (service worker 캐시 때문).
+
+## 3. 코드 구조
+`src/` 안의 파일이 숫자 순서대로 하나의 IIFE로 합쳐짐.
+
+| 파일 | 역할 |
+|---|---|
+| 00-core | 렌더러, 씬, 블룸, 조명 |
+| 01-fx | 파티클, 빔 볼트, 빔 궤적, 명중 이펙트 |
+| 02-mech | 플레이어 기체, 모션(POSE/ACT), 기체 목록 FRAMES(mk2 / swift) |
+| 03-enemies | 적 템플릿, knock(날리기) |
+| 04-input | 키보드·마우스, 감도(SENS, localStorage에 저장) |
+| 05-audio | 절차적 효과음과 음악 |
+| 06-combat | 타게팅(조준 원뿔 + E 포커스), 베기, 사격(조준 후 70ms 뒤 발사) |
+| 07-pose | 관절 스프링 포즈, 사격 조준 IK |
+| 08-gameplay | 단계(PHASES), 점수, 피격(1발 = 기체 1기), 무피격 배율, 돌격 드론 |
+| 09-catapult | 출격 컷씬, 전함 |
+| 10-items | 아이템, 필살기 |
+| 10b-units | 옵션 유닛 4종 |
+| 10c-boss | 보스 케르베로스 |
+| 11-loop | 메인 루프, 카메라 |
+| 12-ui | 등록, 랭킹, HUD, 서버 API 호출 |
+| 12b-duel | 쇼다운 로비, 점수 대결 |
+| 12c-versus | 1:1 기체 대전 (WebSocket) |
+| 13-boot | 모델 로딩. 여기 있는 `bakeGLTF()`가 압축 모델의 크기 정보를 복원함 |
+
+- `rig.js`: 기체별 리깅 레이아웃(`LAYOUTS.mk2`, `LAYOUTS.swift`). 새 기체를 추가하면 관절 좌표 레이아웃도 같이 추가해야 함.
+- `head2.html`: HTML/CSS 껍데기 (HUD와 각 화면). UI 이미지는 `ui/*.webp`.
+
+## 4. 서버
+- **`server/api.js`:** 빌드할 때 `public/_worker.js`로 들어감. 경로는 세 가지.
+  - `/api/board`, `/api/player`, `/api/start`, `/api/finish` : D1 `orbit-breaker-db` 사용. 학번당 3회 제한과 최고점은 서버가 관리.
+  - `/api/duel/*` : 점수 대결 방.
+  - `/pvp?room=` : Durable Object(pvp 워커)로 WebSocket 중계.
+- **`pvp/`:** 워커 `orbitbreaker-pvp`. PvpRoom Durable Object가 두 자리를 중계함. Pages의 `wrangler.toml`에 `script_name`으로 바인딩돼 있음.
+- **D1 id:** `ff24e7fc-93f1-44f0-8717-8b61ae610fbc` (wrangler.toml에 있음). 스키마는 `server/schema.sql`이고 이미 적용됨.
+
+## 5. 주의사항
+- **대회 필수 요구사항:** 이름·학과·학번 입력, 학번당 3회, 최고점만 순위 반영, 전체 순위와 본인 순위 표시, 밸런스(특정 전략이 압도하지 않게), 안정성.
+- **압축 모델:** 압축 GLB는 노드에 스케일이 들어 있음. `bakeGLTF()`를 거치지 않으면 모델, 리깅, 컷씬이 전부 깨짐.
+- **비순위 모드:** 쇼다운과 대전은 순위와 출격 횟수에 반영하지 않음.
+- **수정 후 확인 순서:**
+  1. `node --check game.js`로 문법 검사
+  2. 실제 브라우저에서 확인
+  3. 배포 폴더의 파일이 새 버전으로 바뀌었는지 확인
+
+## 6. 남은 일 (우선순위 순)
+1. **대전 실기 테스트:** PC 2대로 1:1 기체 대전 손맛과 지연 확인. 그 결과로 데미지(`12c-versus.js`의 `VS_DMG`), 빔 속도(170), 감도 튜닝.
+2. **보스와 밸런스:** 90초 보스를 실제 화면에서 확인. 옵션 유닛 밸런스 조정 (포드 유닛의 올 레인지가 강함).
+3. **기획서 PDF (10쪽):**
+   - 필수 목차: 개요, 기술, 플레이 방법과 스크린샷, 차별성과 팀 역할, 규칙과 e스포츠 적용 계획
+   - **AI 사용 내역** (필수, 빠지면 감점·실격): Claude는 코드·기획, Tripo AI는 3D 모델, 나노바나나는 이미지·UI
+   - **오픈소스 라이선스:** three.js(MIT), Google Fonts(OFL), meshoptimizer(MIT)
+4. **시연 영상** (5분 이내).
+5. **선택 작업:** 추가 기체(프롬프트 준비돼 있음), 보스 전용 모델, 첫 출격 튜토리얼 힌트, 화면 밖 적 경고.
+
+## 7. 2026-10-27 Codex 1:1 개편
+- 메뉴: 데모 화면의 적 표시/이동/생성 중단. 출격 시 복원.
+- PvP 프로토콜 v2: `pvp/src/arena.js`가 공통 규칙, 준비, 라운드 시계, 체력, 탄도, 공격 간격/거리, 회피 자원, 승패를 관리. `index.js`는 WebSocket과 Durable Object 저장/알람을 연결.
+- 방 생성자만 기체 패시브와 옵션(옵션 패시브+R+F)을 각각 변경 가능. 기본 OFF/OFF. 규칙/장비 변경 시 양쪽 준비 해제, 시작 이후 변경 금지.
+- 양쪽 준비 후 공통 3초 카운트다운, 99초 2선승. 시간 종료는 체력 비율, 동률은 같은 라운드 재경기.
+- PvP 일반 베기 14 / 3타 22, 돌진 접근 18m 이내, 공격 동작+후딜 동안 다른 공격/회피 불가. 라이플 8 피해/0.4초/170m/s, 발사 방향 고정. 회피 비용25/쿨다운0.65초/무적0.18초; 저스트 회피 +15 부스트와 1초 내 다음 베기 +20%.
+- 기체 패시브 ON: Mk-II HP110, 스위프트 HP90/이동+15%/회복+10%. OFF: 모두 HP100, 동일 성능.
+- 옵션 ON: 대전 전용 R/F(직선 돌진, 포드 확산사격, 미사일 연사, 짧은 반사 장벽). PvE 광역 날리기 로직은 호출하지 않음. 필살기 게이지는 시간/명중/저스트 회피로 충전. `VS_UNIT_TEXT`와 arena.js 참조.
+- Esc는 대전을 멈추지 않으며 조작만 해제. 슬롯/프로토콜/메시지 검증, 기본 이동 상한 검사 포함. 서버는 클라이언트 위치를 받아 사용하므로 완전한 서버 이동 시뮬레이션은 아님.
+- 타임어택의 체력·옵션·점수·3회 제한은 변경하지 않음. bakeGLTF 그대로 보존.
+- `build_deploy.py`가 PvP 서버 소스도 배포 폴더에 복사함. 기존 빌드 3단계 후 deploy.sh 실행.
+- 자동 검증: `node --test tests/pvp-arena.test.mjs`. 실제 2PC에서 조작감/지연 최종 확인 필요.
