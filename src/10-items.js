@@ -11,7 +11,7 @@ function addSpec(n){if(SCREEN!=="play"||G.specT>=0)return;const was=G.spec;G.spe
 /* ---- special: ORBIT BREAK ---- */
 function special(){
   if(VS){vsSkill(true);return}if(SCREEN!=="play"||S.ended||G.spec<100||G.specT>=0||G.stagger>0)return;
-  G.spec=0;G.specT=0;G.iframe=2;S.act=null;S.dash=0;S.dashT=null;S.pending=null;startAct("special");S.slow=.55;if(P&&P.J)fxCharge(P.J.torso);
+  tutCount("spec");G.spec=0;G.specT=0;G.iframe=2;S.act=null;S.dash=0;S.dashT=null;S.pending=null;startAct("special");S.slow=.55;if(P&&P.J)fxCharge(P.J.torso);
   unitSpecial();sfx("specCharge");
   if(G.unit==="boost")for(let i=0;i<14;i++){const o=new V3().randomDirection().multiplyScalar(9);emit(ADD,{pos:S.pos.clone().add(o),color:0xffc060,vel:o.clone().multiplyScalar(-2.2),s0:1.4,s1:.3,life:.45,a:.8,drag:0})}
 }
@@ -31,7 +31,7 @@ function specialBurst(){
 const wellCore=new THREE.SphereGeometry(1,24,16);
 function throwGrav(){
   if(VS)return;if(SCREEN!=="play"||S.ended||G.grav<=0||G.stagger>0||G.wells.some(w=>w.state==="fly"))return;
-  G.grav--;const dir=camFwd(),from=S.pos.clone().add(new V3(0,1.2,0)).addScaledVector(dir,2.5);
+  G.grav--;tutCount("grav");const dir=camFwd(),from=S.pos.clone().add(new V3(0,1.2,0)).addScaledVector(dir,2.5);
   const g=new THREE.Group();
   const core=new THREE.Mesh(wellCore,new THREE.MeshBasicMaterial({color:0x14061f}));core.scale.setScalar(.7);g.add(core);
   const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xb070ff,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));halo.scale.set(4,4,1);g.add(halo);

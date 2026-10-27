@@ -153,3 +153,12 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 - ACT 길이: slash1 .56/.38, slash2 .52/.36, slash3 .86/.52, guard(칼날 격돌 시) 추가.
 - 사용자 빔샤벨 에셋(10/28): ui/fx_blade.webp(R=코어,G=글로우, 칼날 텍스처 채널 분리), ui/fx_trail.webp(잔상), models/hilt.glb(Tripo 67MB→weld/simplify/resize512/jpeg/meshopt 580KB, 방출구 +Y).
   saberMat/makeArc 가 텍스처 로드되면 사용(SABER_ON/TRAIL_ON), 아니면 절차적. attachHilt()로 플레이어·검투기에 손잡이. 플레이어 사벨 핑크(0xff3aa8), 과열 시 빨강. 칼날 길이 L .52→.7.
+
+## 17. 스토리 「유성우 예보」 + 인트로 + 튜토리얼 (10/28)
+- 세계관: 궤도 전쟁 3년째, 지상엔 '궤도 정비'로 발표. 격추된 기체는 대기권에서 불타 유성이 됨 → 사람들은 소원을 빔. 120초 = 전장이 서울 상공을 지나는 시간, 점수/격파 수 = 오늘 밤 유성 수.
+  인물: 앰버 1(나), 동생 유나(메시지), 한서윤 중위(CIC), 적 에이스 카인(붉은 검투기). 일반 출격 대사·결과 문구도 이 톤으로 교체.
+- src/09b-intro.js: playIntro() ~30초(검은 카드 → 궤도 전투·추락 유성 → 유성우 → 동생 문자/답장 → 타이틀) → playCatapult 로 이어짐. Space 스킵.
+- src/12e-tutorial.js: TUT, 타이틀 메뉴 '튜토리얼'(#tutBtn). 타이머·게임오버 없음(hurt→tutHurt), fillEnemies 막음.
+  단계 8개(이동 웨이포인트/회피/사격 3기/3타 콤보/저스트 회피/특수기 2종/카인 카운터/귀환) → 엔딩 카드 "그날 밤 서울 하늘에는 유성 N개" → 실전 출격/메인.
+  카운터 훅: dodge, justDodge, onKill, slashStrike(slash3), special, unitSkill, throwGrav, bladeParry.
+- 롤백용: origin/stable-pre-tutorial (튜토리얼 이전 main).

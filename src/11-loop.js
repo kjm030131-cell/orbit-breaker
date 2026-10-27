@@ -17,7 +17,8 @@ function update(rdt){
   else if(VS&&G.focus&&SCREEN==="play"){vsFocusCamera(rdt)}
   else if(G.focus&&SCREEN==="play"&&targetable(G.focus)){focusCamera(rdt)}
   else if(!locked&&!VS){if(Math.abs(mouseX)>.25)S.yaw-=Math.sign(mouseX)*(Math.abs(mouseX)-.25)*1.8*rdt}
-  if(!VS&&S.started&&!S.ended&&SCREEN==="play"){S.time-=dt;const sc=Math.ceil(S.time);if(sc!==S.lastSec){S.lastSec=sc;if(sc<=10&&sc>0)sfx("tickLow",null,sc)}if(S.time<30&&MUS.inten===0&&MUS.track==="battle"){MUS.inten=1;MUS.bpm=150}if(S.time<=0){S.time=0;finishRun()}}
+  tutFrame(dt);
+  if(!VS&&!TUT.on&&S.started&&!S.ended&&SCREEN==="play"){S.time-=dt;const sc=Math.ceil(S.time);if(sc!==S.lastSec){S.lastSec=sc;if(sc<=10&&sc>0)sfx("tickLow",null,sc)}if(S.time<30&&MUS.inten===0&&MUS.track==="battle"){MUS.inten=1;MUS.bpm=150}if(S.time<=0){S.time=0;finishRun()}}
 
   /* movement */
   const f=fwd(),right=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw)),acc=new V3();
@@ -41,6 +42,7 @@ function update(rdt){
   if(VS&&VS.phase!=="fight")S.vel.set(0,0,0);
   S.pos.addScaledVector(S.vel,dt);fieldPush();
 
+  if(INTRO.on)introUpdate(rdt);
   if(CINE.on)cineUpdate(rdt);
 
   /* heat */
@@ -115,7 +117,7 @@ function update(rdt){
   for(const d of debris){d.rotation.x+=d.userData.spin.x*rdt;d.rotation.y+=d.userData.spin.y*rdt}
 
   /* camera */
-  if(!(CINE.on&&cineCamera(rdt))){
+  if(!(INTRO.on&&introCamera(rdt))&&!(CINE.on&&cineCamera(rdt))){
   const cf=camFwd(),dist=S.demo?12:8.6;
   const want=S.pos.clone().addScaledVector(cf,-dist).add(new V3(0,2.4,0));
   if(S.demo){const pv=SCREEN==="load",a=S.demoT*(pv?.35:.25),r=pv?10.5:11;want.copy(S.pos).add(new V3(Math.sin(a+2.6)*r,(pv?.6:2.2)+Math.sin(a*.7)*(pv?.3:1),Math.cos(a+2.6)*r))}

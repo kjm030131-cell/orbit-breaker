@@ -157,15 +157,17 @@ async function launch(){
   await playCatapult();
   show("play");S.started=true;launching=false;phaseBanner(PHASES[0]);sfx("phase");
 }
-function debriefLine(lost,score){
-  if(lost)return "앰버 1, 기체 반응 소실… 회수정 보냈어요. 다음엔 조준선 깜빡임을 놓치지 마세요.";
-  if(BOSS.dead)return "케르베로스 격파 확인. 아르고스 드론군 지휘 체계 붕괴, 낙하 궤적 전부 이탈했어요. 완벽한 작전이었습니다.";
-  if(score>=60000)return "드론군 대부분 무력화. 잔해 낙하 궤적 크게 이탈 중. 훌륭해요, 앰버 1.";
-  if(score>=25000)return "낙하 궤적 일부 수정 확인. 지휘기가 남아 있어요. 재출격하면 놈을 노려봐요.";
-  return "작전 시간 종료, 귀환하세요. 아르고스 드론군 아직 다수 건재. 연쇄 폭발을 노려봐요.";
+function debriefLine(lost,score){const n=S.kills||0;
+  if(lost)return `앰버 1, 기체 반응 소실… 회수정 보냈어요. 오늘 밤 서울 하늘엔 유성이 ${n}개. 다음엔 조준선 깜빡임을 놓치지 마세요.`;
+  if(BOSS.dead)return `케르베로스 격파 확인. 서울 상공 통과 완료, 유성 ${n}개. …지상에선 역대급 유성우라고 난리예요.`;
+  if(score>=60000)return `서울 상공 통과 완료. 오늘 밤 유성 ${n}개. 훌륭해요, 앰버 1.`;
+  if(score>=25000)return `통과 완료. 유성 ${n}개. 지휘기는 아직 남아 있어요. 다음엔 놈을 노려봐요.`;
+  return `120초 종료, 귀환하세요. 오늘 밤 유성은 ${n}개. 연쇄 폭발을 노려봐요.`;
 }
+
 function finishRun(reason){
   if(VS){vsTimeUp();return}
+  if(TUT.on){tutExit("title");return}
   if(S.ended)return;S.ended=true;if(document.pointerLockElement)document.exitPointerLock();
   const lost=reason==="lost";let bonus=0;
   const rate=lost?0:G.lives*.1+(G.lives===MAX_LIVES?.1:0);if(!lost){bonus=Math.round(S.score*rate);S.score+=bonus}

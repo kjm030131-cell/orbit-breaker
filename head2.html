@@ -185,6 +185,34 @@ button{font:inherit;color:inherit}
 .lTxt{font-family:var(--f-kdisp);font-size:26px;margin-top:6px}
 .lSub{font-family:var(--f-mono);font-size:12px;letter-spacing:.2em;color:var(--muted);margin-top:8px}
 #cine{position:fixed;inset:0;z-index:24;pointer-events:none}
+#intro{position:fixed;inset:0;z-index:26;pointer-events:none}#intro[hidden]{display:none}
+#intro .ib{position:absolute;inset:0;background:#000;opacity:0;transition:opacity 1.2s}#intro.black .ib{opacity:1}
+#intro .lb{position:absolute;left:0;right:0;height:11vh;background:#000}#intro .lb.top{top:0}#intro .lb.bot{bottom:0}
+#inCardBox{position:absolute;left:0;right:0;top:42%;text-align:center;padding:0 24px}
+#inCard{font-size:clamp(22px,3.2vw,40px);font-weight:700;letter-spacing:.08em;color:#f2efe8;min-height:1.3em}
+#inSub{margin-top:14px;font-size:clamp(13px,1.3vw,16px);color:#9a968c;letter-spacing:.04em;min-height:1.3em}
+#inLine{position:absolute;left:0;right:0;bottom:calc(11vh + 26px);text-align:center;font-size:clamp(16px,1.7vw,22px);color:#ece8df;letter-spacing:.04em;text-shadow:0 2px 12px #000;padding:0 24px}
+#inMsg{position:absolute;right:max(24px,6vw);bottom:calc(11vh + 70px);width:min(340px,80vw);opacity:0;transform:translateY(12px);transition:opacity .35s,transform .35s}
+#inMsg.on{opacity:1;transform:none}#inMsg .mh{font-size:12px;color:#9a968c;margin:0 0 6px 4px}
+#inMsg .bA{background:rgba(40,42,48,.94);color:#f2f2f2;padding:10px 14px;border-radius:16px 16px 16px 4px;font-size:15px;line-height:1.45;min-height:1.45em}
+#inMsg .bB{margin:8px 0 0 auto;width:fit-content;max-width:80%;background:#ffb21a;color:#1a1408;padding:9px 14px;border-radius:16px 16px 4px 16px;font-size:15px;opacity:0;transition:opacity .3s;min-height:1.4em}
+#inMsg.reply .bB{opacity:1}
+#inTitle{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity 1s .3s}
+#inTitle.on{opacity:1}#inTitle b{font-size:clamp(34px,5vw,64px);letter-spacing:.22em;color:#f2efe8}#inTitle span{margin-top:12px;color:#ffb21a;letter-spacing:.5em;font-size:clamp(14px,1.4vw,18px)}
+#intro .skip{position:absolute;right:28px;top:calc(5.5vh - 7px);color:#8d8a82;z-index:2}
+#tutObj{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:5;max-width:min(560px,70vw);padding:9px 16px;border-left:3px solid #ffb21a;background:linear-gradient(90deg,rgba(0,0,0,.72),rgba(0,0,0,.35));pointer-events:none}
+#tutObj[hidden]{display:none}
+#tutObj .lbl{display:block;font-size:11px;letter-spacing:.18em;color:#ffb21a;margin-bottom:3px}#tutObj .lbl i{font-style:normal;color:#8d8a82;margin-left:10px}
+#tutObj b{display:block;font-size:15px;color:#f2efe8;font-weight:600;line-height:1.4}
+#tutObj em{display:block;font-style:normal;font-size:13px;color:#7fe8ff;margin-top:3px;min-height:1em}
+#tutObj.new{animation:tno .5s ease-out}@keyframes tno{0%{opacity:0;transform:translate(-50%,-10px)}}
+#tutObj.ok{border-left-color:#5dff9a}#tutObj.ok b{color:#5dff9a}
+#tutEnd{position:fixed;inset:0;z-index:30;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;opacity:0;transition:opacity 1.6s;padding:24px}
+#tutEnd[hidden]{display:none}#tutEnd.on{opacity:1}
+#tutEnd p{margin:0;color:#ece8df;font-size:clamp(18px,2vw,26px);letter-spacing:.04em;text-align:center}
+#tutEnd #tutEndB{color:#9a968c;font-size:clamp(14px,1.4vw,18px);opacity:0;animation:tef 1s 1.8s forwards}@keyframes tef{to{opacity:1}}
+#tutEnd .btns{margin-top:34px;display:flex;gap:12px;opacity:0;animation:tef 1s 2.6s forwards}
+body.tut #clockBox{visibility:hidden}
 #cine[hidden]{display:none}
 #cine .lb{position:absolute;left:0;right:0;height:11vh;background:#000;transform:scaleY(0);transition:transform .5s cubic-bezier(.2,.8,.2,1)}
 #cine .lb.top{top:0;transform-origin:top}#cine .lb.bot{bottom:0;transform-origin:bottom}
@@ -461,7 +489,7 @@ body{font-variant-numeric:tabular-nums;word-break:keep-all}
 
 <!-- in-game HUD -->
 <div id="hud" hidden>
-  <div class="reticle"></div><div id="hitm"></div><div id="lockWarn"><b>피격 경고</b></div>
+  <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">OBJECTIVE<i id="tutObjN"></i></span><b id="tutObjTxt"></b><em id="tutObjProg"></em></div><div id="lockWarn"><b>피격 경고</b></div>
   <div id="lock"><i></i><i></i><i></i><i></i><span id="lockTxt">록온</span></div>
   <div id="pop"></div>
   <div id="phase"><div id="phaseSub" class="lbl">단계</div><div id="phaseName">—</div></div>
@@ -512,6 +540,7 @@ body{font-variant-numeric:tabular-nums;word-break:keep-all}
     <div class="tagline"><i></i>120초 우주 메카 스코어 어택</div>
     <nav class="menu" id="menu">
       <button class="mi" data-go="form" type="button"><span class="k"><img class="ico" src="ui/ic_play.webp" alt=""></span><span class="t">출격</span></button>
+      <button class="mi" id="tutBtn" type="button"><span class="k"><img class="ico" src="ui/ic_quality.webp" alt=""></span><span class="t">튜토리얼</span></button>
       <button class="mi" data-go="duel" type="button"><span class="k"><img class="ico" src="ui/ic_versus.webp" alt=""></span><span class="t">1:1 쇼다운</span></button>
       <button class="mi" data-go="rank" type="button"><span class="k"><img class="ico" src="ui/ic_trophy.webp" alt=""></span><span class="t">작전 기록</span></button>
       <button class="mi" data-go="brief" type="button"><span class="k"><img class="ico" src="ui/ic_quality.webp" alt=""></span><span class="t">조작 교본</span></button>
@@ -679,6 +708,11 @@ body{font-variant-numeric:tabular-nums;word-break:keep-all}
 </section>
 
 <div id="launch" hidden><div class="lBox"><div class="lNum" id="lNum">3</div><div class="lTxt" id="lTxt">XR-07 Mk-II, 출격 준비</div><div class="lSub" id="lSub">CATAPULT · STANDBY</div></div></div>
+<div id="intro" hidden><div class="ib"></div><div class="lb top"></div><div class="lb bot"></div>
+  <div id="inCardBox"><div id="inCard"></div><div id="inSub"></div></div><div id="inLine"></div>
+  <div id="inMsg"><div class="mh">유나</div><div class="bA" id="inMsgA"></div><div class="bB" id="inMsgB"></div></div>
+  <div id="inTitle"><b>ORBIT BREAKER</b><span>유성우 예보</span></div><div class="skip lbl">Space — 건너뛰기</div></div>
+<div id="tutEnd" hidden><p id="tutEndA"></p><p id="tutEndB"></p><div class="btns"><button class="btn primary" type="button" id="tutGo">실전 출격</button><button class="btn" type="button" id="tutBack">메인으로</button></div></div>
 <div id="cine" hidden><div class="lb top"></div><div class="lb bot"></div><div class="cTag"><span class="lbl">CATAPULT 02 · LAUNCH SEQUENCE</span></div>
   <div class="cSub" id="cineSub"><span class="who" id="subWho"></span><span id="subTxt"></span></div><div class="skip lbl">Space · Click — 건너뛰기</div><div class="cFade"></div></div>
 <div id="pause" hidden><div class="frame pane pMenu">

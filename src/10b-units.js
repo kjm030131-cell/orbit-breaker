@@ -81,7 +81,7 @@ function projHit(p){const e=p.tgt,at=e.m.position.clone();
 function unitSkill(){
   if(VS){vsSkill(false);return}if(SCREEN!=="play"||S.ended||G.dead>0||G.stagger>0||G.specT>=0||G.cfield>0)return;
   if(G.unitCd>0){sfx("deny");return}
-  const u=G.unit;
+  const u=G.unit;tutCount("unit");
   if(u==="boost"){
     const dir=aimDir();G.ob=.34;G.obDir.copy(dir);G.obHit=new Set();G.iframe=Math.max(G.iframe,.45);G.unitCd=UNITS.boost.cd;
     S.act=null;S.dash=0;S.dashT=null;S.pending=null;S.bladeOn=1.2;startAct("lunge");S.face=Math.atan2(dir.x,dir.z);

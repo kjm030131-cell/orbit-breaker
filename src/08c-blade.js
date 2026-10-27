@@ -61,8 +61,8 @@ function bladeClash(e,perfect){const mid=S.pos.clone().lerp(e.m.position,.5).add
   startAct("guard");S.attackCd=.2;S.combo=0;popText(perfect?"칼날 격돌 · 반격 찬스!":"막힘 · 틈을 노려라");addScore(perfect?700:120,mid,perfect?"cyan":"");addSpec(perfect?3:1)}
 // player's slash lands on a duelist: false = let the normal hit (launch) go through
 function bladeParry(e,at){
-  if(e.stun>0||e.bs==="rec"){e.hp=1;popText("빈틈 공략");addScore(900,at,"big");return false}
-  if(e.bs==="wind"){e.hp=1;popText("카운터!");addScore(1600,at,"big");S.slow=Math.max(S.slow,.4);addSpec(3);return false}
+  if(e.stun>0||e.bs==="rec"){e.hp=1;tutCount("counter");popText("빈틈 공략");addScore(900,at,"big");return false}
+  if(e.bs==="wind"){e.hp=1;tutCount("counter");popText("카운터!");addScore(1600,at,"big");S.slow=Math.max(S.slow,.4);addSpec(3);return false}
   bladeClash(e,e.bs==="strike");S.dashT=null;return true}
 let _deflT=0;function bladeDeflect(e,at){sparks(at,null,0xff8a80,26,.35,14);fxImpact(at,0xff5060);sfx("block",at);sfx("sizzle",at);hitMark("block");
   if(T_NOW()-_deflT>2.5){_deflT=T_NOW();popText("빔 튕겨냄 · 근접으로 베어라")}}

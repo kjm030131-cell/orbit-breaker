@@ -75,7 +75,7 @@ function slashStrike(){ // called on the strike frame of a slash action
   knock(e,dir,crit?62:heavy?52:36,big?2.2:1.8);hitFlash(e);if(crit){e.rad=Math.max(e.rad,4.8);G.crit=0}
   S.hitstop=crit?.17:heavy?.13:.085;S.shake=big?.85:.55;flash(big?.28:.16);impactPunch(crit?1.4:heavy?1:.6);hitMark(big?"kill":"hit");sfx("thud",at,big?1:0);sfx("sizzle",at);
   fxSlashHit(at,crit?0x7fe0ff:0xff8a2a,big);sfx(big?"heavy":"hit",at);
-  if(crit)popText("크리티컬");addSpec(2);
+  if(crit)popText("크리티컬");addSpec(2);if(heavy)tutCount("combo");
   addScore((heavy?260:150)*(crit?2:1),at,crit?"cyan":"");S.heat=Math.min(100,S.heat+3);S.vel.multiplyScalar(.1);S.dashT=null;
 }
 function disposeEnemy(e){clearTele(e);if(e.arc){scene.remove(e.arc.mesh);e.arc.mat.dispose();e.arc.geo.dispose();e.arc=null}scene.remove(e.m);e.m.traverse(o=>{if(o.material)o.material.dispose()})}

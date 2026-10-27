@@ -13,7 +13,7 @@ const KC_WINDOW=3.5;
 function comboMult(){const k=G.kc;return k>=35?3:k>=20?2.5:k>=10?2:k>=5?1.5:1}
 function mult(){return comboMult()*cleanMult()*(G.phase>=3?2:1)}
 function addScore(n,pos,cls){if(S.ended)return 0;const v=Math.round(n*mult());S.score+=v;if(pos&&SCREEN==="play")scorePop(pos,"+"+v.toLocaleString(),cls);return v}
-function onKill(e){if(SCREEN!=="play")return;hitMark("kill");impactPunch(.35);addSpec(4);G.kc++;G.kcT=KC_WINDOW;G.maxKC=Math.max(G.maxKC,G.kc);
+function onKill(e){if(SCREEN!=="play")return;tutCount("kill");hitMark("kill");impactPunch(.35);addSpec(4);G.kc++;G.kcT=KC_WINDOW;G.maxKC=Math.max(G.maxKC,G.kc);
   if(G.kc===5||G.kc===10||G.kc===20||G.kc===35)popText(`콤보 ×${comboMult()}`);
   if(e.elite){addScore(1500,e.m.position.clone(),"big");popText("정예기 격파")}
   if(e.ms){addScore(e.blade?1800:1200,e.m.position.clone(),"big");popText(e.blade?"검투기 격파":"적 MS 격파")}}
@@ -48,7 +48,7 @@ function spawnEnemy(pos,elite,ram){
 function aroundPlayer(rMin,rMax,ySpread){const a=Math.random()*Math.PI*2,r=rMin+Math.random()*(rMax-rMin);return new V3(S.pos.x+Math.cos(a)*r,S.pos.y+(Math.random()-.5)*ySpread,S.pos.z+Math.sin(a)*r)}
 function spawnCluster(){const n=2+Math.floor(Math.random()*3),c=aroundPlayer(32,58,12);
   for(let i=0;i<n;i++)spawnEnemy(c.clone().add(new V3().randomDirection().multiplyScalar(5+Math.random()*4)),false)}
-function fillEnemies(){if(VS||S.demo||CINE.on)return;const ph=PHASES[G.phase];let alive=0,el=0,rm=0,ms=0,bl=0;for(const e of enemies)if(e.alive&&e.launched<=0&&!e.isBoss&&!e.isWP){alive++;if(e.elite)el++;if(e.ram)rm++;if(e.blade)bl++;else if(e.ms)ms++}
+function fillEnemies(){if(VS||S.demo||CINE.on||TUT.on||INTRO.on)return;const ph=PHASES[G.phase];let alive=0,el=0,rm=0,ms=0,bl=0;for(const e of enemies)if(e.alive&&e.launched<=0&&!e.isBoss&&!e.isWP){alive++;if(e.elite)el++;if(e.ram)rm++;if(e.blade)bl++;else if(e.ms)ms++}
   if(bl<(ph.blade||0)&&SCREEN==="play"&&S.started&&Math.random()<.03&&spawnMS(aroundPlayer(38,50,6),true))return;
   if(ms<(ph.ms||0)&&SCREEN==="play"&&S.started&&Math.random()<.03&&spawnMS(aroundPlayer(34,46,8)))return;
   if(EN_MESH&&el<ph.elites&&SCREEN==="play"){spawnEnemy(aroundPlayer(30,40,8),true);return}
@@ -126,6 +126,7 @@ function stepEBolts(dt){
 }
 function hurt(b){
   if(VS)return; // PvP HP is updated only by the room server.
+  if(TUT.on){tutHurt(b);return}
   if(G.armor>0){G.armor=0;G.iframe=1;sfx("armor");popText("반응 장갑 작동");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:3,s1:14,life:.4});fxImpact(S.pos.clone().add(new V3(0,.8,0)),0x7fe0ff);S.vel.addScaledVector(b.dir,10);S.shake=.5;return}
   if(G.dead>0)return;
   fxImpact(S.pos.clone().add(new V3(0,.8,0)),0xff4030);sparks(S.pos,b.dir,0xffb080,20,.4,24);sfx("hurt");
@@ -143,7 +144,7 @@ function dodge(){
   G.dodgeCd=.45;S.boost-=15;G.iframe=Math.max(G.iframe,.22);
   const f=fwd(),r=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw)),d=new V3();
   if(keys.KeyW)d.add(f);if(keys.KeyS)d.sub(f);if(keys.KeyA)d.add(r);if(keys.KeyD)d.sub(r);if(keys.Space)d.y+=1;if(keys.KeyC)d.y-=1;
-  if(d.lengthSq()===0)d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(72));sfx("dodge");
+  if(d.lengthSq()===0)d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(72));sfx("dodge");tutCount("dodge");
   for(let i=0;i<10;i++){const k=i/10;emit(ADD,{pos:S.pos.clone().addScaledVector(d,-k*6/72).add(new V3(0,.8,0)),tex:TX.streak,color:0x7fe0ff,s0:5,s1:1,life:.25+k*.2,a:.45*(1-k)})}
   for(let i=0;i<6;i++)emit(ADD,{pos:S.pos.clone().add(new V3((Math.random()-.5)*1.5,Math.random()*2.5-.5,(Math.random()-.5)*1.5)),color:0x7fe0ff,s0:2,s1:.3,life:.35,a:.5});
   let just=false;
@@ -154,7 +155,7 @@ function dodge(){
     if(along/RAM_SPEED<.22&&rel.clone().addScaledVector(e.rdir,-along).length()<3.2){just=true;e.dodged=true}}
   if(just)justDodge();
 }
-function justDodge(){
+function justDodge(){tutCount("just");
   addSpec(12);if(G.unit==="shield"&&!G.armor&&G.guardCd<=0){G.armor=1;G.guardCd=25;popText("실드 비트 · 1회 피격 무효")}
   S.slow=.75;G.crit=2.6;G.iframe=.9;S.boost=Math.min(100,S.boost+40);S.heat=Math.max(0,S.heat-25);
   popText("저스트 회피");sfx("just");addScore(300,S.pos.clone().add(new V3(0,2,0)),"cyan");
