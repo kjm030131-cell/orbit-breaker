@@ -111,7 +111,7 @@ function vsTick(rdt){if(!VS)return;const v=VS;vsFlushSkill();if(v.correctTo){con
   if(s){if(s.fr&&s.fr!==VS.oppFrame){VS.oppFrame=s.fr}
     const k=1-Math.exp(-14*rdt);R.root.position.lerp(new V3(s.p[0],s.p[1]+Math.sin(clockT*1.6)*.12,s.p[2]),k);
     let d=s.f-R.root.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));R.root.rotation.y+=d*k;
-    let i=0;for(const key in R.SP){const b=R.J[key];if(b&&s.j.length>=i+3){b.rotation.x+=(s.j[i]-b.rotation.x)*k;b.rotation.y+=(s.j[i+1]-b.rotation.y)*k;b.rotation.z+=(s.j[i+2]-b.rotation.z)*k}i+=3}
+    let i=0;for(const key in R.SP){const b=R.J[key];if(b&&s.j.length>=i+3){b.rotation.x+=(s.j[i]-b.rotation.x)*k;b.rotation.y+=(s.j[i+1]-b.rotation.y)*k;b.rotation.z+=(s.j[i+2]-b.rotation.z)*k}i+=3}if(R.sync)R.sync();
     R.beam.scale.z=Math.max(.001,s.bl);R.beam.visible=s.bl>.02;R.J.rifle.scale.setScalar(s.r||1);
     R.flames.forEach(g=>g.scale.set(1,1+Math.sin(clockT*40)*.1,1))}
   // soft arena boundary

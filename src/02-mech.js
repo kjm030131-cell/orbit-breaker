@@ -5,9 +5,11 @@ let P=null;
 const FRAMES={mk2:{name:"XR-07 Mk-II",kr:"범용 주력기",hip:.5,obj:null},swift:{name:"XR-09 스위프트",kr:"고기동 시험기",hip:.47,obj:null}};
 function buildPlayer(gltf,frame,remote){
   frame=frame||"mk2";let src=null;gltf.scene.traverse(o=>{if(o.isMesh&&!src)src=o});
-  const rig=MechRig.build(src,frame),J=rig.J,mesh=rig.mesh;if(remote)mesh.material=mesh.material.clone();const hipY=FRAMES[frame].hip;
-  mesh.scale.setScalar(M_SCALE);mesh.position.y=-hipY*M_SCALE;mesh.frustumCulled=false;
-  const mat=mesh.material;if(ENV)mat.envMap=ENV;mat.envMapIntensity=0.35;mat.color.setRGB(.95,.95,.95);
+  let J,mesh,hipY,mix=null;
+  if(isMixRig(gltf)){mix=buildMixRig(gltf,remote);J=mix.J;mesh=mix.holder;hipY=mix.hipY;if(remote)mix.skin.material=mix.skin.material.clone()}
+  else{const rig=MechRig.build(src,frame);J=rig.J;mesh=rig.mesh;if(remote)mesh.material=mesh.material.clone();hipY=FRAMES[frame].hip;mesh.frustumCulled=false}
+  mesh.scale.setScalar(M_SCALE);mesh.position.y=-hipY*M_SCALE;
+  const mat=mix?mix.skin.material:mesh.material;if(ENV)mat.envMap=ENV;mat.envMapIntensity=0.35;mat.color.setRGB(.95,.95,.95);
   mat.emissive=new THREE.Color(0x000000);
   const root=new THREE.Group();root.add(mesh);
   // thrusters
@@ -21,7 +23,7 @@ function buildPlayer(gltf,frame,remote){
   const eye=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff4a2a,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
   eye.position.set(0,.022,.05);eye.scale.set(.05,.03,1);J.head.add(eye);
   // beam blade (left hand)
-  const blade=new THREE.Group();blade.position.set(0,-.15,.03);J.foreR.add(blade);
+  const blade=new THREE.Group();if(mix)blade.position.copy(J.rifle.position).add(new V3(0,-.03,.03));else blade.position.set(0,-.15,.03);J.foreR.add(blade);
   blade.add(new THREE.Mesh(new THREE.BoxGeometry(.022,.022,.07),new THREE.MeshStandardMaterial({color:0x3a3d42,metalness:.8,roughness:.3})));
   const beam=new THREE.Group();beam.position.z=.035;blade.add(beam);
   const L=.52;
@@ -35,11 +37,11 @@ function buildPlayer(gltf,frame,remote){
   const tipObj=new THREE.Object3D();tipObj.position.z=L;beam.add(tipObj);
   const baseObj=new THREE.Object3D();baseObj.position.z=L*.18;beam.add(baseObj);
   const hiltGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff8a30,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0}));hiltGlow.scale.set(.16,.16,1);blade.add(hiltGlow);
-  const muzzle=new THREE.Object3D();muzzle.position.set(-.04,-.27,.07);J.rifle.add(muzzle);
+  const muzzle=new THREE.Object3D();if(mix&&mix.gun&&mix.gun.userData.muzzle)muzzle.position.copy(mix.gun.userData.muzzle).sub(mix.P0.rifle);else muzzle.position.set(-.04,-.27,.07);J.rifle.add(muzzle);
   // springs for every joint axis
   const SP={};const cfg={hips:[150,.75],torso:[190,.62],head:[230,.6],armR:[260,.5],foreR:[300,.55],armL:[260,.48],foreL:[300,.52],thighR:[140,.58],shinR:[150,.55],thighL:[140,.58],shinL:[150,.55]};
   for(const k in cfg){SP[k]={k:cfg[k][0],z:cfg[k][1],x:[0,0,0],v:[0,0,0]}}
-  return {root,J,mat,flames,eye,beam,inner,outer,tipObj,baseObj,hiltGlow,muzzle,SP,bladeLen:0,rifleS:1,frame};
+  return {root,J,mat,flames,eye,beam,inner,outer,tipObj,baseObj,hiltGlow,muzzle,SP,bladeLen:0,rifleS:1,frame,sync:mix?mix.sync:null};
 }
 function setFrame(k){const F=FRAMES[k];if(!F||!F.obj||(P&&P.frame===k))return false;
   let pos=null,rot=0;if(P){pos=P.root.position.clone();rot=P.root.rotation.y;scene.remove(P.root)}

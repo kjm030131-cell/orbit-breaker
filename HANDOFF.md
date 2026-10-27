@@ -115,8 +115,9 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 - 테스트 학번 99990001("테스트")로 출격 기록 있음 → 마감 전 D1에서 지우기.
 - 기획서 PDF, 시연 영상 (마감 10/30 18:00). AI 사용 내역에 Claude·GPT/Codex·Tripo·나노바나나, 라이선스에 Kenney(CC0) 추가.
 
-## 12. 스위프트 리깅 모델 (10/27 밤, 아직 미연결)
-- `models/swift_rig.glb`: Tripo에서 리토폴로지(1.9만 폴리곤)와 리깅을 마친 스위프트. 스켈레톤은 Mixamo 규격(mixamorig:Hips, Spine1, RightArm, RightForeArm, LeftUpLeg ... 65개). 애니메이션은 없음.
-- 쓰려면 어댑터가 필요함: 우리 관절 11개(hips/torso/head/armR/foreR/armL/foreL/thighR/shinR/thighL/shinL)를 mixamorig 뼈에 연결. 우리 포즈는 "월드 축 기준 회전"이라 변환이 필요함 → local = (P⁻¹·R·P)·restLocal (P는 부모 뼈의 기본 자세 월드 회전).
-- 장점: Tripo AI 애니메이션과 Mixamo 무료 애니메이션(검 베기, 공중제비 등)을 그대로 쓸 수 있음. 지금 자동 리깅보다 관절이 찢어지지 않음.
-- 주의: 게임 판정은 ACT의 strike 시점에 묶여 있음. 애니메이션 클립을 쓸 때 클립의 타격 순간과 맞춰야 함.
+## 12. Mixamo 리깅 기체 (10/27 적용)
+- `models/mech.glb`(Mk-II), `models/swift.glb`(스위프트) = Tripo 리토폴로지+자동 리깅(Mixamo 스켈레톤) 버전.
+- `src/02a-mixrig.js`: 기존 관절 11개는 보이지 않는 "조종용 뼈대"로 남기고, 매 프레임 `sync()`가 각 관절의 회전을 Mixamo 뼈에 옮김(기본 자세 회전 위에 곱함). 포즈·전투·대전 전송 코드는 그대로.
+- Mk-II 소총은 손 뼈에 붙은 정점 988개를 따로 떼어 `gun` 뼈로 옮김 → 칼을 뽑을 때 숨김. 총구 위치도 소총 정점에서 계산.
+- 주의: three r147의 `boneTransform(i,v)`는 v에 정점 위치를 먼저 넣어야 함. `bakeGLTF`는 스킨 메시를 건너뜀(바인드 행렬이 깨지므로).
+- 대전 상대 기체는 `THREE.SkeletonUtils.clone`으로 복제하고, 처음 저장한 기본 자세로 되돌린 뒤 연결함.

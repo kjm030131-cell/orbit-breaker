@@ -6,7 +6,7 @@ const fail=()=>{$("loadStatus").textContent="모델을 불러오지 못했습니
 // models: the deployed build fetches meshopt-compressed .glb files; the artifact build parses embedded base64
 // compressed GLBs (meshopt + quantization) keep positions as int16 with the scale on the node:
 // bake every mesh's world transform into float geometry so rigging and scaling see real model space
-function bakeGLTF(g){g.scene.updateMatrixWorld(true);g.scene.traverse(o=>{if(!o.isMesh)return;const geo=o.geometry;
+function bakeGLTF(g){g.scene.updateMatrixWorld(true);g.scene.traverse(o=>{if(!o.isMesh||o.isSkinnedMesh)return;const geo=o.geometry;
   for(const k of Object.keys(geo.attributes)){const a=geo.attributes[k];if(!a.isInterleavedBufferAttribute&&a.array instanceof Float32Array&&!a.normalized)continue;
     const n=a.count,s=a.itemSize,f=new Float32Array(n*s),get=[a.getX,a.getY,a.getZ,a.getW];
     for(let i=0;i<n;i++)for(let j=0;j<s;j++)f[i*s+j]=get[j].call(a,i);geo.setAttribute(k,new THREE.Float32BufferAttribute(f,s))}
