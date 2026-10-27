@@ -97,6 +97,45 @@ window.MechRig = (function () {
       collar: 0.775,
       hand: [0, -0.15, 0.03],
     },
+    // enemy grunt mech (T-pose source model, arms along X, gun on the right forearm)
+    ms: {
+      bones: [
+        ["hips", -1, [0, 0.54, 0]],
+        ["torso", 0, [0, 0.62, 0]],
+        ["head", 1, [0, 0.8, 0]],
+        ["armR", 1, [-0.17, 0.745, 0]],
+        ["foreR", 3, [-0.32, 0.745, 0]],
+        ["armL", 1, [0.17, 0.745, 0]],
+        ["foreL", 5, [0.32, 0.745, 0]],
+        ["thighR", 0, [-0.075, 0.53, 0]],
+        ["shinR", 7, [-0.085, 0.32, 0]],
+        ["thighL", 0, [0.075, 0.53, 0]],
+        ["shinL", 9, [0.085, 0.32, 0]],
+      ],
+      seg: [
+        [0, [0, 0.5, 0], [0, 0.6, 0], 0.8],
+        [0, [-0.12, 0.53, 0], [0.12, 0.53, 0], 0.9],
+        [1, [0, 0.6, 0], [0, 0.78, 0], 0.7],
+        [1, [-0.13, 0.72, 0], [0.13, 0.72, 0], 0.8],
+        [2, [0, 0.81, 0], [0, 0.88, 0], 0.9],
+        [3, [-0.17, 0.745, 0], [-0.32, 0.745, 0], 1],
+        [4, [-0.32, 0.745, 0], [-0.5, 0.745, 0], 1],
+        [5, [0.17, 0.745, 0], [0.32, 0.745, 0], 1],
+        [6, [0.32, 0.745, 0], [0.5, 0.745, 0], 1],
+        [7, [-0.075, 0.53, 0], [-0.085, 0.32, 0], 1],
+        [8, [-0.085, 0.32, 0], [-0.09, 0.04, 0], 1],
+        [8, [-0.09, 0.02, -0.07], [-0.09, 0.02, 0.09], 1],
+        [9, [0.075, 0.53, 0], [0.085, 0.32, 0], 1],
+        [10, [0.085, 0.32, 0], [0.09, 0.04, 0], 1],
+        [10, [0.09, 0.02, -0.07], [0.09, 0.02, 0.09], 1],
+      ],
+      rule(x, y, z) {
+        if (y > 0.8 && Math.abs(x) < 0.07) return 2; // head
+        if (Math.abs(x) > 0.19 && y > 0.66) return x < 0 ? (Math.abs(x) > 0.32 ? 4 : 3) : (Math.abs(x) > 0.32 ? 6 : 5); // arms + shoulder plates
+        return -1;
+      },
+      collar: 0.8,
+    },
   };
 
   function segDist(px, py, pz, a, b) {
@@ -151,11 +190,15 @@ window.MechRig = (function () {
   function build(srcMesh, layoutName) {
     const L = LAYOUTS[layoutName] || LAYOUTS.mk2;
     const BONES = L.bones;
-    const geo = srcMesh.geometry.clone();
-    if (!geo.attributes.normal) geo.computeVertexNormals();
-    const { ids, w } = assign(geo, L);
-    geo.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(ids, 4));
-    geo.setAttribute("skinWeight", new THREE.Float32BufferAttribute(w, 4));
+    let geo, ids = null;
+    if (srcMesh.geometry.attributes.skinIndex) geo = srcMesh.geometry; // already skinned: share it
+    else {
+      geo = srcMesh.geometry.clone();
+      if (!geo.attributes.normal) geo.computeVertexNormals();
+      const r = assign(geo, L); ids = r.ids;
+      geo.setAttribute("skinIndex", new THREE.Uint16BufferAttribute(r.ids, 4));
+      geo.setAttribute("skinWeight", new THREE.Float32BufferAttribute(r.w, 4));
+    }
     const bones = BONES.map(([name]) => { const b = new THREE.Bone(); b.name = name; return b; });
     BONES.forEach(([, parent, pos], i) => {
       const pp = parent < 0 ? [0, 0, 0] : BONES[parent][2];
