@@ -26,9 +26,10 @@ function buildPlayer(gltf,frame,remote){
   eye.position.set(0,.022,.05);eye.scale.set(.05,.03,1);J.head.add(eye);
   // beam blade (left hand)
   const blade=new THREE.Group();if(mix)blade.position.copy(J.rifle.position).add(new V3(0,-.03,.03));else blade.position.set(0,-.15,.03);J.foreR.add(blade);
-  blade.add(new THREE.Mesh(new THREE.BoxGeometry(.022,.022,.07),new THREE.MeshStandardMaterial({color:0x3a3d42,metalness:.8,roughness:.3})));
+  const hiltBox=new THREE.Mesh(new THREE.BoxGeometry(.022,.022,.07),new THREE.MeshStandardMaterial({color:0x3a3d42,metalness:.8,roughness:.3}));blade.add(hiltBox);
+  attachHilt(blade,.1,new V3(0,0,-.064),Math.PI/2,hiltBox);
   const beam=new THREE.Group();beam.position.z=.035;blade.add(beam);
-  const L=.52;
+  const L=.7;
   const g1=new THREE.CylinderGeometry(.0055,.0055,L,8);g1.rotateX(Math.PI/2);g1.translate(0,0,L/2);
   const g2=new THREE.CylinderGeometry(.014,.009,L+.02,12,1,true);g2.rotateX(Math.PI/2);g2.translate(0,0,L/2);
   const g3=new THREE.CylinderGeometry(.03,.018,L+.05,14,1,true);g3.rotateX(Math.PI/2);g3.translate(0,0,L/2);
@@ -36,7 +37,7 @@ function buildPlayer(gltf,frame,remote){
   const inner=new THREE.Mesh(g2,new THREE.MeshBasicMaterial({color:0xff7a1a,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
   const outer=new THREE.Mesh(g3,new THREE.MeshBasicMaterial({color:0xff4a10,transparent:true,opacity:.28,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
   beam.add(core,inner,outer);beam.scale.z=.001;core.visible=inner.visible=outer.visible=false; // kept only as colour/opacity holders
-  const saber=saberMesh(0xff7a1a,.075,L+.03);beam.add(saber);
+  const saber=saberMesh(0xff3aa8,.1,L+.03);beam.add(saber);
   const tipObj=new THREE.Object3D();tipObj.position.z=L;beam.add(tipObj);
   const baseObj=new THREE.Object3D();baseObj.position.z=L*.18;beam.add(baseObj);
   const hiltGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff8a30,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0}));hiltGlow.scale.set(.16,.16,1);blade.add(hiltGlow);

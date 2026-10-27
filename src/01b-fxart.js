@@ -3,8 +3,8 @@
 // to load (artifact build) leaves the procedural effect in place.
 var FXT={};const FXOK={};
 (function(){const L=new THREE.TextureLoader();
-  for(const k of ["expl","beam","saber","slash","muzzle","hit","ring","smoke","thruster","charge","electric"]){
-    const t=L.load("ui/fx_"+k+".webp",()=>{FXOK[k]=true;if(k==="ring")TX.ring=t;if(k==="hit")TX.flare=t;if(k==="smoke")TX.smoke=t},undefined,()=>{});t.encoding=THREE.sRGBEncoding;FXT[k]=t}})();
+  for(const k of ["expl","beam","saber","slash","muzzle","hit","ring","smoke","thruster","charge","electric","blade","trail"]){
+    const t=L.load("ui/fx_"+k+".webp",()=>{FXOK[k]=true;if(k==="ring")TX.ring=t;if(k==="hit")TX.flare=t;if(k==="smoke")TX.smoke=t},undefined,()=>{});t.encoding=k==="blade"||k==="trail"?THREE.LinearEncoding:THREE.sRGBEncoding;if(k==="blade")t.wrapT=THREE.RepeatWrapping;FXT[k]=t}})();
 
 // explosion flipbook (4x4): pooled sprites, each with its own texture view (shared image, own UV offset)
 const FLIP=[];

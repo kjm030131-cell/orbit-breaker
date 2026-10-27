@@ -1,3 +1,4 @@
+const _SAB_C=new THREE.Color(0xff3aa8),_SAB_HOT=new THREE.Color(0xff2030);
 /* ================= main loop ================= */
 const clock=new THREE.Clock();
 // Focus camera: eases toward the focused target with a turn-rate cap. Up close (dash / pass-by) the direction
@@ -64,7 +65,7 @@ function update(rdt){
     if(CINE.on){m.rotation.x=0;m.rotation.z=0}else{attitude(m,localV,dt,T);bodyMotion(m,dt)}
     solvePose(dt,localV,boosting,T);
     const heatC=new THREE.Color().setHSL(.07-S.heat/100*.07,1,.55+S.heat/400);
-    P.inner.material.color.copy(S.over>0?new THREE.Color(0xff2030):heatC);SABER_T.value=T;if(P.saber)P.saber.uniforms.uColor.value.copy(P.inner.material.color);
+    P.inner.material.color.copy(S.over>0?new THREE.Color(0xff2030):heatC);SABER_T.value=T;saberTexTick();if(P.saber)P.saber.uniforms.uColor.value.copy(S.over>0?_SAB_HOT:_SAB_C);
     P.eye.material.color.setHSL(.02,1,.45+Math.sin(T*3)*.05+S.heat/400);
     const want=(S.bladeOn>0&&S.over<=0)?1:0;
     P.bladeLen+=(want-P.bladeLen)*(1-Math.pow(want?1e-7:1e-4,rdt));
@@ -77,7 +78,7 @@ function update(rdt){
     const tipL=tip.clone().sub(m.position),swingSp=P.prevTip&&rdt>0?tipL.distanceTo(P.prevTip)/rdt:0;P.prevTip=tipL;
     const live=SCREEN==="play"||SCREEN==="launch";
     audioFrame({hum:live?P.bladeLen:0,swing:swingSp,thrust:live?(S.dash>0?1.2:boosting?1:clamp(S.vel.length()/45,0,.4)):0,amb:live?1:0});
-    stepTrail(Math.min(rdt,.05),base,tip,P.beam.visible&&(swinging||S.act==="lunge"),heatC);
+    stepTrail(Math.min(rdt,.05),base,tip,P.beam.visible&&(swinging||S.act==="lunge"),S.over>0?_SAB_HOT:_SAB_C);
     const fls=(CINE.on?CINE.thr:boosting?2.6:S.dash>0?3.4:1)*(1+Math.sin(T*50)*.12);
     P.flames.forEach((g,i)=>{g.scale.set(1+(fls-1)*.15,fls*(1+Math.sin(T*37+i)*.1),1+(fls-1)*.15)});
     if((boosting||S.dash>0||(CINE.on&&CINE.thr>1.4))&&rdt>0){const p=new V3();P.flames[(Math.random()*2)|0].getWorldPosition(p);

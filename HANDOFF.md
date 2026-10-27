@@ -151,3 +151,5 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
   CLIP_MAP: 액트별 클립 구간 w0..w1, 클립의 타격 프레임 hit 을 액트 strike 프레임에 맞춤, 타격 순간 상체가 정면 보게 yaw 보정.
   손목(rifle) 회전 → 칼날 그룹(P.beam.parent) 회전. mixrig sync 에 RightHand 매핑 추가(기본값 동일).
 - ACT 길이: slash1 .56/.38, slash2 .52/.36, slash3 .86/.52, guard(칼날 격돌 시) 추가.
+- 사용자 빔샤벨 에셋(10/28): ui/fx_blade.webp(R=코어,G=글로우, 칼날 텍스처 채널 분리), ui/fx_trail.webp(잔상), models/hilt.glb(Tripo 67MB→weld/simplify/resize512/jpeg/meshopt 580KB, 방출구 +Y).
+  saberMat/makeArc 가 텍스처 로드되면 사용(SABER_ON/TRAIL_ON), 아니면 절차적. attachHilt()로 플레이어·검투기에 손잡이. 플레이어 사벨 핑크(0xff3aa8), 과열 시 빨강. 칼날 길이 L .52→.7.

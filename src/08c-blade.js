@@ -6,7 +6,7 @@
 //   rec    : 0.8 s (1.3 s after a read dodge) wide open → any slash launches it
 function bladeBuild(e){const piv=new THREE.Group();
   const glow=saberMesh(0xff2a4a,.8,5.2);glow.rotation.x=-Math.PI/2;glow.position.y=.45;
-  const hilt=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,.8,6),new THREE.MeshStandardMaterial({color:0x26282c,metalness:.8,roughness:.4}));hilt.position.y=.1;
+  const hilt=new THREE.Mesh(new THREE.CylinderGeometry(.15,.15,.8,6),new THREE.MeshStandardMaterial({color:0x26282c,metalness:.8,roughness:.4}));hilt.position.y=.1;attachHilt(piv,1.05,new V3(0,-.6,0),0,hilt);
   piv.add(glow,hilt);piv.position.set(-.21*MS_H,.16*MS_H,.14*MS_H);e.m.add(piv);e.blade={piv,glow,rx:.6,rz:-.3};e.arc=makeArc(64)}
 function bladeTip(e){return e.blade.piv.localToWorld(new V3(0,5,0))}
 function bladeArms(e){const J=e.J;if(!J)return;const s=e.bs,u=s==="strike"?1-Math.max(0,e.bt)/.22:0;
