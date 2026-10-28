@@ -21,7 +21,7 @@ function spawnBoss(){
   enemies.push(e);BOSS.e=e;BOSS.atkT=4;BOSS.mode=0;BOSS.down=0;BOSS.introT=3.2;
   buildWPs();
   sfx("radio");setTimeout(()=>{if(!S.ended){sfx("phase");cutin("케르베로스 출현","아르고스 지휘기")}},400);
-  radio("CIC","지휘기 케르베로스 출현! 붉게 빛나는 약점 포드 3개를 먼저 부숴요!");
+  radio("CIC","지휘기 케르베로스 출현! 붉게 빛나는 약점 포드 3개를 먼저 부숴요!","vo_op04");
 }
 function buildWPs(){
   BOSS.wps=WP_OFF.map((off,i)=>{const g=new THREE.Group();
@@ -100,9 +100,12 @@ function resetBoss(){
 // radio chatter overlay (reuses the cutscene subtitle style, but small, top-centre)
 // portraits: ui/face_op.webp (CIC), face_ace.webp (enemy), face_cap.webp (captain) when present
 const FACES={CIC:"face_op",적:"face_ace",함장:"face_cap"};
-function radio(who,txt){const r=$("radio");if(!r)return;$("radioWho").textContent=who;const k=Object.keys(FACES).find(n=>who.includes(n)),f=$("radioFace");
+// recorded lines (ElevenLabs, vo/*.mp3): one voice at a time, follows the sound on/off (M) setting
+let VO_A=null;function voPlay(id,onDur){if(VO_A){try{VO_A.pause()}catch(_){}VO_A=null}if(!id||!AUD.on)return;try{const a=new Audio(`vo/${id}.mp3`);a.volume=Math.min(1,(AUD.vol??.9)*1.05);
+  if(onDur)a.addEventListener("loadedmetadata",()=>onDur(a.duration));a.play().catch(()=>{});VO_A=a}catch(_){}}
+function radio(who,txt,vo){const r=$("radio");if(!r)return;$("radioWho").textContent=who;const k=Object.keys(FACES).find(n=>who.includes(n)),f=$("radioFace");
   f.style.backgroundImage=k?`url(ui/${FACES[k]}.webp)`:"";f.textContent="";if(k){const im=new Image();im.onerror=()=>{f.style.backgroundImage=""};im.src=`ui/${FACES[k]}.webp`}$("radioTxt").textContent=txt;r.classList.remove("on");void r.offsetWidth;r.classList.add("on");
-  sfx("radio");clearTimeout(radio.h);radio.h=setTimeout(()=>r.classList.remove("on"),4600)}
+  sfx("radio");clearTimeout(radio.h);radio.h=setTimeout(()=>r.classList.remove("on"),4600);if(vo)voPlay(vo,d=>{if(d>3.9){clearTimeout(radio.h);radio.h=setTimeout(()=>r.classList.remove("on"),d*1000+700)}})}
 /* ---- boss guide (single, 10/28): many players did not know how to kill Kerberos. While it is up, the objective box says what to do
    right now and an arrow points at the next weak point (or at the stalled hulk while it is down). ---- */
 function bossGuideTick(){const b=BOSS.e,on=!!(b&&b.alive&&!TUT.on&&!VS&&SCREEN==="play"&&!S.ended);document.body.classList.toggle("bossguide",on);
@@ -122,5 +125,5 @@ function bossGuideTick(){const b=BOSS.e,on=!!(b&&b.alive&&!TUT.on&&!VS&&SCREEN==
 function bossPhase2(b){if(BOSS.phase2||!(b.down>0))return false;BOSS.phase2=true;b.down=0;b.flash=1;
   const p=b.m.position.clone();for(let i=0;i<4;i++)setTimeout(()=>{if(BOSS.e===b&&b.alive){fxExplosion(p.clone().add(new V3().randomDirection().multiplyScalar(6)),1.4);sfx("boom",p,3)}},i*140);
   S.hitstop=Math.max(S.hitstop||0,.14);S.slow=Math.max(S.slow,.5);flash(.35);impactPunch(1.4);addScore(3000,p,"big");
-  cutin("1차 격파","케르베로스 분노 · 공격이 거세집니다");radio("CIC","1차 격파! 아직 살아 있어요. 약점이 다시 열려요, 한 번 더!");
+  cutin("1차 격파","케르베로스 분노 · 공격이 거세집니다");radio("CIC","1차 격파! 아직 살아 있어요. 약점이 다시 열려요, 한 번 더!","vo_op05");
   buildWPs();b.m.userData.mat.emissive.setRGB(.35,.04,.02);setTimeout(()=>{if(BOSS.e===b)b.m.userData.mat.emissive.setRGB(0,0,0)},900);BOSS.atkT=1.6;return true}

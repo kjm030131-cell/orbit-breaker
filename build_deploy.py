@@ -37,7 +37,7 @@ shutil.copytree('ui',D+'/ui',dirs_exist_ok=True)
 shutil.copy('admin.html',D+'/admin.html')  # /admin: ranking management (password checked by the API)
 os.makedirs(D+'/sfx',exist_ok=True)
 SFX=sorted(f[:-4] for f in os.listdir('sfx') if f.endswith('.mp3')) if os.path.isdir('sfx') else []
-[shutil.copy('sfx/%s.mp3'%k,D+'/sfx/') for k in SFX];json.dump(SFX,open(D+'/sfx/list.json','w'));os.path.exists('sfx/preview.html') and shutil.copy('sfx/preview.html',D+'/sfx/');print('sfx',SFX)
+[shutil.copy('sfx/%s.mp3'%k,D+'/sfx/') for k in SFX];os.path.isdir('vo') and shutil.copytree('vo',D+'/vo',dirs_exist_ok=True);json.dump(SFX,open(D+'/sfx/list.json','w'));os.path.exists('sfx/preview.html') and shutil.copy('sfx/preview.html',D+'/sfx/');print('sfx',SFX)
 im=Image.open('ui/logo.webp');im.thumbnail((820,820));im.save(D+'/ui/logo.webp',quality=72,method=6)
 Image.open('ui/panel.webp').save(D+'/ui/panel.webp',quality=70,method=6)
 # icons: logo on a dark square

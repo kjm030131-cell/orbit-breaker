@@ -105,7 +105,7 @@ const TUT_STEPS=[
    cue:()=>{for(const e of enemies)if(e.tutAce&&e.alive&&e.bs==="wind"&&e.m.position.distanceTo(S.pos)<40)return {now:true,key:"LMB"};return null},
    ace:true,enter(){tutRestoreUnit();tutAce()},
    done(){return (TUT.c.counter||0)>=1}},
-  {obj:"귀환",how:"수고했어요. 잠시 후 튜토리얼이 끝나요.",say:[[ACE,"…좋은 반응이다. 다음에 떨어지는 건 네 쪽일지도 모르지."],[OP,"서울 상공 통과 완료. …버텼네요. 귀환해요, 앰버 1."]],
+  {obj:"귀환",how:"수고했어요. 잠시 후 튜토리얼이 끝나요.",say:[[ACE,"…좋은 반응이다. 다음에 떨어지는 건 네 쪽일지도 모르지."],[OP,"추진제 한계예요. …버텼네요. 귀환해요, 앰버 1."]],
    enter(){setTimeout(()=>{for(const e of enemies)if(e.tutAce){fxExplosion(e.m.position,.8);sfx("dash",e.m.position);e.alive=false;disposeEnemy(e)}enemies.length=0},2600);setTimeout(tutEnding,6500)},done(){return false}}];
 function tutRestoreUnit(){if(TUT.unit0&&G.unit!==TUT.unit0)tutSetUnit(TUT.unit0);G.spec=0}
 function tutAce(){const e=spawnMS(tutAhead(46,0,2),true);if(e){e.tutAce=true;e.windT=.85}}

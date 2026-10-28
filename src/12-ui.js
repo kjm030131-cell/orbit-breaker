@@ -165,10 +165,10 @@ async function launch(){
 }
 function debriefLine(lost,score){const n=S.kills||0;
   if(lost)return `앰버 1, 기체 반응 소실… 회수정 보냈어요. 오늘 밤 서울 하늘엔 유성이 ${n}개. 다음엔 조준선 깜빡임을 놓치지 마세요.`;
-  if(BOSS.dead)return `케르베로스 격파 확인. 서울 상공 통과 완료, 유성 ${n}개. …지상에선 역대급 유성우라고 난리예요.`;
-  if(score>=60000)return `서울 상공 통과 완료. 오늘 밤 유성 ${n}개. 훌륭해요, 앰버 1.`;
-  if(score>=25000)return `통과 완료. 유성 ${n}개. 지휘기는 아직 남아 있어요. 다음엔 놈을 노려봐요.`;
-  return `120초 종료, 귀환하세요. 오늘 밤 유성은 ${n}개. 연쇄 폭발을 노려봐요.`;
+  if(BOSS.dead)return `케르베로스 격파 확인. 추진제 소진 전 귀환, 유성 ${n}개. …지상에선 역대급 유성우라고 난리예요.`;
+  if(score>=60000)return `방위선 사수 완료. 오늘 밤 유성 ${n}개. 훌륭해요, 앰버 1.`;
+  if(score>=25000)return `방위선 사수 완료. 유성 ${n}개. 지휘기는 아직 남아 있어요. 다음엔 놈을 노려봐요.`;
+  return `추진제 소진, 귀환하세요. 오늘 밤 유성은 ${n}개. 연쇄 폭발을 노려봐요.`;
 }
 
 // result screen layout: solo / score duel (score, stats, board) or the 1:1 machine battle outcome (vsres)

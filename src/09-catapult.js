@@ -69,15 +69,11 @@ function attachShipModel(){
 
 /* ---- overlay text ---- */
 function cineLines(){const n=(PILOT.name||"파일럿"),u=UNITS[G.unit]||UNITS.mega;if(TUT.on)return[
-  {at:-2.35,who:"아스트라이아 함장",txt:"전 기체 전투 배치. 적 편대, 서울 상공 궤도로 진입한다."},
-  {at:.25,who:"아스트라이아 CIC · 한서윤 중위",txt:"앰버 1, 첫 출격이죠. 긴장 풀고, 제 말만 따라와요."},
-  {at:1.95,who:"아스트라이아 CIC · 한서윤 중위",txt:"서울 상공 통과까지 120초. 발진을 허가합니다."},
-  {at:3.05,who:"앰버 1",txt:"앰버 1, 출격한다!"}];return[
-  {at:-2.35,who:"아스트라이아 함장",txt:"전 기체 전투 배치. 적 편대가 서울 상공 궤도에 들어선다."},
-  {at:.25,who:"아스트라이아 CIC · 한서윤 중위",txt:`앰버 1, ${u.en} 장착 확인. 카타풀트 진로 클리어.`},
-  {at:1.95,who:"아스트라이아 CIC · 한서윤 중위",txt:`서울 상공 통과까지 120초. ${n} 소위, 발진을 허가합니다.`},
-  {at:3.05,who:`앰버 1 · ${n}`,txt:`${n}, ${(FRAMES[P&&P.frame]||FRAMES.mk2).name}. 앰버 1, 출격한다!`}]}
-function setSub(i){const L=cineLines()[i];CINE.line=i;CINE.typed=0;$("subWho").textContent=L.who;$("subTxt").textContent="";$("cineSub").classList.add("on");sfx("radio")}
+  {at:-2.5,who:"아스트라이아 CIC · 한서윤 중위",txt:"추진제는 120초분. 다 쓰기 전에 돌아와야 해요. 발진을 허가합니다.",vo:"vo_op03"},
+  {at:3.3,who:"앰버 1",txt:"앰버 1, 출격한다!"}];return[
+  {at:-2.5,who:"아스트라이아 CIC · 한서윤 중위",txt:"추진제는 120초분. 다 쓰기 전에 돌아와야 해요. 발진을 허가합니다.",vo:"vo_op03"},
+  {at:3.3,who:`앰버 1 · ${n}`,txt:`${n}, ${(FRAMES[P&&P.frame]||FRAMES.mk2).name}. 앰버 1, 출격한다!`}]}
+function setSub(i){const L=cineLines()[i];CINE.line=i;CINE.typed=0;$("subWho").textContent=L.who;$("subTxt").textContent="";$("cineSub").classList.add("on");sfx("radio");if(L.vo)voPlay(L.vo)}
 
 /* ---- control ---- */
 function playCatapult(){return new Promise(res=>{

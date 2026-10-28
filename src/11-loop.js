@@ -19,7 +19,7 @@ function update(rdt){
   else if(G.focus&&SCREEN==="play"&&targetable(G.focus)){focusCamera(rdt)}
   else if(!locked&&!VS){if(Math.abs(mouseX)>.25)S.yaw-=Math.sign(mouseX)*(Math.abs(mouseX)-.25)*1.8*rdt}
   tutFrame(dt);
-  if(!VS&&!TUT.on&&S.started&&!S.ended&&SCREEN==="play"){S.time-=dt;const sc=Math.ceil(S.time);if(sc!==S.lastSec){S.lastSec=sc;if(sc<=10&&sc>0)sfx("tickLow",null,sc)}if(S.time<30&&MUS.inten===0&&MUS.track==="battle"){MUS.inten=1;MUS.bpm=150}if(S.time<=0){S.time=0;finishRun()}}
+  if(!VS&&!TUT.on&&S.started&&!S.ended&&SCREEN==="play"){S.time-=dt;const sc=Math.ceil(S.time);if(sc!==S.lastSec){S.lastSec=sc;if(sc<=10&&sc>0)sfx("tickLow",null,sc);if(!DUEL){if(sc===30)radio("아스트라이아 CIC · 한서윤 중위","추진제 30초 남았어요. 아끼지 말고 몰아붙여요.","vo_op27");if(sc===10)radio("아스트라이아 CIC · 한서윤 중위","추진제 바닥나요! 10초 뒤 강제 귀환!","vo_op28");if(sc===118)radio("아스트라이아 함장","전 기체 전투 배치. 적 편대, 헬리오스 방위선으로 진입한다.","vo_cap01")}}if(S.time<30&&MUS.inten===0&&MUS.track==="battle"){MUS.inten=1;MUS.bpm=150}if(S.time<=0){S.time=0;finishRun()}}
 
   /* movement */
   const f=fwd(),right=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw)),acc=new V3();
