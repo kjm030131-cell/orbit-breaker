@@ -44,9 +44,9 @@ function duck(amount,time){if(!DUCK)return;const t=AC.currentTime;DUCK.gain.canc
 
 /* ---- recorded samples: sfx/<key>.mp3 replaces the synthesized sound when present ---- */
 const SFX_KEYS=["shot","hit","ignite","slash","heavy","boom","destroyed","chain","efire","tele","block","dash","dodge","just","hurt",
-  "specBurst","specReady","lock","phase","pickup","cataCharge","cataLaunch","radio","uiok","ui","uiback","deny","doors","slash2","slash3","clash","sizzle","humtex","tele","telelock"];
+  "specBurst","specReady","lock","phase","pickup","cataCharge","cataLaunch","radio","uiok","ui","uiback","deny","doors","slash2","slash3","clash","sizzle","humtex","tele","telelock","megaCharge","megaFire","megaLoop","megaEnd"];
 const SAMPLES={},SAMPLE_GAIN={shot:.8,hit:.7,boom:.8,chain:.8,destroyed:.95,ui:.35,uiok:.5,uiback:.45,deny:.5,lock:.6,radio:.6,efire:.6,dash:.75,slash:.62,slash2:.62,slash3:.78,clash:.95,sizzle:.42,tele:.55,telelock:.7,dodge:.7,ignite:.7,doors:.7};
-const SAMPLE_DUCK={heavy:[.7,.25],boom:[.7,.2],destroyed:[.35,.9],specBurst:[.25,1.4],just:[.25,.9],hurt:[.5,.5],clash:[.6,.35],cataLaunch:[.4,1.2],phase:[.55,.6]};
+const SAMPLE_DUCK={megaFire:[.35,1.2],heavy:[.7,.25],boom:[.7,.2],destroyed:[.35,.9],specBurst:[.25,1.4],just:[.25,.9],hurt:[.5,.5],clash:[.6,.35],cataLaunch:[.4,1.2],phase:[.55,.6]};
 const SAMPLE_VARY={shot:.05,hit:.07,boom:.08,slash:.04,slash2:.04,slash3:.03,sizzle:.12,clash:.04,efire:.06,chain:.05,block:.05};
 function loadSamples(){const base="sfx/";if(location.protocol==="file:"||!window.GLB_BASE)return; // deploy build only
   fetch(base+"list.json",{cache:"no-cache"}).then(r=>r.ok?r.json():[]).catch(()=>[]).then(list=>{for(const k of list)if(SFX_KEYS.includes(k))fetch(base+k+".mp3").then(r=>r.ok?r.arrayBuffer():null).then(b=>b&&AC.decodeAudioData(b)).then(buf=>{if(buf)SAMPLES[k]=buf}).catch(()=>{})})}
@@ -61,6 +61,7 @@ function sfx(k,pos,arg){const a=AC;if(!a||!AUD.ready||a.state!=="running")return
  if(k==="tele"&&arg&&SAMPLES.telelock){if(a.currentTime-(AUD.tlT||0)<.14)return;AUD.tlT=a.currentTime;playSample("telelock",pos,0);return}
  if(k==="tele"&&SAMPLES.tele&&a.currentTime-(AUD.teT||0)<.12)return;if(k==="tele")AUD.teT=a.currentTime;
  if(k==="clash"&&!SAMPLES.clash)k="block";if(k==="sizzle"&&!SAMPLES.sizzle)return;
+ if(k==="megaCharge"&&!SAMPLES.megaCharge)k=SAMPLES.cataCharge?"cataCharge":"specCharge";if(k==="megaFire"&&!SAMPLES.megaFire)k="specBurst";if(k==="megaEnd"&&!SAMPLES.megaEnd)k="boom";
  if(SAMPLES[k]){playSample(k,pos,arg);return}
  switch(k){
  case "thud":{const H=arg?1:0,o=bus(pos,1,.12);osc(a,o,"sine",H?150:120,H?30:40,t,H?.34:.2,H?.8:.45);osc(a,o,"triangle",H?230:180,55,t,.09,.3);nzf(a,o,"lowpass",1100,110,t,.13,H?.55:.3,.7);break}
@@ -153,7 +154,9 @@ function megaLoopInit(){const a=AC;if(LOOP.mega||!a)return;const g=a.createGain(
   const os=[41,41.6,82.3,123.7].map((f,i)=>{const o=a.createOscillator();o.type=i<2?"sawtooth":"square";o.frequency.value=f;const og=a.createGain();og.gain.value=i<2?.5:.12;o.connect(og);og.connect(lp);o.start();return o});
   const ns=a.createBufferSource();ns.buffer=NOISE;ns.loop=true;const nf=a.createBiquadFilter();nf.type="bandpass";nf.frequency.value=1400;nf.Q.value=.8;const ng=a.createGain();ng.gain.value=.9;ns.connect(nf);nf.connect(ng);ng.connect(g);ns.start();
   g.connect(SFXB);LOOP.mega={g,lp,os,nf}}
-function megaLoop(k){if(!AUD.ready)return;megaLoopInit();const L=LOOP.mega;if(!L)return;setP(L.g.gain,k*.32,.06);setP(L.lp.frequency,500+k*1400,.08);setP(L.nf.frequency,900+k*1500,.08);L.os.forEach((o,i)=>setP(o.frequency,[41,41.6,82.3,123.7][i]*(1+k*.18),.1))}
+function megaLoopSample(){if(LOOP.megaS||!SAMPLES.megaLoop)return LOOP.megaS;const s=AC.createBufferSource();s.buffer=SAMPLES.megaLoop;s.loop=true;s.loopStart=.06;s.loopEnd=SAMPLES.megaLoop.duration-.06;
+  const g=AC.createGain();g.gain.value=0;s.connect(g);g.connect(SFXB);s.start();return LOOP.megaS={s,g}}
+function megaLoop(k){if(!AUD.ready)return;megaLoopInit();const L=LOOP.mega;if(!L)return;const R=megaLoopSample();if(R){setP(R.g.gain,k*.55,.06);setP(R.s.playbackRate,.9+k*.15,.1)}setP(L.g.gain,k*(R?.14:.32),.06);setP(L.lp.frequency,500+k*1400,.08);setP(L.nf.frequency,900+k*1500,.08);L.os.forEach((o,i)=>setP(o.frequency,[41,41.6,82.3,123.7][i]*(1+k*.18),.1))}
 function audioFrame(st){if(!AUD.ready)return;
   setP(LOOP.hum.g.gain,st.hum*.13,.04);const sw=clamp(st.swing/60,0,1);
   setP(LOOP.hum.f.frequency,380+sw*520,.03);LOOP.hum.o.forEach((o,i)=>setP(o.frequency,[55,55.7,110][i]*(1+sw*.12),.04));

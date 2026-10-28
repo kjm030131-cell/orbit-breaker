@@ -203,6 +203,6 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 - 오버부스트 유닛 삭제 → 하이퍼 메가 런처 HM-1 (`mega`, src/10e-mega.js). 기본 유닛.
   R 메가 빔: 0.6초 충전 → 0.9초 관통 빔(쿨 9초). F 하이퍼 메가 빔(궁극기): 1초 충전 → 굵은 빔 5초 계속 조사, 마우스로 쓸기(회전 제한), 무적.
   패시브: 라이플 명중 시 필살 +2. 빔은 맵 엄폐물에 막힘(파괴물은 피해). 회피는 R 빔만 취소. 빔 중엔 카메라가 왼쪽 어깨 너머로 이동(S.megaCam).
-  이펙트: fx_beam/fx_charge 를 흑백화한 ui/fx_mbeam·fx_mcharge(틴트용) + 튜브 셰이더 + 리본 3겹 + expl/ring/flare/electric. 사운드: cataCharge 샘플 + LOOP.mega 합성 드론.
+  이펙트: fx_beam/fx_charge 를 흑백화한 ui/fx_mbeam·fx_mcharge(틴트용) + 튜브 셰이더 + 리본 3겹 + expl/ring/flare/electric. 사운드: sfx/megaCharge·megaFire·megaLoop·megaEnd.mp3 (기존 CC0 샘플 cataCharge·ignite·specBurst·boom·heavy·humtex·dash 를 ffmpeg 로 피치·레이어 믹스) + LOOP.mega 합성 드론 보강.
   아이콘 ui/u_mega·r_mega·f_mega 는 기존 아이콘 프레임 + 이펙트로 합성한 임시본(교체 가능).
 - PvP 프로토콜 v5: 서버 유닛 'mega'(R 0.7초 후 직선 빔 20, F 0.9초 후 굵은 빔 30, 정면 가드 시 게이지 -40/-70 + 칩), 라이플 명중 시 필살 +6. 클라 &v=5. 테스트 추가.

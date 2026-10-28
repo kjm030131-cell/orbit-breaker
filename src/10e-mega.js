@@ -44,10 +44,10 @@ function megaStart(mode){if(G.mega)megaEnd(true);const c=MEGA_CFG[mode],from=meg
   G.mega={mode,c,t:0,firing:false,slow:true,dir:megaWant(from,c.range),hits:new Map(),beam:null,L:c.range,ringT:0,boomT:0,sparkT:0};
   S.act=null;S.dash=0;S.dashT=null;S.pending=null;S.bufT=0;
   if(mode==="f"){G.iframe=Math.max(G.iframe,c.charge+c.fire+.3);S.slow=Math.max(S.slow,.35)}
-  sfx(SAMPLES.cataCharge?"cataCharge":"specCharge");megaLoop(.25);
+  sfx("megaCharge");megaLoop(.25);
   emit(ADD,{pos:from,tex:TX.ring,color:MEGA_C,s0:mode==="f"?14:8,s1:1,life:c.charge*.8,a:.8});
   if(mode==="r")popText(c.label+" · 충전")}
-function megaEnd(silent){const m=G.mega;if(!m)return;megaBeamFree(m.beam);G.mega=null;megaLoop(0);
+function megaEnd(silent){const m=G.mega;if(!m)return;megaBeamFree(m.beam);G.mega=null;megaLoop(0);if(m.firing&&!silent)sfx("megaEnd");
   if(!silent&&m.firing){const tip=m.lastFrom?m.lastFrom.clone().addScaledVector(m.dir,m.L):null;if(tip){fxFlip(tip,m.mode==="f"?14:8,.7);emit(ADD,{pos:tip,tex:TX.ring,color:MEGA_C,s0:3,s1:m.mode==="f"?40:22,life:.5})}
     S.vel.multiplyScalar(.3)}}
 function megaTick(dt,rdt,T){const m=G.mega;if(!m)return;
@@ -64,7 +64,7 @@ function megaTick(dt,rdt,T){const m=G.mega;if(!m)return;
       if(Math.random()<.25)fxElectric(from.clone().add(new V3().randomDirection().multiplyScalar(1.5)),2+k*3)}
     megaLoop(.25+k*.35);
     if(m.t>=c.charge){m.firing=true;m.t=0;m.beam=megaBeamMesh(c.w);
-      sfx("specBurst");sfx("thud",from,1);flash(m.mode==="f"?.45:.25);impactPunch(m.mode==="f"?1.4:.8);S.hitstop=Math.max(S.hitstop,m.mode==="f"?.08:.05);
+      sfx("megaFire");sfx("thud",from,1);flash(m.mode==="f"?.45:.25);impactPunch(m.mode==="f"?1.4:.8);S.hitstop=Math.max(S.hitstop,m.mode==="f"?.08:.05);
       flashLight(from,MEGA_C,m.mode==="f"?18:10,90,.5);emit(ADD,{pos:from,tex:TX.ring,color:0xffffff,s0:2,s1:m.mode==="f"?30:16,life:.35,a:1});
       if(m.mode==="r")popText(c.label)}
     return}
@@ -99,9 +99,9 @@ function megaTick(dt,rdt,T){const m=G.mega;if(!m)return;
 // 1:1 showdown: purely visual beam (the room server owns the hit); fired after the same charge delay as the server
 const VS_MEGA=[];
 function megaVsFx(fromFn,dir,special){const ch=fromFn();
-  emit(ADD,{pos:ch,tex:FXOK.mcharge?FXT.mcharge:TX.glow,color:MEGA_C,s0:2,s1:special?9:5,life:special?.9:.7,a:.9,spin:6});sfx(SAMPLES.cataCharge?"cataCharge":"specCharge",ch)}
+  emit(ADD,{pos:ch,tex:FXOK.mcharge?FXT.mcharge:TX.glow,color:MEGA_C,s0:2,s1:special?9:5,life:special?.9:.7,a:.9,spin:6});sfx("megaCharge",ch)}
 function megaVsBeam(from,dir,special){const b=megaBeamMesh(special?7:3);VS_MEGA.push({b,from,dir:dir.clone().normalize(),t:0,life:special?1.8:.5,L:special?190:150});
-  sfx("specBurst",from);flashLight(from,MEGA_C,12,80,.4)}
+  sfx("megaFire",from);flashLight(from,MEGA_C,12,80,.4)}
 function megaVsTick(rdt,T){for(let i=VS_MEGA.length-1;i>=0;i--){const v=VS_MEGA[i];v.t+=rdt;const u=v.t/v.life;
   if(u>=1||!VS){megaBeamFree(v.b);VS_MEGA.splice(i,1);continue}
   megaBeamPose(v.b,v.from,v.dir,v.L,Math.min(1,v.t/.06)*(u>.7?(1-u)/.3:1),T)}}
