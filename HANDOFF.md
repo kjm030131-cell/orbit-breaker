@@ -418,3 +418,8 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 - ui/fx_meteor(재진입 불꽃 꼬리, 가산), fx_bigexpl(4x4 대폭발 연속그림, 알파), fx_shockwave(충격파 링, 가산), fx_puff(연기, 알파) — 사용자 GPT 제작.
 - 유성: fxMeteorNew/Set/Free 스프라이트 풀(28) — 메인화면(12i-title)·오프닝(09b-intro) 유성에 사용, 풀이 차면 예전 입자로.
 - 보스 격파: bossDie 에 fxBigExplosion(p,120) 한 줄(대폭발 + 충격파 2겹). 미사일 꼬리 연기 = fx_puff. stepFxBig 은 11-loop 의 stepFxArt 옆.
+
+## 44. 튜토리얼 세계관 브리핑 (10/29 04:40)
+- 12e-tutorial.js TUT_BRIEF: 튜토리얼 첫 단계 '작전 브리핑' — 함장 이진태 5줄 + 최지우 1줄(세계관 V4 요약), 목표 상자에 한 줄 요약.
+  줄마다 글자 수 기준 시간(최소 4.2초) 뒤 다음 줄, Enter/Tab 건너뛰기. 녹음 파일 vo/vo_tut01~06.mp3 를 넣으면 자동 재생(없으면 자막만).
+- 명중 피드백음: 05-audio.js sfx "hitmark"(일반)·"headmark"(1:1 머리) 합성음. 사격 명중·약점 포드·듀얼리스트·1:1 원거리 명중에서 재생.

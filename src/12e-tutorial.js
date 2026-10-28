@@ -53,9 +53,25 @@ function unitStep(k){const T=UNIT_TXT[k],rDone=()=>(TUT.c["u_"+k]||0)>=1,fase=()
   done(){return rDone()&&(TUT.c.spec||0)>=1&&!G.mega&&G.specT<0&&G.cfield<=0},exit(){tutClear();radio(OP,UNIT_P[k])}}}
 // five passive drones in a row straight ahead (for the piercing beam)
 function tutLine(n){for(let i=0;i<n;i++)tutDrone(tutAhead(26+i*9,(i%2?1:-1)*1.2,2),true)}
+/* world briefing (10/29, world V4): the captain sets the scene before the first control. Recorded lines vo/vo_tut01..06.mp3 play
+   when present (silent text otherwise). Each line waits for its text / voice; Enter or Tab skips to the controls. */
+const CAP="이클립스 함장 · 이진태 대령";
+const TUT_BRIEF=[
+ [CAP,"2189년. 지구 전력의 70퍼센트는 궤도 위 태양광 발전망, 헬리오스에서 내려온다.","vo_tut01","2189년 · 지구 전력의 70%를 만드는 궤도 발전망 '헬리오스'"],
+ [CAP,"3년 전 제로 데이. 관제 AI가 탈취된 그날 이후, 궤도는 전쟁터가 됐다.","vo_tut02","3년 전 '제로 데이' · 관제 AI 탈취 → 궤도 전쟁 발발"],
+ [CAP,"아르고스 연합이 헬리오스를 노린다. 우리 테라 궤도방위군이 그 방위선을 지킨다.","vo_tut03","적 아르고스 연합 vs 우리 테라 궤도방위군 · 전장은 헬리오스 방위선"],
+ [CAP,"오늘 밤에도 지상엔 유성우 예보가 뜨겠지. 그 유성우는 전부, 우리가 떨어뜨린 잔해다.","vo_tut04","지상의 '유성우 예보' = 우리가 격추한 적의 잔해"],
+ [CAP,"추진제는 120초. 그 안에 최대한 많이 떨어뜨리고 귀환한다. 우리엘 1, 훈련을 시작한다.","vo_tut05","출격 한 번 = 추진제 120초 · 그 안에 최대한 많이 격추"],
+ [OP,"기체 동조 확인. 들려요, 우리엘 1? 지금부터 차근차근 같이 해 봐요.","vo_tut06","오퍼레이터 최지우 중위가 조작을 하나씩 알려줘요"]];
+const tutBriefLen=l=>Math.max(4.2,l[1].length/7.5+1.4);
 const TUT_STEPS=[
+  {obj:"작전 브리핑",how:()=>{const l=TUT_BRIEF[Math.min(TUT_BRIEF.length-1,TUT.bi||0)];return l[3]+"   ·   Enter 건너뛰기"},keys:["Enter"],limit:60,
+   prog:()=>`${Math.min(TUT_BRIEF.length,(TUT.bi||0)+1)} / ${TUT_BRIEF.length}`,
+   enter(){TUT.bi=0;TUT.bT=0;TUT.c.next=0;const l=TUT_BRIEF[0];radio(l[0],l[1],l[2])},
+   tick(){TUT.bT+=TUT.dt;const l=TUT_BRIEF[TUT.bi];if(l&&TUT.bT>=tutBriefLen(l)){TUT.bi++;TUT.bT=0;const n=TUT_BRIEF[TUT.bi];if(n)radio(n[0],n[1],n[2])}},
+   done(){return TUT.bi>=TUT_BRIEF.length||(TUT.c.next||0)>0},exit(){if(TUT.bi<TUT_BRIEF.length-1)voPlay(null)}},
   {obj:"화면을 클릭해서 마우스 고정",how:"클릭하면 마우스 커서가 사라지고 조종이 시작돼요. 나중에 Esc를 누르면 일시정지예요.",keys:["LMB"],limit:30,
-   say:[[OP,"기체 동조 확인. 들려요, 우리엘 1? 차근차근 해 봐요."]],done(){return locked}},
+   say:[[OP,"먼저 화면을 한 번 클릭해서 조종을 시작해요."]],done(){return locked}},
   {obj:"마우스로 주변 둘러보기",how:"마우스를 움직이면 시점과 조준선(화면 가운데)이 같이 돌아가요. 좌우 위아래로 크게 둘러봐요.",keys:["Mouse"],limit:30,
    prog:()=>`${Math.min(100,Math.round((TUT.c.look||0)/3*100))}%`,enter(){TUT.c.look=0;TUT.y0=S.yaw;TUT.p0=S.pitch},
    tick(){TUT.c.look+=Math.abs(S.yaw-TUT.y0)+Math.abs(S.pitch-TUT.p0);TUT.y0=S.yaw;TUT.p0=S.pitch},done(){return TUT.c.look>=3}},
