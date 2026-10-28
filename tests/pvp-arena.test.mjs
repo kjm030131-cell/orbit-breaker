@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {Arena} from '../pvp/src/arena.js';
+import {Arena,VS_COVER} from '../pvp/src/arena.js';
 function room(rules={},cover=false){const a=new Arena();a.s.noCover=!cover;a.s.hpBase=100;a.join('a','A',1000);a.join('b','B',1000);a.handle('a',{t:'rules',...rules},1000);return a;}
 function start(a){a.handle('a',{t:'ready',ready:true},1000);a.handle('b',{t:'ready',ready:true},1000);a.advance(4000);a.drain();return a;}
 const shot=(dir=[0,0,1])=>({t:'shot',from:[0,.4,-26],dir});
@@ -46,9 +46,10 @@ test('v6 melee: sidestep out of the swing cone whiffs and adds recovery',()=>{co
 test('v6 counter hit: hitting a winding-up opponent deals +30%',()=>{const a=start(room());a.s.players.b.p=[0,0,-20];a.s.players.b.f=Math.PI;a.handle('a',{t:'swing'},4000);a.handle('b',{t:'swing'},4170);a.advance(4190);assert.equal(a.s.players.b.hp,82);assert.ok(a.drain().some(e=>e.m.t==='counter'&&e.m.side==='a'));assert.equal(a.s.players.a.hp,100);});
 test('v6 read: just-dodging a swing freezes the attacker',()=>{const a=start(room());a.s.players.b.p=[0,0,-20];a.handle('b',{t:'swing'},4000);a.handle('a',{t:'dodge'},4100);assert.ok(a.drain().some(e=>e.m.t==='read'&&e.m.side==='a'));assert.ok(a.s.players.b.stun>=4650);assert.equal(a.s.players.a.crit,5300);});
 test('v6 rifle falloff past 60 m',()=>{const a=start(room());a.s.players.b.p=[0,0,60];a.projectile('a',[0,.4,-26],[0,0,1],8,170,4000,0x40d8ff,true);a.advance(4600);assert.equal(a.s.players.b.hp,95);});
-test('1:1 cover: an asteroid stops shots and cuts beams short',()=>{const a=start(room({skills:true},true));a.s.players.a.p=[-11,0,-26];a.s.players.b.p=[-11,0,26];a.projectile('a',[-11,.4,-26],[0,0,1],8,170,4000,0x40d8ff,true);a.advance(4400);assert.equal(a.s.players.b.hp,100);assert.equal(a.s.shots.length,0);
- a.handle('a',{t:'skill',dir:[0,0,1]},4500);a.advance(5200);a.advance(5400);assert.equal(a.s.players.b.hp,100);
- const b=start(room({},true));b.s.players.b.p=[0,0,10];b.projectile('a',[0,.4,-26],[0,0,1],8,170,4000,0x40d8ff,true);b.advance(4400);assert.equal(b.s.players.b.hp,92);});
+test('1:1 cover: map objects stop shots and cut beams short',()=>{const q=VS_COVER[0][7][0],o=[q[0],q[1],q[2]];const a=start(room({skills:true},true));
+ a.s.players.a.p=[o[0],o[1],o[2]-40];a.s.players.b.p=[o[0],o[1],o[2]+40];a.projectile('a',[o[0],o[1],o[2]-30],[0,0,1],8,170,4000,0x40d8ff,true);a.advance(4300);a.advance(4600);assert.equal(a.s.players.b.hp,100);assert.equal(a.s.shots.length,0);
+ a.handle('a',{t:'pose',p:[o[0],o[1]-1,o[2]-40],f:0,j:[],a:[0,0,1]},4650);a.handle('a',{t:'skill',dir:[0,0,1]},4700);for(let t=5400;t<=6000;t+=100)a.advance(t);assert.equal(a.s.players.b.hp,100);
+ const b=start(room({},true));b.s.players.a.p=[0,0,-26];b.s.players.b.p=[0,0,10];b.projectile('a',[0,.4,-26],[0,0,1],8,170,4000,0x40d8ff,true);b.advance(4400);assert.equal(b.s.players.b.hp,92);});
 test('v8 HP 150 by default; a staggered player breaks out with dodge once (costs 30 boost)',()=>{const a=room();delete a.s.hpBase;a.handle('a',{t:'ready',ready:true},1000);a.handle('b',{t:'ready',ready:true},1000);a.advance(4000);assert.equal(a.s.players.a.hp,150);
  a.s.players.b.p=[0,0,-20];a.handle('a',{t:'swing'},4000);a.advance(4180);assert.ok(a.s.players.b.stun>4500);a.handle('b',{t:'dodge'},4250);assert.ok(a.drain().some(e=>e.m.t==='break'&&e.m.side==='b'));assert.equal(a.s.players.b.stun,4250);assert.equal(Math.round(a.s.players.b.boost),70);
  a.s.players.b.stun=9000;a.handle('b',{t:'dodge'},4300);assert.equal(a.s.players.b.stun,9000);});

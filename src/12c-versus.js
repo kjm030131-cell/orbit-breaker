@@ -1,6 +1,6 @@
 /* ================= server-coordinated 1:1 mech battle ================= */
 let VS=null;
-const VS_HP=100,VS_ROUND=75,VS_WIN=2;
+const VS_HP=150,VS_ROUND=75,VS_WIN=2,VS_INTERP=100,VS_BOLT=230;
 const VS_UNIT_TEXT={mega:{r:"메가 빔",f:"하이퍼 빔",desc:"R: 0.7초 충전 후 0.6초 지속 빔(최대 20) · F: 0.9초 충전 후 2.4초 굵은 빔을 마우스로 쓸기(최대 36, 가드도 깎음) · 라이플 명중 시 필살 +6"},pods:{r:"포드 교차사격",f:"올 레인지",desc:"R: 3발 교차사격 · F: 7발 확산사격 · 20초마다 1발 요격"},missile:{r:"미사일 연사",f:"풀 버스트",desc:"R: 3발 연사 · F: 6발 연사 · 라이플 간격 0.3초"},shield:{r:"반사 장벽",f:"카운터 필드",desc:"R: 1초 방어, 첫 0.25초 반사 · F: 2초 방어 후 12m 충격파 · 저스트 회피 장갑"}};
 function vsNow(){return Date.now()+(VS?VS.off:0)}
 function vsCanAct(){return !!VS&&VS.phase==="fight"&&!S.ended&&!PAUSED&&S.started&&G.stagger<=0&&vsNow()<VS.endAt}
@@ -47,7 +47,7 @@ function vsMsg(m){if(!VS)return;const v=VS;
   if(m.t==="roundStart"){v.rules=m.rules;v.players=m.players;v.wins=m.wins;v.round=m.round;v.roundAt=m.startAt;v.endAt=m.endAt;v.off=m.now-Date.now();v.phase="count";v.rs=null;v.lastT=0;v.ready=true;v.matchDone=false;
     const me=m.players[v.side],op=m.players[v.side==="a"?"b":"a"];v.maxHp=me.maxHp;v.oppMaxHp=op.maxHp;v.hp=me.hp;v.oppHp=op.hp;v.oppFrame=op.frame;G.unit=me.unit;setFrame(me.frame);vsSpawn();show("play");document.body.classList.add("versus");PAUSED=false;$("pause").hidden=true;$("vsBar").hidden=false;vsLobby();return}
   if(m.t==="state"){if(m.round!==v.round)return;const me=m.players[v.side],op=m.players[v.side==="a"?"b":"a"];if(me){v.hp=me.hp;v.maxHp=me.maxHp;S.boost=me.boost;G.spec=me.spec;G.crit=Math.max(0,(me.crit-vsNow())/1000);G.unitCd=Math.max(0,(me.skillAt-vsNow())/1000);G.barrier=Math.max(0,(me.barrier-vsNow())/1000);G.armor=me.armor?1:0;v.gp=me.gp??100;if(me.guard===false&&S.guard&&!keys.KeyQ)S.guard=false;}if(op){v.oppHp=op.hp;v.oppMaxHp=op.maxHp;}return}
-  if(m.t==="pose"){v.rs=m;m.rx=vsNow();v.rvel=new V3(...(m.v||[0,0,0]));return}
+  if(m.t==="pose"){v.rs=m;m.rx=vsNow();v.rvel=new V3(...(m.v||[0,0,0]));(v.hist||(v.hist=[])).push({t:m.st||m.rx,p:new V3(...m.p),v:v.rvel.clone()});if(v.hist.length>24)v.hist.shift();return}
   if(m.t==="position"){const p=new V3(...m.p);if(p.distanceTo(S.pos)>30)S.pos.copy(p);else v.correctTo=p.sub(S.pos);return}
   if(m.t==="projectile"){if(v.phase!=="fight")return;const from=new V3(...m.from),dir=new V3(...m.dir);fireEnemyBolt(from,dir,false,v.tgt,m.dmg);const b=G.ebolts[G.ebolts.length-1];b.vsVisual=true;b.speed=m.speed;b.life=2.4;b.color=m.color;b.g.children[1].material.color.set(m.color);return}
   if(m.t==="swing"){if(m.side!==v.side){if(v.remote){v.remote.act="slash"+((m.combo??(m.heavy?2:0))+1);v.remote.actT=0;v.remote.guard=false}if(m.heavy)popText("상대 강공격 · 가드 또는 회피")}return}
@@ -113,7 +113,7 @@ function vsFocusCamera(rdt){if(!G.focus||!targetable(G.focus))return;const d=G.f
   const pitch=clamp(Math.atan2(d.y-1.5,hz)*.65-.04,-.35,.3);S.pitch+=clamp((pitch-S.pitch)*(1-Math.exp(-2*dt)),-.3*dt,.3*dt);
 }
 function vsSkillFX(m){const mine=m.side===VS.side,pos=mine?S.pos:VS.tgt&&VS.tgt.m.position;if(!pos)return;emit(ADD,{pos:pos.clone(),tex:TX.ring,color:UNITS[m.unit].color,s0:2,s1:m.special?24:12,life:.45});sfx(m.special?"specCharge":"throw",pos);if(m.unit==="mega"){const R=VS.remote;megaVsFx(()=>mine?megaMuzzle():R&&R.root?R.root.position.clone().add(new V3(0,1.2,0)):pos.clone(),new V3(...m.dir),!!m.special)}if(mine){popText(VS_UNIT_TEXT[m.unit][m.special?"f":"r"])}}
-function vsSpawn(){const v=VS,a=v.side==="a";S.guard=false;v.gp=100;v.rdisp=null;v.rvel=null;v.rs=null;const i=enemies.indexOf(v.tgt);if(i>=0)enemies.splice(i,1);vsClearShots();restart();S.vsLunge=0;S.shotCd=S.attackCd=0;S.aimT=0;S.face=S.yaw=a?0:Math.PI;S.pitch=-.05;S.pos.set(0,0,a?-26:26);S.vel.set(0,0,0);S.time=VS_ROUND;G.focus=null;target=null;v.shotToken=(v.shotToken||0)+1;v.skillInput=null;v.correctTo=null;P.root.visible=true;camera.position.copy(S.pos).addScaledVector(camFwd(),-10).add(new V3(0,2.8,0));camera.fov=68;camera.updateProjectionMatrix();applyQuality();
+function vsSpawn(){const v=VS,a=v.side==="a";S.guard=false;v.gp=100;v.rdisp=null;v.rvel=null;v.rs=null;v.hist=[];const i=enemies.indexOf(v.tgt);if(i>=0)enemies.splice(i,1);vsClearShots();restart();S.vsLunge=0;S.shotCd=S.attackCd=0;S.aimT=0;S.face=S.yaw=a?0:Math.PI;S.pitch=-.05;S.pos.set(0,0,a?-26:26);S.vel.set(0,0,0);S.time=VS_ROUND;G.focus=null;target=null;v.shotToken=(v.shotToken||0)+1;v.skillInput=null;v.correctTo=null;P.root.visible=true;camera.position.copy(S.pos).addScaledVector(camFwd(),-10).add(new V3(0,2.8,0));camera.fov=68;camera.updateProjectionMatrix();applyQuality();
   const want=FRAMES[v.oppFrame]&&FRAMES[v.oppFrame].gltf?v.oppFrame:"mk2";if(v.remote&&v.remote.frame!==want){scene.remove(v.remote.root);v.remote=null}if(!v.remote)v.remote=buildPlayer(FRAMES[want].gltf,want,true);
   if(!v.remote.halo){const h=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff3a30,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false}));h.scale.setScalar(9);h.position.y=1;v.remote.root.add(h);v.remote.halo=h}
   scene.add(v.remote.root);v.remote.root.visible=true;v.remote.root.position.set(0,0,a?26:-26);v.remote.root.rotation.y=a?Math.PI:0;
@@ -133,16 +133,21 @@ function vsTick(rdt){if(!VS)return;const v=VS;vsFlushSkill();if(v.correctTo){con
   // follow the remote state
   const R=VS.remote,s=VS.rs;
   if(s){if(s.fr&&s.fr!==VS.oppFrame){VS.oppFrame=s.fr}
-    const k=1-Math.exp(-14*rdt),age=clamp((vsNow()-(s.st||s.rx||vsNow()))/1000,0,.22),vel=v.rvel||new V3();
-    const want=new V3(s.p[0],s.p[1],s.p[2]).addScaledVector(vel,age);v.rdisp=v.rdisp||want.clone();
-    v.rdisp.addScaledVector(vel,rdt*.9);const err=want.sub(v.rdisp);if(err.length()>25)v.rdisp.add(err);else v.rdisp.addScaledVector(err,1-Math.exp(-12*rdt));
+    // smooth display: play the opponent ~100 ms in the past, interpolating between received poses (no extrapolation
+    // overshoot, so fast dodges read as a quick dash instead of a teleport); only fall back to a short extrapolation
+    const k=1-Math.exp(-14*rdt),H=v.hist||[],rt=vsNow()-VS_INTERP;let want=null;
+    for(let i=H.length-1;i>0;i--){if(H[i-1].t<=rt){const a=H[i-1],b=H[i],u=clamp((rt-a.t)/Math.max(1,b.t-a.t),0,1);want=a.p.clone().lerp(b.p,u);break}}
+    if(!want){const last=H[H.length-1];want=last?last.p.clone().addScaledVector(last.v,clamp((rt-last.t)/1000,0,.12)):new V3(s.p[0],s.p[1],s.p[2])}
+    const prev=v.rdisp?v.rdisp.clone():want.clone();v.rdisp=v.rdisp||want.clone();const err=want.clone().sub(v.rdisp);if(err.length()>30)v.rdisp.copy(want);else v.rdisp.addScaledVector(err,1-Math.exp(-20*rdt));
+    // afterimage streaks when the opponent dashes, so the motion is readable
+    {const sp=rdt>0?prev.distanceTo(v.rdisp)/rdt:0;if(sp>32&&rdt>0){const d=v.rdisp.clone().sub(prev).normalize();for(let j=0;j<2;j++)emit(ADD,{pos:prev.clone().lerp(v.rdisp,j/2).add(new V3(0,1,0)),tex:TX.streak,color:0xff7060,vel:d.clone().multiplyScalar(-8),s0:3.2,s1:.6,sx:3,life:.22,a:.55})}}
     R.root.position.set(v.rdisp.x,v.rdisp.y+Math.sin(clockT*1.6)*.12,v.rdisp.z);
     let d=s.f-R.root.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));R.root.rotation.y+=d*k;
     let i=0;for(const key in R.SP){const b=R.J[key];if(b&&s.j.length>=i+3){b.rotation.x+=(s.j[i]-b.rotation.x)*k;b.rotation.y+=(s.j[i+1]-b.rotation.y)*k;b.rotation.z+=(s.j[i+2]-b.rotation.z)*k}i+=3}R.guard=s.g===true||(R.guard&&s.g===undefined);if(R.act){R.actT=(R.actT||0)+rdt;if(R.actT>=ACT[R.act].dur)R.act=null}clipDrive(R,R.act,R.actT||0,R.guard,rdt);if(R.sync)R.sync();
     R.beam.scale.z=Math.max(.001,s.bl);R.beam.visible=s.bl>.02;R.J.rifle.scale.setScalar(s.r||1);
     R.flames.forEach(g=>g.scale.set(1,1+Math.sin(clockT*40)*.1,1))}
   // soft arena boundary
-  const r=S.pos.length();if(r>90)S.vel.addScaledVector(S.pos.clone().normalize(),-(r-90)*5*rdt);
+  const r=S.pos.length();if(r>90)S.vel.addScaledVector(S.pos.clone().normalize(),-(r-90)*5*rdt);if(Math.abs(S.pos.y)>38)S.vel.y-=Math.sign(S.pos.y)*(Math.abs(S.pos.y)-38)*6*rdt;
   // opponent marker: always on screen, clamped to the edge when the enemy is behind or off-screen
   {const mk=$("oppMark"),R2=VS.remote.root;mk.hidden=!(R2.visible&&VS.phase!=="end");if(!mk.hidden){const pp=R2.position.clone().add(new V3(0,2.5,0)),v=pp.clone().project(camera);
     let x=(v.x+1)/2*innerWidth,y=(1-v.y)/2*innerHeight;const behind=v.z>1;if(behind){x=innerWidth-x;y=innerHeight-y}

@@ -81,18 +81,18 @@ function fieldStep(dt,T){const show=!inVS()&&!CINE.on;VSC.g.visible=inVS();FIELD
     if(L>FIELD.R){S.vel.addScaledVector(d.normalize(),-(L-FIELD.R)*4*dt);if(FIELD.warnT<=0){FIELD.warnT=3;popText("작전 구역 경계 · 복귀하세요")}}}}
 setTimeout(loadField,1200);
 
-/* ---- 1:1 cover: same asteroid list the room server judges with (LOCAL_ARENA.VS_COVER) ---- */
-const VSC={g:new THREE.Group(),built:false};scene.add(VSC.g);VSC.g.visible=false;
+/* ---- 1:1 cover: the single-player objects placed into the arena; spheres baked server-side (LOCAL_ARENA.VS_COVER) ---- */
+const VSC={g:new THREE.Group(),built:false,sph:null};scene.add(VSC.g);VSC.g.visible=false;
 function vsCoverList(){return LOCAL_ARENA.VS_COVER}
-function vsCoverBuild(){if(VSC.built||!FIELD.tpl)return;const tl=FIELD.tpl;if(!tl.rock1||!tl.rock3)return;
+function vsCoverSph(){if(!VSC.sph){VSC.sph=[];for(const c of vsCoverList())for(const q of c[7])VSC.sph.push(q)}return VSC.sph}
+function vsCoverBuild(){if(VSC.built||!FIELD.tpl)return;const tl=FIELD.tpl;if(Object.keys(tl).length<7)return;
   for(const c of vsCoverList()){const tpl=tl[c[0]];if(!tpl)continue;const sz=tpl.geometry.boundingBox.getSize(new V3()),m=new THREE.Mesh(tpl.geometry,tpl.material);
-    m.scale.setScalar(c[4]/Math.max(sz.x,sz.y,sz.z));m.rotation.set(c[6]||0,c[5]||0,0);
-    // centre the rock's bounding box on the judged sphere so what you see is what blocks
-    const ctr=tpl.geometry.boundingBox.getCenter(new V3()).multiplyScalar(m.scale.x).applyEuler(m.rotation);m.position.set(c[1],c[2],c[3]).sub(ctr);VSC.g.add(m)}
+    m.scale.setScalar(c[4]/Math.max(sz.x,sz.y,sz.z));m.rotation.set(c[6]||0,c[5]||0,0);m.position.set(c[1],c[2],c[3]);VSC.g.add(m);
+    if(FDEF[c[0]]&&FDEF[c[0]].glow){const gs=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:FDEF[c[0]].glow,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));gs.position.set(c[1],c[2],c[3]);gs.scale.setScalar(c[4]*.9);VSC.g.add(gs)}}
   VSC.built=true}
-function vsCoverAt(p,pad){for(const c of vsCoverList()){const dx=p.x-c[1],dy=p.y-c[2],dz=p.z-c[3];if(dx*dx+dy*dy+dz*dz<(c[7]+(pad||0))**2)return c}return null}
-function vsCoverRay(from,dir,range){let best=range;for(const c of vsCoverList()){const o=new V3(c[1],c[2],c[3]),t=o.clone().sub(from).dot(dir);if(t<=0||t>range)continue;
-  const d=o.distanceTo(from.clone().addScaledVector(dir,t));if(d<c[7])best=Math.min(best,t-Math.sqrt(c[7]*c[7]-d*d))}return best}
+function vsCoverAt(p,pad){for(const q of vsCoverSph()){const dx=p.x-q[0],dy=p.y-q[1],dz=p.z-q[2];if(dx*dx+dy*dy+dz*dz<(q[3]+(pad||0))**2)return q}return null}
+function vsCoverRay(from,dir,range){let best=range;const o=new V3();for(const q of vsCoverSph()){o.set(q[0],q[1],q[2]);const t=o.clone().sub(from).dot(dir);if(t<=0||t>range)continue;
+  const d=o.distanceTo(from.clone().addScaledVector(dir,t));if(d<q[3])best=Math.min(best,t-Math.sqrt(q[3]*q[3]-d*d))}return best}
 function vsCoverStep(){VSC.g.visible=inVS();if(!VSC.g.visible)return;vsCoverBuild();
-  for(const c of vsCoverList()){const d=S.pos.clone().sub(new V3(c[1],c[2],c[3])),L=d.length(),min=c[7]+2.2;if(L>=min)continue;d.divideScalar(L||1);
-    S.pos.set(c[1],c[2],c[3]).addScaledVector(d,min);const vn=S.vel.dot(d);if(vn<0)S.vel.addScaledVector(d,-vn*1.2)}}
+  for(const q of vsCoverSph()){const dx=S.pos.x-q[0],dy=S.pos.y-q[1],dz=S.pos.z-q[2],L=Math.hypot(dx,dy,dz),min=q[3]+2.2;if(L>=min)continue;const d=new V3(dx,dy,dz).divideScalar(L||1);
+    S.pos.set(q[0],q[1],q[2]).addScaledVector(d,min);const vn=S.vel.dot(d);if(vn<0)S.vel.addScaledVector(d,-vn*1.2)}}
