@@ -399,3 +399,11 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 - ui/logo_arclight.webp (캐시 때문에 새 이름) = 사용자 생성 워드마크(빛줄기 버전)에서 빛줄기를 지우고 A 다리를 복원한 글자만 이미지(1707×251).
   빛줄기는 CSS `.logo .beam`(A 가로획 자리, left -1.6% · width 23.2% · top 52.6%) — 메인 등장 때 beamFire, 이후 beamIdle 반짝임. 인트로 타이틀 카드(#inTitle)도 같은 로고.
 - 앱 아이콘: build_deploy 가 로고의 A + 빛줄기로 생성. 앱 이름·탭 제목·관리자 화면·CSV 파일명도 ARCLIGHT.
+
+## 41. UI 에셋 전면 교체 (10/29 03:30, ARCLIGHT 스타일)
+- 사용자가 GPT 로 만든 평면·얇은 선·45도 모서리 스타일 에셋으로 교체: panel, plate, radio, btn_pri/sec, bossbar, g_boost/g_boostfill,
+  ic_* 8종, i_* 6종, r_/f_/u_ (mega·pods·missile·shield), grade_S~C, lockon. 메달·조준선(CSS SVG, 맞으면 빨강)·fx_* 는 그대로.
+- 9-slice 값 새로 맞춤: panel 70/34px(inset -6px), plate 30 60 30 70, radio 40 40 40 185(#radio 도 border-image), 버튼 26 72 26 32 fill,
+  bossTrack padding 4.3% 3% 4.4% 14.4%, bslot 9.6%/2.6%/22%/20%, 부스트 채움 amber(부족 시 hue-rotate -38deg).
+- build_deploy 가 index.html 의 ui/*.webp 참조에 ?v=<빌드시각> 을 붙임(ui/* 1일 캐시 때문에 같은 이름으로 바꾼 그림이 안 보이던 문제).
+- 원본 시트 → 자르기 스크립트는 세션 작업물(필요하면 시트를 다시 받아 같은 방식으로: 알파 정리 → 칸/연결요소로 분할 → 정사각 패딩 → 리사이즈).

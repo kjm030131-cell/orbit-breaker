@@ -28,6 +28,8 @@ html=html.replace('<script src="rig.js"></script>','<script src="rig.js"></scrip
 assert 'GLB_BASE' in html and 'mech_glb.js' not in html
 ver0=str(int(os.path.getmtime('orbit-breaker.html')))
 html=html.replace('<script src="rig.js"></script>','<script src="rig.js?v='+ver0+'"></script>',1)  # bust the 1h JS cache on every deploy
+# cache-bust every ui image: ui/* is cached for a day, so a redrawn asset under the same name would not show
+html=re.sub(r'(ui/[^"\'`()\s?]*?\.webp)(?!\?)',lambda m:m.group(1)+'?v='+ver0,html)
 open(D+'/index.html','w').write(html)
 shutil.copy('node_modules/three/examples/js/libs/meshopt_decoder.js',D+'/lib/')
 shutil.copy('rig.js',D+'/rig.js')
