@@ -189,6 +189,7 @@ function mStab(t,notes,vol){const a=AC,f=a.createBiquadFilter(),g=a.createGain()
   f.connect(g);g.connect(MUSB);const s=a.createGain();s.gain.value=.5;g.connect(s);s.connect(REV);
   notes.forEach(n=>[-8,8].forEach(dt=>{const o=a.createOscillator();o.type="sawtooth";o.frequency.value=NOTE(n+12);o.detune.value=dt;o.connect(f);o.start(t);o.stop(t+.32)}))}
 function schedStep(t,step){
+  if(bgmOn(MUS.track))return; // a recorded track is playing instead
   const bar=Math.floor(step/16)%4,s=step%16;
   if(MUS.track==="title"){const ch=TITLE_CH[bar];
     if(s===0){mPad(t,ch,60/MUS.bpm*4,.05);mPluck(t,ch[0]-12,.08,2.2)}
@@ -204,9 +205,20 @@ function schedStep(t,step){
     if(s===0&&bar===0&&step>0)mPad(t,ch,60/MUS.bpm*16,.025);
   }
 }
+/* ---- recorded BGM (bgm/*.mp3): a track listed here replaces the generative score once it has loaded;
+   until then (or if loading fails, e.g. the artifact build) the generative score keeps playing ---- */
+const BGM={cur:null,src:null,gain:null,tracks:{title:{url:"bgm/title.mp3",vol:.62,buf:null,loading:false}}};
+function bgmLoad(k){const e=BGM.tracks[k];if(!e||e.buf||e.loading)return;e.loading=true;
+  fetch(e.url).then(r=>{if(!r.ok)throw new Error(r.status);return r.arrayBuffer()}).then(b=>AC.decodeAudioData(b)).then(buf=>{e.buf=buf;if(MUS.track===k)bgmStart(k)}).catch(err=>{console.warn("bgm",k,err)})}
+function bgmStop(fade){if(!BGM.src)return;const t=AC.currentTime,g=BGM.gain,s=BGM.src,f=fade===undefined?.8:fade;
+  g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+f);try{s.stop(t+f+.05)}catch(e){}BGM.src=null;BGM.gain=null;BGM.cur=null}
+function bgmStart(k){const e=BGM.tracks[k];if(!e||!e.buf||BGM.cur===k)return;bgmStop();const t=AC.currentTime,s=AC.createBufferSource(),g=AC.createGain();
+  s.buffer=e.buf;s.loop=true;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(e.vol,t+1.5);s.connect(g);g.connect(MUSB);s.start(t);BGM.src=s;BGM.gain=g;BGM.cur=k}
+const bgmOn=k=>!!(BGM.tracks[k]&&BGM.tracks[k].buf);
 function musTick(){if(!AUD.ready||!MUS.track)return;const sp=60/MUS.bpm/4;
   if(MUS.next<AC.currentTime-.5)MUS.next=AC.currentTime+.05;
   while(MUS.next<AC.currentTime+.15){schedStep(MUS.next,MUS.step);MUS.step++;MUS.next+=60/MUS.bpm/4}}
 function music(track){if(!AUD.ready){MUS.want=track;return}if(MUS.track===track)return;
+  if(BGM.tracks[track]){if(bgmOn(track))bgmStart(track);else{bgmStop();bgmLoad(track)}}else bgmStop();
   MUS.track=track;MUS.step=0;MUS.next=AC.currentTime+.08;MUS.bpm=track==="battle"?138:76;MUS.inten=0;
   if(!MUS.timer)MUS.timer=setInterval(musTick,30)}

@@ -29,13 +29,14 @@ assert 'GLB_BASE' in html and 'mech_glb.js' not in html
 ver0=str(int(os.path.getmtime('orbit-breaker.html')))
 html=html.replace('<script src="rig.js"></script>','<script src="rig.js?v='+ver0+'"></script>',1)  # bust the 1h JS cache on every deploy
 # cache-bust every ui image: ui/* is cached for a day, so a redrawn asset under the same name would not show
-html=re.sub(r'(ui/[^"\'`()\s?]*?\.webp)(?!\?)',lambda m:m.group(1)+'?v='+ver0,html)
+html=re.sub(r'((?:ui|bgm)/[^"\'`()\s?]*?\.(?:webp|mp3))(?!\?)',lambda m:m.group(1)+'?v='+ver0,html)
 open(D+'/index.html','w').write(html)
 shutil.copy('node_modules/three/examples/js/libs/meshopt_decoder.js',D+'/lib/')
 shutil.copy('rig.js',D+'/rig.js')
 os.makedirs(D+'/models',exist_ok=True);[shutil.copy(f,D+'/models/') for f in glob.glob('models/*.glb')+glob.glob('models/*.json')]
 Image.open('sky.jpg').convert('RGB').save(D+'/sky.jpg',quality=72,optimize=True,progressive=True)
 shutil.copytree('ui',D+'/ui',dirs_exist_ok=True)
+os.path.isdir('bgm') and shutil.copytree('bgm',D+'/bgm',dirs_exist_ok=True)  # recorded background music
 shutil.copy('admin.html',D+'/admin.html')  # /admin: ranking management (password checked by the API)
 os.makedirs(D+'/sfx',exist_ok=True)
 SFX=sorted(f[:-4] for f in os.listdir('sfx') if f.endswith('.mp3')) if os.path.isdir('sfx') else []
