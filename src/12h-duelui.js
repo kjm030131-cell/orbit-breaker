@@ -15,3 +15,5 @@ $("dName").addEventListener("keydown",e=>{if(e.code==="Enter"){e.preventDefault(
 $("dName").addEventListener("input",()=>{$("dErr1").textContent=""});
 $("dCode").addEventListener("keydown",e=>{if(e.code==="Enter"){e.preventDefault();e.stopPropagation();$("dJoin").click()}});
 setInterval(()=>{if(SCREEN!=="duel")return;const n=+$("dx").dataset.step,room=dxInRoom();if(room&&n!==3)dxStep(3);else if(!room&&n===3)dxStep(2)},200);
+// tutorial shortcut on the first screen (it is a 기체 대전 practice, no name needed)
+$("dTut1").addEventListener("click",()=>{if(VS||DUEL)return;DMODE="vs";for(const b of $("dModes").children)b.classList.toggle("sel",b.dataset.dm==="vs");$("dUnitField").hidden=true;$("dTut").click()});

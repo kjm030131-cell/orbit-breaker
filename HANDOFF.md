@@ -327,3 +327,6 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 - 상단 단계 표시(1·2·3), 뒤로/Esc = 한 단계 뒤(대기실에서는 방 나가기 → 2단계, 1단계에서는 타이틀). 12-ui Esc → duelBack().
 - 방 상태 따라 자동 전환: 200ms 마다 방 있음(VS 온라인 또는 DUEL)이면 3단계, 방이 닫히면 2단계(dxInRoom).
 - DMODE 기본값 "vs". 로비 안내 문구는 짧게 정리(vsLobby).
+- (10/28 15:10) 로비 수정: 작은 화면에서 위가 잘리던 문제(세로 스크롤로), 카드 넘침(min-width:0), 참가 버튼 전용 스타일(.dxJoinBtn),
+  #scrDuel 의 display 덮어쓰기가 hidden 을 무시하던 문제(:not([hidden]) 로 한정), 1단계에 "처음이세요? 쇼다운 튜토리얼" 버튼(#dTut1), 2단계 타일 이름 "쇼다운 튜토리얼".
+  검증: Playwright(/opt/pw-browsers, PLAYWRIGHT_BROWSERS_PATH)로 head2.html 만 띄워 1920·1280·1000×540 스크린샷(3D 없이 UI 확인 가능, 글꼴은 Noto Sans CJK 대체).
