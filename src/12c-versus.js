@@ -31,7 +31,7 @@ function vsOpen(code,name,create=false){
   if(VS)vsClose();VS={code,name,side:null,phase:"wait",hp:100,maxHp:100,oppHp:100,oppMaxHp:100,rules:{passives:false,skills:false},players:{},wins:[0,0],round:0,oppName:"",remote:null,tgt:null,sendT:0,pingT:0,off:0,ready:false};const v=VS;
   const base=window.PVP_URL||((location.protocol==="https:"?"wss://":"ws://")+location.host+"/pvp");
   if(code==="local"){v.ws=vstLocalSocket(v,name);v.local=true;$("dCodeBig").textContent="연 습";vsLobby();return}
-  try{v.ws=new WebSocket(base+"?room="+code+"&name="+encodeURIComponent(name)+"&v=7&create="+(create?1:0))}catch(e){VS=null;duelErr("대전 서버에 연결할 수 없습니다.");return}
+  try{v.ws=new WebSocket(base+"?room="+code+"&name="+encodeURIComponent(name)+"&v=8&create="+(create?1:0))}catch(e){VS=null;duelErr("대전 서버에 연결할 수 없습니다.");return}
   v.ws.onmessage=e=>{if(VS!==v)return;let m;try{m=JSON.parse(e.data)}catch{return}vsMsg(m)};
   v.ws.onclose=()=>{if(VS!==v)return;if(["wait","lobby"].includes(v.phase)){vsClose();duelErr("대전 서버 연결이 종료됐습니다. 방을 다시 만들어 주세요.")}else if(v.phase!=="end"&&!v.matchDone)vsEnd("disconnect")};
   v.ws.onerror=()=>{if(VS===v)duelErr("대전 서버에 연결할 수 없습니다.")};
@@ -56,12 +56,14 @@ function vsMsg(m){if(!VS)return;const v=VS;
   if(m.t==="parry"){const mine=m.side===v.side;if(mine){popText("패리! 지금 반격");sfx("clash");sfx("just");flash(.3);S.slow=.4;G.crit=1.2;impactPunch(1.1);emit(ADD,{pos:S.pos.clone().add(new V3(0,1,0)),tex:TX.ring,color:0x7fe0ff,s0:2,s1:22,life:.45,a:.9})}
     else{popText("패리당함 · 경직!");G.stagger=.75;S.act=null;S.vsLunge=0;sfx("clash");sfx("deny");S.shake=.6}vsSparks(.9);return}
   if(m.t==="guardBreak"){const mine=m.side===v.side;sfx("heavy");sfx("clash");vsSparks(1.2);if(mine){S.guard=false;G.stagger=.9;popText("가드 브레이크!");const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on")}else{popText("가드 브레이크! 몰아쳐요");S.hitstop=.1;impactPunch(.9);hitMark("kill")}return}
-  if(m.t==="damage"){if(m.side===v.side){v.hp=m.hp;vsDamageFX(new V3(...m.dir),m.kind==="melee")}else{v.oppHp=m.hp;const at=v.tgt&&v.tgt.m.position.clone().add(new V3(0,.8,0));if(m.kind==="chip")return;
+  if(m.t==="damage"){if(m.side===v.side){v.hp=m.hp;vsDamageFX(new V3(...m.dir),m.kind==="melee",m)}else{v.oppHp=m.hp;const at=v.tgt&&v.tgt.m.position.clone().add(new V3(0,.8,0));if(m.kind==="chip")return;
       const mel=m.kind==="melee";sfx(mel?(m.heavy?"heavy":"hit"):"hit",at);sfx("thud",at,m.heavy?1:0);if(mel)sfx("sizzle",at);if(at){fxImpact(at,mel?0xff8a2a:0x40d8ff);if(mel)fxSlashHit(at,0xff8a2a,!!m.heavy)}
       hitMark(m.heavy?"kill":"hit");impactPunch(mel?(m.heavy?1:.55):.2);if(mel)S.hitstop=m.heavy?.11:.065;if(v.remote&&mel){v.remote.act=null;v.remote.hitT=.25}}return}
   if(m.t==="block"){const mine=m.side===v.side;
     if(m.kind==="guard"||m.kind==="guardShot"){sfx(m.kind==="guard"?"clash":"block");vsSparks(m.heavy?.8:.5);if(mine){popText(`가드 · ${m.gp}%`);S.hitstop=.05;S.vel.addScaledVector(vsAway(),m.heavy?16:9)}else{hitMark("block");popText(m.kind==="guard"?"막힘 · 가드를 깎아요":"빔 막힘");S.hitstop=.04}return}
     if(mine){popText(m.kind==="reflect"?"저스트 반사":m.kind==="pod"?"포드 요격":"반응 장갑");sfx("block")}return}
+  if(m.t==="break"){if(m.side===v.side){G.stagger=0;G.broke=true;S.attackCd=Math.min(S.attackCd,.05);popText("경직 풀기");sfx("just");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0xffd060,s0:2,s1:16,life:.4,a:.9})}else{popText("상대 경직 풀기");if(v.remote)emit(ADD,{pos:v.remote.root.position.clone(),tex:TX.ring,color:0xffd060,s0:2,s1:14,life:.4,a:.8})}return}
+  if(m.t==="breakFail"){popText("부스트 부족 · 경직 풀기 불가");sfx("deny");return}
   if(m.t==="whiff"){if(m.side===v.side){popText("헛스윙 · 빈틈");sfx("deny");S.attackCd=Math.max(S.attackCd,.3)}else{popText("빈틈! 지금 반격");sfx("lock");if(v.remote)v.remote.hitT=.3}return}
   if(m.t==="counter"){const mine=m.side===v.side;sfx("heavy");sfx("clash");vsSparks(1);if(mine){popText("COUNTER!");S.hitstop=.16;S.slow=Math.max(S.slow,.3);impactPunch(1.4);flash(.25)}else{popText("카운터 당함");S.shake=.6}return}
   if(m.t==="read"){const mine=m.side===v.side;if(mine){popText("간파! 크리티컬 반격");sfx("just");S.slow=Math.max(S.slow,.35);G.crit=1.2;impactPunch(.8);emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:20,life:.45,a:.9})}else{popText("간파당함 · 경직");G.stagger=Math.max(G.stagger,.55);S.act=null;S.vsLunge=0;sfx("deny")}return}
@@ -85,7 +87,7 @@ function vsSparks(k){const at=vsMid(),d=vsAway();sparks(at,d,0xffe0a0,34,.55,Mat
 function vsClashFX(at){vsSparks(1.2);sfx("clash");sfx("sizzle");S.hitstop=.12;impactPunch(1);flash(.2);S.vel.copy(vsAway().multiplyScalar(26));S.act=null;S.vsLunge=0;S.combo=0;hitMark("block");popText("칼날 격돌!");
   emit(ADD,{pos:at||vsMid(),tex:TX.ring,color:0xffe0a0,s0:2,s1:20,life:.4,a:.9})}
 function vsGuard(on){if(!VS||VS.phase!=="fight")return;if(on){if(S.guard||G.stagger>0||S.attackCd>0)return;S.guard=true;S.act=null;S.vsLunge=0}else{if(!S.guard)return;S.guard=false}vsSend({t:"guard",on})}
-function vsDamageFX(dir,melee){S.guard=false;G.iframe=melee?.7:.12;G.stagger=melee?.3:.08;S.vel.addScaledVector(dir,melee?22:8);S.act=null;S.dash=0;S.vsLunge=0;S.dashT=null;S.pending=null;VS.shotToken=(VS.shotToken||0)+1;
+function vsDamageFX(dir,melee,m){S.guard=false;G.iframe=melee?.7:.12;G.broke=false;G.stagger=melee?(m&&m.heavy?.9:.65):m&&m.kind==="bolt"?.3:.25;S.vel.addScaledVector(dir,melee?22:8);S.act=null;S.dash=0;S.vsLunge=0;S.dashT=null;S.pending=null;VS.shotToken=(VS.shotToken||0)+1;
   fxImpact(S.pos.clone().add(new V3(0,.8,0)),0xff4030);sfx(melee?"heavy":"hurt");S.shake=melee?.7:.3;const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");}
 function vsAttackHit(heavy,crit,at){fxSlashHit(at,crit?0x7fe0ff:0xff8a2a,heavy||crit);sfx(heavy?"heavy":"slash",at);S.dashT=null;}
 function vsSkill(special=false){
