@@ -29,6 +29,10 @@ async def main():
             const l0=T.G.lives;T.update(.05);if(T.G.lives<l0)lost++;minHp=Math.min(minHp,T.G.hp);if(T.G.dead>0)dead++}
           ms=(performance.now()-t0)/1200;return {msPerUpdate:+ms.toFixed(2),kills,minHp,deadFrames:dead,livesLost:lost,lives:T.G.lives,phase:T.G.phase,time:+T.S.time.toFixed(1),enemies:T.enemies.filter(e=>e.alive).length}}''')
         await pg.evaluate('()=>window.__T.setPaused(false)');await pg.wait_for_timeout(1500);await shot('02_solo')
+        await ev('shoot','()=>{const T=window.__T;T.setPaused(true);T.restart();T.show("play");T.S.started=true;T.S.demo=false;T.G.iframe=99;for(let i=0;i<10;i++)T.update(.05);T.shoot();for(let i=0;i<3;i++)T.update(.05);return T.S.act}')
+        await shot('02b_shoot')
+        await ev('slash','()=>{const T=window.__T;for(let i=0;i<12;i++)T.update(.05);T.attack();for(let i=0;i<3;i++)T.update(.05);return T.S.act}')
+        await shot('02c_slash')
         # 1b) a decent player for the full 120 s: dodges ~60% of shots / rams in time, breaks staggers, kills a drone every 1.5 s, chips the pods and slashes the stalled boss
         await ev('solo_skilled','''()=>{const T=window.__T;T.setPaused(true);T.G.unit="mega";T.restart();T.show("play");T.S.started=true;T.S.ended=false;T.S.demo=false;
           let lost=0,hits=0,minHp=100,dodges=0,bossT=null,last=100;
