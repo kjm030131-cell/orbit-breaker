@@ -5,6 +5,8 @@ on:
   push:
     branches: ['qa/**']
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   smoke:
     runs-on: ubuntu-latest
@@ -27,3 +29,10 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: qa, path: /tmp/qa }
+      - name: publish results to the qa-results branch (readable with git, artifacts may be unreachable)
+        if: always()
+        run: |
+          cd /tmp/qa && python -c "import glob;from PIL import Image;[Image.open(f).convert('RGB').save(f[:-4]+'.jpg',quality=72) for f in glob.glob('*.png')]" && rm -f *.png
+          git init -q && git checkout -q -b qa-results && git add -A
+          git -c user.name=qa-bot -c user.email=qa@users.noreply.github.com commit -q -m "qa ${GITHUB_SHA::7}"
+          git push -q -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} qa-results

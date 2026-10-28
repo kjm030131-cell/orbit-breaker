@@ -1,4 +1,4 @@
-const $=id=>document.getElementById(id);
+const $=(c=>id=>{let e=c[id];if(!e||!e.isConnected){e=document.getElementById(id);if(e)c[id]=e}return e})({}); // cached lookups (HUD calls this hundreds of times a frame)
 const V3=THREE.Vector3, clamp=THREE.MathUtils.clamp, lerp=THREE.MathUtils.lerp;
 
 /* ================= renderer ================= */

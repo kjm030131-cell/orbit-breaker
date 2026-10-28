@@ -67,7 +67,8 @@ function vsHeadLost(){const v=VS;if(!v||v.fp)return;v.fp=true;vsBodyVisible(P,fa
 function vsPartsMsg(m){const v=VS;if(!v)return;const mine=m.side===v.side,R=mine?P:v.remote;vsBreakPart(R,m.part,mine);if(mine&&m.part==="head"){vsHeadLost();return}
   const n=VS_PART[m.part].name;if(mine)popText(m.part==="armR"?"오른팔 파괴 · 공격 속도 저하":m.part==="armL"?"왼팔 파괴 · 가드 약화":n+" 파괴");
   else popText(m.part==="head"?"상대 머리 파괴 · 상대 시야 제한":"상대 "+n+" 파괴!")}
-function vsPartsHud(){const v=VS;for(const [id,pt] of [["vsPtMe",v.pt],["vsPtOp",v.opt]])for(const el of $(id).children){const k=el.dataset.p,hp=pt?pt[k]:VS_PART_HP[k],r=Math.max(0,hp/VS_PART_HP[k]);
+function vsPartsHud(){const v=VS,sig=JSON.stringify([v.pt,v.opt]);if(v.ptSig===sig)return;v.ptSig=sig; // only touch the DOM when a part value changed
+  for(const [id,pt] of [["vsPtMe",v.pt],["vsPtOp",v.opt]])for(const el of $(id).children){const k=el.dataset.p,hp=pt?pt[k]:VS_PART_HP[k],r=Math.max(0,hp/VS_PART_HP[k]);
   el.style.setProperty("--w",(r*100).toFixed(0)+"%");el.classList.toggle("gone",hp<=0);el.classList.toggle("low",hp>0&&r<.35)}}
 function vsArmK(shot){const pt=VS&&VS.pt;return pt&&pt.armR<=0?(shot?VS_ARM_R_SHOT:VS_ARM_R_SLOW):1}
 // aim point on the opponent: the spot under the reticle, kept inside the (VS_MS-scaled) body so a head or arm shot lands there
