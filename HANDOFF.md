@@ -35,7 +35,8 @@
 
 2026 SCHU AI·SW Festival 게임개발 경진대회(E-Sports 부문) 출품작.
 마감 **10/30(금) 18:00**. 제출물은 웹 링크, 5분 시연영상, 10쪽 기획서 PDF.
-라이브 주소: **https://orbitbreaker.pages.dev** (Cloudflare Pages + D1 + Durable Object)
+라이브 주소: **https://arclight-game.pages.dev** (Cloudflare Pages 프로젝트 `arclight-game` + D1 + Durable Object)
+옛 주소 orbitbreaker.pages.dev 는 배포 때마다 deploy/redirect/_worker.js 로 덮어써서 새 주소로 301 이동(옛 서비스워커는 스스로 해제).
 
 ## 1. 폴더 (두 폴더를 ~/Desktop 에 나란히 두기)
 - `orbit-breaker-src/` : 이 폴더. 소스 코드.

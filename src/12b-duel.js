@@ -11,7 +11,7 @@ $("dUnits").addEventListener("click",e=>{const b=e.target.closest("[data-du]");i
 const dFrameBtns=()=>{$("dFrames").innerHTML=Object.keys(FRAMES).map(k=>{const F=FRAMES[k];return `<button type="button" data-df="${k}" class="${P&&P.frame===k?"sel":""}" ${F.obj?"":"disabled"}>${F.name}${F.obj?"":" · 수신 중"}</button>`}).join("")};
 $("dFrames").addEventListener("click",e=>{const b=e.target.closest("[data-df]");if(!b||b.disabled||VS&&!["wait","lobby"].includes(VS.phase))return;if(setFrame(b.dataset.df)){sfx("ui");PILOT.frame=b.dataset.df;buildBits(G.unit);if(VS)vsLoadout()}dFrameBtns()});
 function duelOpen(){dUnitBtns();dFrameBtns();vsLobby();if(!$("dName").value&&PILOT.name)$("dName").value=PILOT.name;
-  $("dErr").textContent=SERVER?"":"쇼다운은 배포된 서버 버전(orbitbreaker.pages.dev)에서만 가능합니다.";
+  $("dErr").textContent=SERVER?"":"쇼다운은 배포된 서버 버전(arclight-game.pages.dev)에서만 가능합니다.";
   ["dCreate","dJoin"].forEach(id=>$(id).disabled=!SERVER&&!window.PVP_URL);if(!DUEL)duelRoomView(null);dxStep(VS&&!VS.local||DUEL?3:1)}
 function duelErr(m){$("dErr").textContent=m;sfx("deny")}
 function duelRoomView(v){
