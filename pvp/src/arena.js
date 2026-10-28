@@ -1,5 +1,6 @@
 // Pure room simulation. Server owns rules, readiness, resources, attacks, HP and rounds.
-export const VERSION=5;
+export const VERSION=6;
+export const ROUND_MS=75000,MELEE_CONE=.8,WHIFF_MS=300,READ_MS=550,COUNTER_K=1.3,CRIT_K=1.35,FAR_M=60,FAR_DMG=5;
 const other=s=>s==='a'?'b':'a';const f0=p=>[Math.sin(p.f),0,Math.cos(p.f)];
 const len=v=>Math.hypot(...v),sub=(a,b)=>a.map((x,i)=>x-b[i]),add=(a,b,k=1)=>a.map((x,i)=>x+b[i]*k),dot=(a,b)=>a.reduce((n,x,i)=>n+x*b[i],0);
 const norm=v=>{const l=len(v);return l>0?v.map(x=>x/l):[0,0,1]};
@@ -15,7 +16,7 @@ export class Arena {
  lobby(now){const s=this.s;this.emit({t:'lobby',rules:s.rules,players:Object.fromEntries(Object.entries(s.players).map(([k,p])=>[k,{name:p.name,frame:p.frame,unit:p.unit,ready:p.ready}])),now,phase:s.phase});}
  resetReady(){for(const p of Object.values(this.s.players))p.ready=false;}
  status(){const s=this.s;this.emit({t:'state',now:s.at,round:s.round,players:Object.fromEntries(Object.entries(s.players).map(([k,p])=>[k,{hp:p.hp,maxHp:p.maxHp,boost:p.boost,spec:p.spec,heat:p.heat,skillAt:p.skillAt,crit:p.crit,barrier:p.barrier,armor:p.armor,gp:Math.round(p.gp),guard:p.guard,gb:p.gbUntil}]))});}
- start(now,replay=false){const s=this.s;if(!s.players.a||!s.players.b)return;if(!replay)s.round++;s.phase='count';s.startAt=now+3000;s.endAt=s.startAt+99000;s.shots=[];s.pending=[];
+ start(now,replay=false){const s=this.s;if(!s.players.a||!s.players.b)return;if(!replay)s.round++;s.phase='count';s.startAt=now+3000;s.endAt=s.startAt+ROUND_MS;s.shots=[];s.pending=[];
   for(const [side,p] of Object.entries(s.players)){const {name,frame,unit}=p;Object.assign(p,player(name,side,s.startAt),{frame,unit,ready:true});p.maxHp=s.rules.passives?(frame==='swift'?90:110):100;p.hp=p.maxHp;}
   this.emit({t:'roundStart',round:s.round,startAt:s.startAt,endAt:s.endAt,now,rules:s.rules,wins:s.wins,players:s.players});
  }
@@ -51,15 +52,22 @@ export class Arena {
      else{this.emit({t:'block',side:other(x.side),kind:'guard',gp:Math.round(q.gp),heavy:!!x.heavy});this.damage(other(x.side),chip,norm(d),'chip',now,x.side);}
      continue;}
    }
-   const inRange=x.kind==='dash'?segment(q.p,x.from,add(x.from,x.dir,23))<4:dist<=x.range;
-   if(inRange&&(x.kind==='pulse'||x.kind==='dash'||dot(norm(d),x.dir||f)>0)){let dmg=x.dmg;if(x.kind==='melee'&&p.crit>=now){dmg=Math.round(dmg*1.2);p.crit=0;}this.damage(other(x.side),dmg,norm(d),x.kind==='pulse'?'skill':'melee',now,x.side,!!x.heavy);}
+   const inRange=dist<=x.range;
+   // melee only connects inside a ~37 deg cone of the swing direction: a sidestep at the right moment makes it whiff
+   if(inRange&&(x.kind==='pulse'||dot(norm(d),x.dir||f)>(x.kind==='melee'?MELEE_CONE:0))){let dmg=x.dmg,heavy=!!x.heavy;
+    if(x.kind==='melee'&&p.crit>=now){dmg=Math.round(dmg*CRIT_K);p.crit=0;}
+    // counter hit: the target was still winding up its own swing
+    const counter=x.kind==='melee'&&s.pending.some(z=>z.side===other(x.side)&&z.kind==='melee');if(counter){dmg=Math.round(dmg*COUNTER_K);heavy=true;}
+    if(this.damage(other(x.side),dmg,norm(d),x.kind==='pulse'?'skill':'melee',now,x.side,heavy)&&counter)this.emit({t:'counter',side:x.side});}
+   else if(x.kind==='melee'){p.lock=Math.max(p.lock,x.at+WHIFF_MS);this.emit({t:'whiff',side:x.side});}
   }
   for(const b of [...s.shots]){if(s.phase!=='fight')break;const q=s.players[other(b.side)];if(!q)continue;const elapsed=Math.min(2.4,(now-b.at)/1000),end=add(b.from,b.dir,elapsed*b.speed),start=b.last||b.from;b.last=end;
    if(segment(add(q.p,[0,.4,0]),start,end)<2.6){s.shots=s.shots.filter(x=>x!==b);
     if(s.rules.skills&&now<q.reflect){this.emit({t:'block',side:other(b.side),kind:'reflect'});this.projectile(other(b.side),end,b.dir.map(x=>-x),b.dmg,b.speed,now,0x8dff7a);continue;}
     if(s.rules.skills&&q.unit==='pods'&&now>=q.podAt){q.podAt=now+20000;this.emit({t:'block',side:other(b.side),kind:'pod'});continue;}
     if(q.guard&&dot([Math.sin(q.f),0,Math.cos(q.f)],b.dir.map(v=>-v))>.3){q.gp-=12;q.gpHit=now;if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;q.stun=now+900;this.emit({t:'guardBreak',side:other(b.side)});}else this.emit({t:'block',side:other(b.side),kind:'guardShot',gp:Math.round(q.gp),at:end});this.status();continue;}
-    if(this.damage(other(b.side),b.dmg,b.dir,'bolt',now,b.side)&&s.rules.skills&&b.rifle&&s.players[b.side]&&s.players[b.side].unit==='mega'){const sh=s.players[b.side];sh.spec=Math.min(100,sh.spec+6);}
+    const far=b.rifle&&len(sub(end,b.from))>FAR_M;
+    if(this.damage(other(b.side),far?Math.min(b.dmg,FAR_DMG):b.dmg,b.dir,'bolt',now,b.side)&&s.rules.skills&&b.rifle&&s.players[b.side]&&s.players[b.side].unit==='mega'){const sh=s.players[b.side];sh.spec=Math.min(100,sh.spec+6);}
    }else if(elapsed>=2.4)s.shots=s.shots.filter(x=>x!==b);
   }
   if(s.phase==='fight'&&now-(s.statusAt||0)>=100){s.statusAt=now;this.status();}
@@ -91,7 +99,9 @@ export class Arena {
   if(m.t==='dodge'){
    if(now<p.dodgeAt||now<p.lock||p.boost<25)return;p.boost-=25;p.dodgeAt=now+650;p.iframe=Math.max(p.iframe,now+180);
    const c=add(p.p,[0,.4,0]);const just=s.shots.some(b=>{if(b.side===side)return false;const rel=sub(c,add(b.from,b.dir,(now-b.at)/1000*b.speed)),along=dot(rel,b.dir);return along>=0&&along/b.speed<=.15&&len(sub(rel,b.dir.map(v=>v*along)))<2.4;})||s.pending.some(x=>x.side!==side&&x.kind==='melee'&&x.at-now>=0&&x.at-now<=150&&len(sub(q.p,p.p))<9);
-   if(just){p.boost=Math.min(100,p.boost+15);p.crit=now+1000;p.spec=Math.min(100,p.spec+10);if(s.rules.skills&&p.unit==='shield'&&now>=p.guardAt){p.armor=true;p.guardAt=now+25000;}}
+   const readMelee=s.pending.some(x=>x.side!==side&&x.kind==='melee'&&x.at-now>=0&&x.at-now<=150&&len(sub(q.p,p.p))<9);
+   if(readMelee){q.lock=Math.max(q.lock,now+READ_MS);q.stun=Math.max(q.stun,now+READ_MS);this.emit({t:'read',side});}
+   if(just){p.boost=Math.min(100,p.boost+15);p.crit=now+1200;p.spec=Math.min(100,p.spec+10);if(s.rules.skills&&p.unit==='shield'&&now>=p.guardAt){p.armor=true;p.guardAt=now+25000;}}
    this.emit({t:'dodge',side,just});this.status();return;
   }
   if(now<p.lock){reject('busy',p.lock);return;}if(now<p.overUntil||p.heat>=100){reject('heat',p.overUntil);return;}

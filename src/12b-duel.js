@@ -4,7 +4,7 @@
 let DUEL=null,DUELDONE=false,duelPoll=0,duelPush=0,duelOff=0,DMODE="score";
 $("dModes").addEventListener("click",e=>{const b=e.target.closest("[data-dm]");if(!b||DUEL||VS)return;DMODE=b.dataset.dm;sfx("ui");
   [...$("dModes").children].forEach(x=>x.classList.toggle("sel",x===b));$("dUnitField").hidden=DMODE==="vs";$("dLore").textContent=DMODE==="vs"?"같은 공역에서 사격·베기·회피로 승부합니다. 기체 대전은 순위·출격 횟수에 반영되지 않습니다.":"같은 120초 규칙으로 점수를 겨룹니다. 점수 대결은 순위·출격 횟수에 반영되지 않습니다.";vsLobby();
-  $("dModeNote").textContent=DMODE==="vs"?"99초 · 2선승. 좌클릭 3연속 콤보 · Q 길게 사벨 가드 · 맞기 직전 가드는 패리 · 동시에 베면 칼날 격돌 · 저스트 회피 후 반격.":"같은 120초 규칙으로 동시에 출격해 점수를 겨룹니다.";$("dErr").textContent=""});
+  $("dModeNote").textContent=DMODE==="vs"?"75초 · 2선승. 좌클릭 3연속 콤보 · Q 길게 사벨 가드 · 맞기 직전 가드는 패리 · 동시에 베면 칼날 격돌 · 저스트 회피 후 반격.":"같은 120초 규칙으로 동시에 출격해 점수를 겨룹니다.";$("dErr").textContent=""});
 const dUnitBtns=()=>{$("dUnits").innerHTML=UNIT_KEYS.map(k=>`<button type="button" data-du="${k}" class="${k===G.unit?"sel":""}" style="--uc:${UNITS[k].css}">${UNITS[k].name.replace(" 유닛","")}</button>`).join("")};
 $("dUnits").addEventListener("click",e=>{const b=e.target.closest("[data-du]");if(!b||VS&&!["wait","lobby"].includes(VS.phase))return;G.unit=b.dataset.du;buildBits(G.unit);sfx("ui");dUnitBtns();if(VS){vsLoadout();vsLobby()}});
 const dFrameBtns=()=>{$("dFrames").innerHTML=Object.keys(FRAMES).map(k=>{const F=FRAMES[k];return `<button type="button" data-df="${k}" class="${P&&P.frame===k?"sel":""}" ${F.obj?"":"disabled"}>${F.name}${F.obj?"":" · 수신 중"}</button>`}).join("")};
