@@ -827,6 +827,17 @@ body.tut #radio{top:calc(150px + env(safe-area-inset-top,0px))}
 #postBar.broken span{color:#fff}
 @keyframes pbB{50%{background:#ffd060}}
 </style>
+<style>
+/* 1:1: part under the reticle */
+#aimPart{position:fixed;left:50%;top:50%;transform:translate(26px,14px);z-index:5;pointer-events:none;padding:1px 7px;font:800 13px var(--f-body);color:#111;background:#ffb21a}
+#aimPart[hidden]{display:none}
+</style>
+<style>
+/* single boss guide reuses the tutorial objective box: keep the radio below it */
+body.bossguide #radio{top:calc(150px + env(safe-area-inset-top,0px))}
+</style>
+
+
 
 
 
@@ -840,7 +851,7 @@ body.tut #radio{top:calc(150px + env(safe-area-inset-top,0px))}
 
 <!-- in-game HUD -->
 <div id="hud" hidden>
-  <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="postBar" hidden><i></i><span>자세</span></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="lockWarn"><b>피격 경고</b></div>
+  <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="aimPart" hidden></div><div id="postBar" hidden><i></i><span>자세</span></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="lockWarn"><b>피격 경고</b></div>
   <div id="lock"><i></i><i></i><i></i><i></i><span id="lockTxt">록온</span></div>
   <div id="pop"></div>
   <div id="phase"><div id="phaseSub" class="lbl">단계</div><div id="phaseName">—</div></div>
@@ -1033,7 +1044,7 @@ body.tut #radio{top:calc(150px + env(safe-area-inset-top,0px))}
         <li><b>1</b><span>베어 날린 적이 다른 적이나 잔해에 부딪히면 <b class="hl">연쇄 폭발</b>.</span></li>
         <li><b>2</b><span><b class="hl">붉은 조준선</b>이 깜빡이면 Shift로 회피. 타이밍이 맞으면 다음 공격이 크리티컬.</span></li>
         <li><b>3</b><span>15초 동안 안 맞으면 점수 배율이 오릅니다. 최대 ×2.</span></li>
-        <li><b>4</b><span>90초에 보스 등장. 붉은 약점 3곳을 부수고 베어 날리세요.</span></li>
+        <li><b>4</b><span>70초에 보스 등장. 붉은 약점 3곳을 부수고, 멈추면 베어 날리세요.</span></li>
       </ul>
       <div class="btns" style="margin-top:22px" id="briefBtns">
         <button class="btn primary" type="button" id="launchBtn">출격 개시 <kbd>Enter</kbd></button>

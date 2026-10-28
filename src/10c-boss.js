@@ -2,7 +2,7 @@
 // Three weak-point pods guard it. Destroy all three (slash, rifle, reflected fire, launched drones)
 // and it goes dark for a few seconds: slash it then, and the whole hulk becomes a chain projectile.
 const BOSS={e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0};
-const WP_HP=6,WP_OFF=[new V3(-1.15,.28,.25),new V3(1.15,.28,.25),new V3(0,.95,-.6)];
+const WP_HP=4,WP_OFF=[new V3(-1.15,.28,.25),new V3(1.15,.28,.25),new V3(0,.95,-.6)];
 const wpGeo=new THREE.IcosahedronGeometry(1.3,0),wpArmor=new THREE.OctahedronGeometry(2,0);
 function spawnBoss(){
   if(!EN_MESH||BOSS.e||BOSS.dead||SCREEN!=="play")return;
@@ -103,3 +103,17 @@ const FACES={CIC:"face_op",적:"face_ace",함장:"face_cap"};
 function radio(who,txt){const r=$("radio");if(!r)return;$("radioWho").textContent=who;const k=Object.keys(FACES).find(n=>who.includes(n)),f=$("radioFace");
   f.style.backgroundImage=k?`url(ui/${FACES[k]}.webp)`:"";f.textContent="";if(k){const im=new Image();im.onerror=()=>{f.style.backgroundImage=""};im.src=`ui/${FACES[k]}.webp`}$("radioTxt").textContent=txt;r.classList.remove("on");void r.offsetWidth;r.classList.add("on");
   sfx("radio");clearTimeout(radio.h);radio.h=setTimeout(()=>r.classList.remove("on"),4600)}
+/* ---- boss guide (single, 10/28): many players did not know how to kill Kerberos. While it is up, the objective box says what to do
+   right now and an arrow points at the next weak point (or at the stalled hulk while it is down). ---- */
+function bossGuideTick(){const b=BOSS.e,on=!!(b&&b.alive&&!TUT.on&&!VS&&SCREEN==="play"&&!S.ended);document.body.classList.toggle("bossguide",on);
+  if(!on){if(BOSS.guide){BOSS.guide=false;$("tutObj").hidden=true;$("tutMark").hidden=true}return}
+  if(!BOSS.guide){BOSS.guide=true;$("tutObj").hidden=false;$("tutSkip").hidden=true;$("tutObjN").textContent="보스"}
+  let tgt=null,obj,how,prog;
+  if(b.down>0){obj="② 지금! 케르베로스를 베어 날리세요";how="약점이 모두 부서져 멈췄어요. 가까이 붙어 좌클릭으로 베면 주변 적까지 한꺼번에 쓸려 나가요.";prog=`멈춤 남은 시간 ${Math.ceil(b.down)}초`;tgt=b.m.position}
+  else{const al=BOSS.wps.filter(w=>w.alive);obj="① 붉은 약점 포드 부수기";how="본체는 단단해요. 몸에 붙은 붉은 포드를 베거나 쏴서 부수세요. 3개를 다 부수면 잠깐 멈춥니다.";prog=`${3-al.length} / 3`;
+    let bd=1e9;for(const w of al){const p=w.m.getWorldPosition?w.m.getWorldPosition(new V3()):w.m.position,d=p.distanceTo(S.pos);if(d<bd){bd=d;tgt=p}}}
+  if($("tutObjTxt").textContent!==obj){$("tutObjTxt").textContent=obj;const o=$("tutObj");o.classList.remove("new");void o.offsetWidth;o.classList.add("new")}
+  if($("tutObjHow").textContent!==how)$("tutObjHow").textContent=how;if($("tutObjProg").textContent!==prog)$("tutObjProg").textContent=prog;
+  const mk=$("tutMark");if(!tgt){mk.hidden=true;return}const v=tgt.clone().add(new V3(0,3,0)).project(camera);let x=(v.x+1)/2*innerWidth,y=(1-v.y)/2*innerHeight;const behind=v.z>1;if(behind){x=innerWidth-x;y=innerHeight-y}
+  const m=60,off=behind||x<m||x>innerWidth-m||y<m||y>innerHeight-m;if(off){const cx=innerWidth/2,cy=innerHeight/2,dx=x-cx,dy=y-cy,k=Math.min((cx-m)/Math.abs(dx||1e-6),(cy-m)/Math.abs(dy||1e-6));x=cx+dx*k;y=cy+dy*k;mk.style.setProperty("--rot",Math.atan2(dy,dx)+Math.PI/2+"rad")}else mk.style.setProperty("--rot","0rad");
+  mk.hidden=false;mk.style.left=x+"px";mk.style.top=y+"px";mk.classList.toggle("edge",off);mk.lastChild.textContent=b.down>0?"베기!":"약점"}

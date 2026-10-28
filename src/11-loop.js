@@ -37,7 +37,7 @@ function update(rdt){
   S.boost=clamp(S.boost+(boosting?-20:36*(VS?vsRegen():1))*dt,0,100);
   S.vel.addScaledVector(acc,dt);S.vel.multiplyScalar(Math.exp(-drag*dt));
   // buffered inputs: a click that lands up to ~0.2 s before the current swing / shot recovers fires as soon as it can
-  if(S.bufT>0){S.bufT-=dt;if(S.buf==="a"&&S.attackCd<=0&&!S.dash){S.bufT=0;attack()}else if(S.buf==="s"&&S.shotCd<=0){S.bufT=0;shoot()}}
+  if(S.bufT>0){S.bufT-=dt;if(S.buf==="a"&&S.attackCd<=0&&!S.dash){S.bufT=0;attack()}else if(S.buf==="s"&&S.shotCd<=0){S.bufT=0;shoot()}else if(S.buf==="d"&&S.attackCd<=0&&S.shotCd<=0&&G.dodgeCd<=0){S.bufT=0;dodge()}}
   const prevFace=S.face;
   if(VS&&S.vsLunge>0){S.vsLunge=Math.max(0,S.vsLunge-dt);S.vel.copy(S.vsDir);if(!S.vsLunge)S.vel.multiplyScalar(.2)}
   else if(S.dash>0&&S.dashT&&S.dashT.alive&&S.dashT.launched<=0){
@@ -130,8 +130,8 @@ function update(rdt){
 
   /* camera */
   if(!(INTRO.on&&introCamera(rdt))&&!(CINE.on&&cineCamera(rdt))&&!titleCamera(rdt)){
-  const cf=camFwd(),dist=S.demo?12:VS?11.2:8.6; // 1:1 mechs are drawn VS_MS bigger: pull the camera back to match
-  const want=S.pos.clone().addScaledVector(cf,-dist).add(new V3(0,VS?3.2:2.4,0));
+  const cf=camFwd(),dist=S.demo?12:VS?12.4:8.6; // 1:1 mechs are drawn VS_MS bigger: pull the camera back to match
+  const want=S.pos.clone().addScaledVector(cf,-dist).add(new V3(0,VS?3.5:2.4,0));
   // HM-1 beam: swing the camera out over the left shoulder so a beam fired down the reticle line is seen side-on, not end-on
   S.megaCam=(S.megaCam||0)+((((G.mega&&!VS)||G.vsBeam)?1:0)-(S.megaCam||0))*(1-Math.exp(-7*rdt));if(S.megaCam>.002)want.add(new V3(Math.cos(S.yaw)*4.2*S.megaCam,1.1*S.megaCam,-Math.sin(S.yaw)*4.2*S.megaCam));
   if(S.demo){const pv=SCREEN==="load",a=S.demoT*(pv?.35:.25),r=pv?10.5:11;want.copy(S.pos).add(new V3(Math.sin(a+2.6)*r,(pv?.6:2.2)+Math.sin(a*.7)*(pv?.3:1),Math.cos(a+2.6)*r))}
@@ -148,6 +148,7 @@ function update(rdt){
   const fv=S.fovB-(S.punch||0)*4.5;if(Math.abs(fv-camera.fov)>.01){camera.fov=fv;camera.updateProjectionMatrix();}}
   if(typeof vsCockpitTick==="function")vsCockpitTick(rdt);
   if(typeof bladeUiTick==="function")bladeUiTick();
+  if(typeof bossGuideTick==="function")bossGuideTick();
 
   if(SCREEN==="play"||SCREEN==="launch"){hudUpdate();if(VS)vsHud();}
 }

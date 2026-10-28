@@ -1,9 +1,9 @@
 /* ================= gameplay systems ================= */
 const PHASES=[
-  {at:0,name:"1단계 · 선발 정찰대",sub:"",count:7,gap:[2.2,3],elites:0,rams:0,ms:0,maxTele:2,fire:[4.5,7.5],tele:.9,bolt:85},
-  {at:25,name:"2단계 · 돌격 드론 출현",sub:"",count:9,gap:[2,2.8],elites:0,rams:1,ms:1,blade:1,maxTele:2,fire:[3.4,5.4],tele:.85,bolt:92},
-  {at:55,name:"3단계 · 정예 호위기",sub:"",count:9,gap:[1.9,2.6],elites:1,rams:2,ms:1,blade:1,maxTele:3,fire:[3,4.8],tele:.8,bolt:100},
-  {at:90,name:"최종 단계 · 지휘기 케르베로스",sub:"",count:6,gap:[2.6,3.4],elites:1,rams:1,ms:0,blade:1,maxTele:3,fire:[2.8,4.4],tele:.75,bolt:108}];
+  {at:0,name:"1단계 · 선발 정찰대",sub:"",count:8,gap:[2.2,3],elites:0,rams:0,ms:0,maxTele:2,fire:[4.5,7.5],tele:.9,bolt:85},
+  {at:20,name:"2단계 · 돌격 드론 출현",sub:"",count:10,gap:[2,2.8],elites:0,rams:1,ms:1,blade:1,maxTele:2,fire:[3.4,5.4],tele:.85,bolt:92},
+  {at:45,name:"3단계 · 정예 호위기",sub:"",count:10,gap:[1.9,2.6],elites:1,rams:2,ms:1,blade:1,maxTele:3,fire:[3,4.8],tele:.8,bolt:100},
+  {at:70,name:"최종 단계 · 지휘기 케르베로스",sub:"",count:7,gap:[2.6,3.4],elites:1,rams:1,ms:0,blade:1,maxTele:3,fire:[2.8,4.4],tele:.75,bolt:108}];
 // clean streak: every 15s without a hit adds +0.2 to the score multiplier (max ×2.0); a hit resets it
 const CLEAN_STEP=15;
 function cleanMult(){return Math.min(2,1+Math.floor(G.clean/CLEAN_STEP)*.2)}
@@ -121,7 +121,7 @@ function fireEnemyBolt(from,dir,elite,owner,dmg){
   if(FXOK.beam){const c=elite?0x40c8ff:0xff3a2a,tr=new THREE.Mesh(ribbonGeo,new THREE.MeshBasicMaterial({map:FXT.beam,color:c,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
     tr.scale.set(2.2,2.2,-9);tr.frustumCulled=false;g.add(tr);const hd=new THREE.Sprite(new THREE.SpriteMaterial({map:FXOK.hit?FXT.hit:TX.glow,color:c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));hd.scale.setScalar(3.4);g.add(hd)}
   g.position.copy(from);g.lookAt(from.clone().add(dir));scene.add(g);
-  G.ebolts.push({g,dir:dir.clone(),speed:(PHASES[G.phase].bolt||85)*(elite?1.12:1),life:1.6,dead:false,color:elite?0x40c8ff:0xff3030,owner:owner||null,dmg:dmg||(elite?24:18),refl:false});
+  G.ebolts.push({g,dir:dir.clone(),speed:(PHASES[G.phase].bolt||85)*(elite?1.12:1),life:1.6,dead:false,color:elite?0x40c8ff:0xff3030,owner:owner||null,dmg:dmg||(elite?30:24),refl:false});
   emit(ADD,{pos:from,tex:TX.flare,color:elite?0x80e0ff:0xff6060,s0:3,s1:5,life:.1});sfx("efire",from);
 }
 function stepEBolts(dt){
@@ -143,7 +143,7 @@ function hurt(b){
   if(G.dead>0)return;
   fxImpact(S.pos.clone().add(new V3(0,.8,0)),0xff4030);sparks(S.pos,b.dir,0xffb080,20,.4,24);sfx("hurt");
   // HP system: every frame has 100 HP; a hit staggers you (no control) unless you break out with Shift
-  const dmg=Math.round(b.dmg||(b.ram?26:20));G.hp=Math.max(0,(G.hp??HP_MAX)-dmg);G.clean=0;G.hpT=0;
+  const dmg=Math.round(b.dmg||(b.ram?34:24));G.hp=Math.max(0,(G.hp??HP_MAX)-dmg);G.clean=0;G.hpT=0;
   if(G.hp>0){G.stagger=Math.max(G.stagger,STAGGER);G.iframe=Math.max(G.iframe,.55);G.broke=false;S.hitstop=Math.max(S.hitstop,.06);S.shake=Math.max(S.shake,.55);
     if(b.dir){S.vel.copy(b.dir).multiplyScalar(18);S.freeT=.3}S.act=null;S.dash=0;S.dashT=null;S.pending=null;flash(.15);
     const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");popText(`피격 −${dmg} · Shift로 경직 풀기`);return}
@@ -154,6 +154,7 @@ function hurt(b){
 function dodge(){
   if(VS){
     if(VS.phase==="fight"&&G.stagger>0&&!G.broke&&!PAUSED){vsSend({t:"dodge"});return} // stagger break-out, the room server decides
+    if(vsCanAct()&&S.over<=0&&S.boost>=20&&(G.dodgeCd>0||S.attackCd>0||S.shotCd>0)){S.buf="d";S.bufT=.25;return} // pressed during recovery: dodge as soon as it opens
     if(!vsCanAct()||S.over>0||G.dodgeCd>0||S.attackCd>0||S.shotCd>0||S.boost<20)return;
     G.dodgeCd=.65;S.boost-=20;G.iframe=Math.max(G.iframe,.18);const d=new V3(),f=fwd(),r=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw));
     if(keys.KeyW)d.add(f);if(keys.KeyS)d.sub(f);if(keys.KeyA)d.add(r);if(keys.KeyD)d.sub(r);if(keys.Space)d.y+=1;if(keys.KeyC)d.y-=1;if(!d.lengthSq())d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(72));S.freeT=.32;vsSend({t:"dodge"});sfx("dodge");return;
@@ -242,7 +243,7 @@ function respawnMech(){
 
 /* ---- rammer drones: hunt, arm (flashing orange line), then charge in a straight line ---- */
 const RAM_SPEED=72;
-const HP_MAX=100,STAGGER=.85,BREAK_COST=30,HP_REGEN_AFTER=6,HP_REGEN=4; // per-frame HP, hit stagger, Shift break-out cost, slow regen when untouched
+const HP_MAX=100,STAGGER=.85,BREAK_COST=30,HP_REGEN_AFTER=8,HP_REGEN=2.5; // per-frame HP, hit stagger, Shift break-out cost, slow regen when untouched
 function ramAI(e,dt,T){
   const em=e.m,eye=em.userData.eye,live=SCREEN==="play"&&!S.ended&&S.started;e.phase+=dt;
   if(e.rs==="hunt"){const to=S.pos.clone().sub(em.position),d=to.length();to.normalize();
@@ -259,7 +260,7 @@ function ramAI(e,dt,T){
   else if(e.rs==="charge"){e.rt-=dt;const p0=em.position.clone();em.position.addScaledVector(e.rdir,RAM_SPEED*dt);em.rotation.z+=dt*14;
     if(dt>0)emit(ADD,{pos:em.position.clone(),color:0xff7a20,s0:2.2,s1:.2,life:.25,a:.8});
     if(live&&!e.dodged&&G.dead<=0){const c=S.pos.clone().add(new V3(0,.4,0)),seg=em.position.clone().sub(p0),L=seg.length()||1e-6,tt=clamp(c.clone().sub(p0).dot(seg)/(L*L),0,1);
-      if(p0.clone().addScaledVector(seg,tt).distanceTo(c)<2.8){if(G.iframe<=0){hurt({dir:e.rdir.clone(),dmg:26})}ramBlow(e);return}}
+      if(p0.clone().addScaledVector(seg,tt).distanceTo(c)<2.8){if(G.iframe<=0){hurt({dir:e.rdir.clone(),dmg:34})}ramBlow(e);return}}
     if(e.rt<=0){e.rs="hunt";e.rt=2.2+Math.random()*1.5}}
 }
 function ramBlow(e){e.alive=false;const p=e.m.position.clone();disposeEnemy(e);fxExplosion(p,1.2);sfx("boom",p,0)}

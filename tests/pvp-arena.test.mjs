@@ -50,7 +50,7 @@ test('1:1 cover: map objects stop shots and cut beams short',()=>{const q=VS_COV
  a.s.players.a.p=[o[0],o[1],o[2]-40];a.s.players.b.p=[o[0],o[1],o[2]+40];a.projectile('a',[o[0],o[1],o[2]-30],[0,0,1],8,170,4000,0x40d8ff,true);a.advance(4300);a.advance(4600);assert.equal(a.s.players.b.hp,100);assert.equal(a.s.shots.length,0);
  a.handle('a',{t:'pose',p:[o[0],o[1]-1,o[2]-40],f:0,j:[],a:[0,0,1]},4650);a.handle('a',{t:'skill',dir:[0,0,1]},4700);for(let t=5400;t<=6000;t+=100)a.advance(t);assert.equal(a.s.players.b.hp,100);
  const b=start(room({},true));b.s.players.a.p=[0,0,-26];b.s.players.b.p=[0,0,10];b.projectile('a',[0,.4,-26],[0,0,1],8,170,4000,0x40d8ff,true);b.advance(4400);assert.equal(b.s.players.b.hp,92);});
-test('v8 HP 150 by default; a staggered player breaks out with dodge once (costs 30 boost)',()=>{const a=room();delete a.s.hpBase;a.handle('a',{t:'ready',ready:true},1000);a.handle('b',{t:'ready',ready:true},1000);a.advance(4000);assert.equal(a.s.players.a.hp,150);
+test('v11 HP 180 by default; a staggered player breaks out with dodge once (costs 30 boost)',()=>{const a=room();delete a.s.hpBase;a.handle('a',{t:'ready',ready:true},1000);a.handle('b',{t:'ready',ready:true},1000);a.advance(4000);assert.equal(a.s.players.a.hp,180);
  a.s.players.b.p=[0,0,-20];a.handle('a',{t:'swing'},4000);a.advance(4180);assert.ok(a.s.players.b.stun>4500);a.handle('b',{t:'dodge'},4250);assert.ok(a.drain().some(e=>e.m.t==='break'&&e.m.side==='b'));assert.equal(a.s.players.b.stun,4250);assert.equal(Math.round(a.s.players.b.boost),70);
  a.s.players.b.stun=9000;a.handle('b',{t:'dodge'},4300);assert.equal(a.s.players.b.stun,9000);});
 test('v8 bolt hits stagger briefly',()=>{const a=start(room());a.s.players.b.p=[0,0,-14];a.projectile('a',[0,1,-24],[0,0,1],8,170,4000,0x40d8ff,true);a.advance(4100);assert.equal(a.s.players.b.hp,92);assert.ok(a.s.players.b.stun>=4300);});
@@ -59,7 +59,7 @@ test('partAt maps hit points to head / arms / body in the target frame',async()=
  const q={p:[0,0,0],f:0};assert.equal(partAt(q,[0,1.7,.3]),'head');assert.equal(partAt(q,[1.3,.5,0]),'armL');assert.equal(partAt(q,[-1.3,.5,0]),'armR');assert.equal(partAt(q,[0,0,1]),null);
  const r={p:[0,0,0],f:Math.PI};assert.equal(partAt(r,[1.3,.5,0]),'armR');assert.equal(partAt(r,[-1.3,.5,0]),'armL');});
 test('head shot wears the head; destroying the weapon arm slows attacks',()=>{const a=start(room());const b=a.s.players.b;
- a.handle('a',{t:'shot',from:[0,1.8,-24],dir:[0,0,1]},4000);a.advance(4300);assert.equal(b.parts.head,45-8);assert.equal(b.hp,100-8);
+ a.handle('a',{t:'shot',from:[0,1.8,-24],dir:[0,0,1]},4000);a.advance(4300);assert.equal(b.parts.head,30-8);assert.equal(b.hp,100-8);
  b.parts.armR=5;b.iframe=0;b.stun=0;a.handle('a',{t:'shot',from:[1.3,.5,-24],dir:[0,0,1]},5000);a.advance(5300);
  assert.equal(b.parts.armR,0);assert.ok(a.drain().some(e=>e.m.t==='part'&&e.m.side==='b'&&e.m.part==='armR'));
  b.stun=0;b.lock=0;a.handle('b',{t:'swing'},6000);assert.equal(b.lock,6000+Math.round(520*1.3));});
@@ -68,7 +68,7 @@ test('the last arm cannot be torn off; side swings hit the near arm, frontal hea
  a.handle('a',{t:'swing'},4000);a.advance(4200);assert.equal(b.parts.armL,1);
  const c=start(room());const q=c.s.players.b;c.s.players.a.p=[0,0,20];q.p=[0,0,26];q.f=Math.PI;
  for(const t of [4000,4600,5200]){c.s.players.a.lock=0;q.iframe=0;q.stun=0;c.handle('a',{t:'swing'},t);c.advance(t+320);}
- assert.equal(q.parts.head,45-22);});
+ assert.equal(q.parts.head,30-22);});
 // v10 saber deflect
 test('swinging into an incoming swing deflects it: no damage, deflected side reels and loses posture',()=>{const a=start(room());const A=a.s.players.a,B=a.s.players.b;
  A.p=[0,0,20];B.p=[0,0,26];A.f=0;B.f=Math.PI;
@@ -83,3 +83,13 @@ test('deflect rally: the deflected side can deflect the follow-up; posture runs 
  a.handle('b',{t:'swing'},4410);assert.equal(A.gp,70);             // B deflects back
  B.gp=20;const t=B.lock;a.handle('b',{t:'swing'},t);a.handle('a',{t:'swing'},t+100);
  const ev=a.drain().map(e=>e.m.t);assert.ok(ev.includes('guardBreak'));assert.ok(B.stun>B.lock-1);});
+// v11 latency grace
+test('a guard that reaches the server within half the defender ping after the hit still blocks it',()=>{const a=start(room());const A=a.s.players.a,B=a.s.players.b;
+ A.p=[0,0,20];B.p=[0,0,26];A.f=0;B.f=Math.PI;a.handle('b',{t:'ping',sent:0,rtt:160},4000);
+ a.handle('a',{t:'swing'},4000);a.advance(4200);assert.equal(B.hp,100); // lands 4180, judged at 4260
+ a.handle('b',{t:'guard',on:true},4230);a.advance(4270);assert.equal(B.hp,100);assert.ok(a.drain().some(e=>e.m.t==='parry'));}); // guard right at the hit on B's screen = parry
+test('no ping reported = no grace (judged on landing)',()=>{const a=start(room());const B=a.s.players.b;a.s.players.a.p=[0,0,20];B.p=[0,0,26];B.f=Math.PI;
+ a.handle('a',{t:'swing'},4000);a.advance(4190);assert.equal(B.hp,86);});
+test('a swing that arrives just before the recovery ends is queued to the end of it, not dropped',()=>{const a=start(room());const A=a.s.players.a;a.s.players.b.p=[0,0,-20];
+ a.handle('a',{t:'swing'},4000);assert.equal(A.lock,4520);a.handle('a',{t:'swing'},4450);const m=a.s.pending.find(x=>x.side==='a'&&x.t0===4520);assert.ok(m);assert.equal(m.at,4700);
+ a.handle('a',{t:'swing'},4600);assert.equal(a.s.pending.filter(x=>x.side==='a').length,1);});

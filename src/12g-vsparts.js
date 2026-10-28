@@ -72,4 +72,9 @@ function vsPartsHud(){const v=VS;for(const [id,pt] of [["vsPtMe",v.pt],["vsPtOp"
 function vsArmK(shot){const pt=VS&&VS.pt;return pt&&pt.armR<=0?(shot?VS_ARM_R_SHOT:VS_ARM_R_SLOW):1}
 // aim point on the opponent: the spot under the reticle, kept inside the (VS_MS-scaled) body so a head or arm shot lands there
 function vsAimPart(root,ad){const o=camera.position,t=Math.max(0,root.clone().sub(o).dot(ad)),off=o.clone().addScaledVector(ad,t).sub(root);
-  off.y=clamp(off.y,-2.6,2.1);const h=Math.hypot(off.x,off.z);if(h>1.7){off.x*=1.7/h;off.z*=1.7/h}return root.clone().add(off)}
+  off.y=clamp(off.y,-2.9,2.3);const h=Math.hypot(off.x,off.z);if(h>1.9){off.x*=1.9/h;off.z*=1.9/h}return root.clone().add(off)}
+// small label next to the reticle naming the part under it (머리 / 왼팔 / 오른팔), same zones as the room server
+function vsAimLabel(){const el=$("aimPart"),R=VS&&VS.remote;let t="";
+  if(R&&R.root.visible&&VS.phase==="fight"&&SCREEN==="play"){const ad=aimDir(),o=camera.position,c=R.root.position.clone().add(new V3(0,.4,0)),k=Math.max(0,c.clone().sub(o).dot(ad)),near=o.clone().addScaledVector(ad,k);
+    if(k<200&&near.distanceTo(c)<3.7){const part=LOCAL_ARENA.partAt({p:R.root.position.toArray(),f:R.root.rotation.y},near.toArray());if(part&&!(VS.opt&&VS.opt[part]<=0))t=VS_PART[part].name}}
+  if(el.textContent!==t){el.textContent=t;el.hidden=!t}}

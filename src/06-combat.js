@@ -29,8 +29,8 @@ function attack(){
     if(S.attackCd>0&&S.attackCd<.2&&!(S.bufT>0)){S.buf="a";S.bufT=.2}
     if(!vsCanAct()||!P||VS.skillInput||S.over>0||S.attackCd>0||S.shotCd>0)return;
     S.combo=(clockT-S.lastSlash<1.3)?(S.combo+1)%3:0;S.lastSlash=clockT;
-    const name="slash"+(S.combo+1);S.attackCd=(ACT[name].dur+(S.combo===2?.45:.25))*vsArmK(false);S.shotCd=S.attackCd;S.pending=null;S.dash=0;S.dashT=null;S.bladeOn=1.3;S.heat=Math.min(100,S.heat+(S.combo===2?12:8));
-    const t=pickTarget();if(t&&t.m.position.distanceTo(S.pos)<=18){S.dashT=t;const d=t.m.position.clone().sub(S.pos);if(d.length()>6.5){S.vsLunge=Math.min(.16,(d.length()-5.6)/75);S.vsDir=d.normalize().multiplyScalar(75)}}
+    const name="slash"+(S.combo+1);S.attackCd=(S.combo===2?.95:.52)*vsArmK(false)+.02;/* = the room server's recovery lock: guard / dodge open exactly when the server allows them */S.shotCd=S.attackCd;S.pending=null;S.dash=0;S.dashT=null;S.bladeOn=1.3;S.heat=Math.min(100,S.heat+(S.combo===2?12:8));
+    const t=pickTarget();if(t&&t.m.position.distanceTo(S.pos)<=18){S.dashT=t;const d=t.m.position.clone().sub(S.pos);if(d.length()>7){S.vsLunge=Math.min(.16,(d.length()-6.2)/75);S.vsDir=d.normalize().multiplyScalar(75)}}
     startAct(name);vsSend({t:"swing"});sfx("ignite");return;
   }
   if(S.attackCd>0&&S.attackCd<.22&&!(S.bufT>0)){S.buf="a";S.bufT=.22}

@@ -51,7 +51,7 @@ function bladeContact(e,to){
   if(clockT-(S.lastStrikeT||-9)<.18||S.act&&/^slash/.test(S.act)&&!S.actHit&&S.actT<.2){bladeClash(e,true);return}
   if(G.iframe>0){e.recT=1.3;S.slow=Math.max(S.slow,.4);popText("간파 · 지금 베어라");addScore(400,S.pos.clone(),"cyan");addSpec(2);sfx("just");
     emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:12,life:.35,a:.7});return}
-  fxSlashHit(S.pos.clone().add(new V3(0,1,0)),0xff3040,true);hurt({dir:to.clone(),dmg:28,g:{position:S.pos.clone()}})}
+  fxSlashHit(S.pos.clone().add(new V3(0,1,0)),0xff3040,true);hurt({dir:to.clone(),dmg:36,g:{position:S.pos.clone()}})}
 /* posture (자세): every blade contact fills it, full = 자세 붕괴 (1.6 s stagger) and only then does a slash finish the duelist.
    guard clash +20 (it ripostes at once), clash onto its strike +30, counter in its wind-up +40, hit while it reels +25. */
 const POST_GUARD=20,POST_PERFECT=30,POST_COUNTER=40,POST_REC=25,POST_SHOT=8;
