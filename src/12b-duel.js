@@ -1,17 +1,18 @@
 /* ================= 1:1 showdown ================= */
 // Two PCs join a 4-digit room on the ranking server, start at the same server time and race the same 120s rules.
 // Scores are exchanged every second; nothing here touches the ranking or the 3-sortie count.
-let DUEL=null,DUELDONE=false,duelPoll=0,duelPush=0,duelOff=0,DMODE="score";
-$("dModes").addEventListener("click",e=>{const b=e.target.closest("[data-dm]");if(!b||DUEL||VS)return;DMODE=b.dataset.dm;sfx("ui");
-  [...$("dModes").children].forEach(x=>x.classList.toggle("sel",x===b));$("dUnitField").hidden=DMODE==="vs";$("dLore").textContent=DMODE==="vs"?"같은 공역에서 사격·베기·회피로 승부합니다. 기체 대전은 순위·출격 횟수에 반영되지 않습니다.":"같은 120초 규칙으로 점수를 겨룹니다. 점수 대결은 순위·출격 횟수에 반영되지 않습니다.";vsLobby();
-  $("dModeNote").textContent=DMODE==="vs"?"75초 · 2선승. 좌클릭 3연속 콤보 · Q 길게 사벨 가드 · 맞기 직전 가드는 패리 · 동시에 베면 칼날 격돌 · 저스트 회피 후 반격.":"같은 120초 규칙으로 동시에 출격해 점수를 겨룹니다.";$("dErr").textContent=""});
+let DUEL=null,DUELDONE=false,duelPoll=0,duelPush=0,duelOff=0,DMODE="vs";
+$("dModes").addEventListener("click",e=>{const b=e.target.closest("[data-dm]");if(!b||DUEL||VS)return;
+  if(!$("dName").value.trim()){$("dErr1").textContent="이름을 먼저 입력하세요.";sfx("deny");$("dName").focus();return}
+  DMODE=b.dataset.dm;sfx("ui");[...$("dModes").children].forEach(x=>x.classList.toggle("sel",x===b));$("dUnitField").hidden=DMODE==="vs";
+  $("dModeNote").textContent=(DMODE==="vs"?"기체 대전":"점수 대결")+" · 방을 만들거나, 상대 방에 참가하세요";$("dErr").textContent=$("dErr1").textContent="";vsLobby();dxStep(2)});
 const dUnitBtns=()=>{$("dUnits").innerHTML=UNIT_KEYS.map(k=>`<button type="button" data-du="${k}" class="${k===G.unit?"sel":""}" style="--uc:${UNITS[k].css}">${UNITS[k].name.replace(" 유닛","")}</button>`).join("")};
 $("dUnits").addEventListener("click",e=>{const b=e.target.closest("[data-du]");if(!b||VS&&!["wait","lobby"].includes(VS.phase))return;G.unit=b.dataset.du;buildBits(G.unit);sfx("ui");dUnitBtns();if(VS){vsLoadout();vsLobby()}});
 const dFrameBtns=()=>{$("dFrames").innerHTML=Object.keys(FRAMES).map(k=>{const F=FRAMES[k];return `<button type="button" data-df="${k}" class="${P&&P.frame===k?"sel":""}" ${F.obj?"":"disabled"}>${F.name}${F.obj?"":" · 수신 중"}</button>`}).join("")};
 $("dFrames").addEventListener("click",e=>{const b=e.target.closest("[data-df]");if(!b||b.disabled||VS&&!["wait","lobby"].includes(VS.phase))return;if(setFrame(b.dataset.df)){sfx("ui");PILOT.frame=b.dataset.df;buildBits(G.unit);if(VS)vsLoadout()}dFrameBtns()});
 function duelOpen(){dUnitBtns();dFrameBtns();vsLobby();if(!$("dName").value&&PILOT.name)$("dName").value=PILOT.name;
   $("dErr").textContent=SERVER?"":"쇼다운은 배포된 서버 버전(orbitbreaker.pages.dev)에서만 가능합니다.";
-  ["dCreate","dJoin"].forEach(id=>$(id).disabled=!SERVER&&!window.PVP_URL);if(!DUEL)duelRoomView(null);setTimeout(()=>$("dName").focus(),60)}
+  ["dCreate","dJoin"].forEach(id=>$(id).disabled=!SERVER&&!window.PVP_URL);if(!DUEL)duelRoomView(null);dxStep(VS&&!VS.local||DUEL?3:1)}
 function duelErr(m){$("dErr").textContent=m;sfx("deny")}
 function duelRoomView(v){
   $("dCodeBig").textContent=v?v.code.split("").join(" "):"— — — —";
@@ -36,7 +37,6 @@ async function duelTick(){if(!DUEL)return;
     if(DUELDONE)duelResult()}catch(e){}}
 $("dCreate").addEventListener("click",duelCreate);$("dJoin").addEventListener("click",duelJoin);
 $("dCode").addEventListener("input",()=>{$("dCode").value=$("dCode").value.replace(/\D/g,"")});
-$("dBack").addEventListener("click",duelLeave);
 $("dReady").addEventListener("click",()=>{if(VS){if(!P||!FRAMES[VS.oppFrame||"mk2"].gltf){duelErr("기체 모델을 불러오는 중입니다. 잠시 기다려 주세요.");return;}vsSend({t:"ready",ready:!VS.ready});sfx("uiok");return}if(!DUEL)return;DUEL.ready=true;sfx("uiok");lock();duelPrepare();duelRoomView(DUEL.v)});
 function duelLeave(){sfx("uiback");if(VS)vsClose();if(DUEL&&!DUEL.started)api("duel/push",{code:DUEL.code,side:DUEL.side,score:0,state:"left"}).catch(()=>{});
   clearInterval(duelPoll);DUEL=null;show("title")}

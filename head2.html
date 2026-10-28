@@ -618,6 +618,76 @@ body.tut #radio{top:calc(150px + env(safe-area-inset-top,0px))}
 .tutHl{outline:2px solid #ffb21a;outline-offset:4px;animation:tutHl 1s ease-in-out infinite}
 @keyframes tutHl{50%{outline-color:rgba(255,178,26,.25)}}
 </style>
+<style>
+/* 1:1 showdown lobby, full-screen 3-step flow (10/28): 1 name + mode, 2 create / join / practice, 3 room + loadout + ready */
+#scrDuel{padding:0!important;background:radial-gradient(ellipse at 50% 40%,rgba(5,6,8,.55),rgba(5,6,8,.93) 75%)}
+.dx{pointer-events:auto;width:100%;min-height:100%;box-sizing:border-box;display:flex;flex-direction:column;padding:clamp(18px,3.2vh,40px) clamp(20px,5vw,90px)}
+.dxTop{display:flex;align-items:center;gap:clamp(16px,3vw,48px);margin-bottom:clamp(18px,4vh,52px)}
+.dxTop h2{margin:0;font:900 clamp(24px,2.4vw,36px) var(--f-kdisp);letter-spacing:-.02em;white-space:nowrap}
+.dxSteps{display:flex;gap:6px;margin:0;padding:0;list-style:none;flex:1}
+.dxSteps li{display:flex;align-items:center;gap:8px;padding:9px 16px;font:700 15px var(--f-body);color:var(--muted);background:rgba(255,255,255,.04);border-bottom:2px solid transparent}
+.dxSteps li i{font:800 14px var(--f-num);font-style:normal;width:22px;height:22px;display:grid;place-items:center;border:1px solid currentColor;border-radius:50%}
+.dx[data-step="1"] li[data-s="1"],.dx[data-step="2"] li[data-s="2"],.dx[data-step="3"] li[data-s="3"]{color:var(--bone);border-bottom-color:var(--amber);background:rgba(255,178,26,.08)}
+.dx[data-step="2"] li[data-s="1"],.dx[data-step="3"] li[data-s="1"],.dx[data-step="3"] li[data-s="2"]{color:#c8c2b4}
+.dxS{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(18px,3.4vh,36px)}
+.dxS[hidden]{display:none}
+.dxQ{margin:0;font:800 clamp(22px,2.2vw,32px) var(--f-kdisp);text-align:center}
+.dxHint{margin:0;font:500 15px var(--f-body);color:var(--muted);text-align:center}
+.dxName{display:flex;flex-direction:column;align-items:center;gap:8px}
+.dxName label{font:700 14px var(--f-body);color:var(--muted)}
+.dxName input{width:min(420px,80vw)!important;font:700 26px var(--f-body)!important;text-align:center;letter-spacing:0!important;padding:14px 18px}
+.dxName .err{margin:0;min-height:20px;font-size:15px}
+.dxModes,.dxTiles{display:grid;gap:clamp(14px,2vw,28px);width:min(1200px,100%)}
+.dxModes{grid-template-columns:1fr 1fr}
+.dxTiles{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.dxCard{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:10px;min-height:clamp(200px,30vh,320px);padding:clamp(20px,2.4vw,34px);text-align:left;cursor:pointer;
+  background:linear-gradient(160deg,rgba(28,31,35,.92),rgba(12,14,16,.92));border:1px solid var(--line-2);color:var(--bone);transition:border-color .15s,transform .15s,background .15s}
+.dxCard:hover,.dxCard:focus-visible{border-color:var(--amber);transform:translateY(-3px);outline:none}
+.dxCard.sel{border-color:var(--amber);background:linear-gradient(160deg,rgba(60,44,10,.9),rgba(14,12,8,.92))}
+.dxCard b{font:900 clamp(26px,2.6vw,40px) var(--f-kdisp);letter-spacing:-.02em}
+.dxCard span{font:500 clamp(15px,1.1vw,18px)/1.55 var(--f-body);color:#cfc9bb}
+.dxCard small{font:700 14px var(--f-body);color:var(--amber)}
+.dxCard em{position:absolute;top:18px;left:clamp(20px,2.4vw,34px);font:800 13px var(--f-body);font-style:normal;color:var(--amber-ink);background:var(--amber);padding:3px 9px}
+.dxCard.big{min-height:clamp(220px,34vh,360px)}
+.dxCard[disabled]{opacity:.4;cursor:not-allowed;transform:none}
+.dxCard.join{cursor:default}
+.dxCard.join .dJoin{margin-top:6px;width:100%}
+.dxCard.join .dJoin input{flex:1;width:auto!important;font-size:30px!important}
+.dxErr{font-size:16px!important;text-align:center}
+.dxRoom{display:grid;grid-template-columns:auto 1fr;gap:clamp(20px,4vw,70px);align-items:center;width:min(1200px,100%)}
+.dxCode{text-align:center;padding:18px 34px;border:1px solid var(--line-2);background:rgba(0,0,0,.35)}
+.dxCode>span{font:700 15px var(--f-body);color:var(--muted)}
+.dxCode .dCodeBig{font:700 clamp(54px,6vw,92px) var(--f-num)!important;margin:2px 0 4px!important;letter-spacing:.18em}
+.dxCode p{margin:0;font:600 15px var(--f-body);color:#cfc9bb}
+.dxVs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:clamp(12px,2vw,30px)}
+.dxVs .pl{padding:22px 24px;background:rgba(255,255,255,.04);border-left:3px solid var(--amber)}
+.dxVs .pl:last-child{border-left:0;border-right:3px solid #40d8ff;text-align:right}
+.dxVs .pl span{display:block;font:700 14px var(--f-body);color:var(--muted);margin-bottom:6px}
+.dxVs .pl b{font:900 clamp(24px,2.4vw,36px) var(--f-kdisp)}
+.dxVs i{font:900 30px var(--f-num);font-style:normal;color:var(--muted)}
+.dxLoad{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:clamp(14px,2vw,28px);width:min(1200px,100%)}
+.dxCol{padding:20px 22px;background:rgba(0,0,0,.35);border:1px solid var(--line)}
+.dxCol[hidden]{display:none}
+.dxCol h4{margin:0 0 12px;font:800 18px var(--f-kdisp)}
+.dxCol h4 small{font:500 13px var(--f-body);color:var(--muted);margin-left:8px}
+.dxPick{display:grid!important;grid-template-columns:1fr 1fr;gap:8px}
+.dxPick button{padding:14px 10px!important;font:800 16px var(--f-kdisp)!important}
+.dxPick button.sel{background:rgba(255,178,26,.12)}
+.dxCol .note{margin:10px 0 0}
+.dxSw{display:flex;align-items:center;gap:12px;padding:10px 0;font:600 16px var(--f-body);cursor:pointer}
+.dxSw input{position:absolute;opacity:0;pointer-events:none}
+.dxSw i{position:relative;width:46px;height:26px;flex:none;background:#2b2f34;border-radius:13px;transition:background .15s}
+.dxSw i::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#cfd4da;transition:left .15s}
+.dxSw input:checked+i{background:var(--amber)}
+.dxSw input:checked+i::after{left:23px;background:#1d1300}
+.dxSw input:disabled~span,.dxSw input:disabled+i{opacity:.55;cursor:not-allowed}
+.dxGo{display:flex;flex-direction:column;align-items:center;gap:10px}
+.dxReady{min-width:min(420px,80vw);padding:20px 30px!important;font-size:24px!important}
+.dCount{font:800 48px var(--f-num)!important;color:var(--amber);min-height:0}
+@media (max-width:820px){.dxModes,.dxTiles,.dxRoom{grid-template-columns:1fr}.dxSteps li{padding:7px 9px;font-size:13px}.dxCard,.dxCard.big{min-height:150px}}
+@media (max-height:760px){.dxCard,.dxCard.big{min-height:170px}.dxTop{margin-bottom:14px}}
+</style>
+
 
 
 
@@ -723,34 +793,44 @@ body.tut #radio{top:calc(150px + env(safe-area-inset-top,0px))}
 
 <!-- 1:1 showdown -->
 <section class="screen shade" id="scrDuel" hidden>
-  <div class="console">
-    <div class="frame pane">
-      <div class="pHead"><h2>1:1 쇼다운</h2><span class="lbl">비순위</span></div>
-      <p class="lore" id="dLore">PC 두 대로 동시에 출격해 겨룹니다. 순위와 출격 횟수에는 반영되지 않습니다.</p>
-      <div class="dModes" id="dModes"><button type="button" data-dm="score" class="sel">점수 대결</button><button type="button" data-dm="vs">기체 대전</button></div>
-      <p class="note" id="dModeNote" style="margin:-4px 0 14px">같은 120초 규칙으로 동시에 출격해 점수를 겨룹니다.</p>
-      <div class="field"><label for="dName">파일럿 이름</label><input id="dName" maxlength="12" autocomplete="off" placeholder="홍길동"></div>
-      <div class="field"><label>기체</label><div class="dUnits" id="dFrames"></div></div>
-      <div class="field" id="dUnitField"><label>옵션 유닛</label><div class="dUnits" id="dUnits"></div></div>
-      <div id="vsRules" hidden>
-        <div class="field"><label><input type="checkbox" id="vsPassives" disabled> 기체 패시브 켜기</label><p class="note" id="vsFrameNote">꺼짐: 기체별 장갑·이동 성능 동일</p></div>
-        <div class="field"><label><input type="checkbox" id="vsSkills" disabled> 옵션 스킬 켜기 (패시브 · R · F)</label><p class="note" id="vsUnitNote">옵션의 패시브·R·F 모두 꺼짐</p></div>
-        <p class="note" id="vsRulesNote">방장이 설정합니다. 기본값은 모두 꺼짐입니다.</p>
+  <div class="dx" id="dx" data-step="1">
+    <header class="dxTop"><h2>1:1 쇼다운</h2>
+      <ol class="dxSteps"><li data-s="1"><i>1</i>대결 방식</li><li data-s="2"><i>2</i>방 만들기 · 참가</li><li data-s="3"><i>3</i>대기실</li></ol>
+      <button class="btn" type="button" id="dBack">뒤로 <kbd>Esc</kbd></button></header>
+    <section class="dxS" id="dS1">
+      <h3 class="dxQ">이름을 적고, 대결 방식을 고르세요</h3>
+      <div class="dxName"><label for="dName">파일럿 이름</label><input id="dName" maxlength="12" autocomplete="off" placeholder="이름 입력"><p class="err" id="dErr1"></p></div>
+      <div class="dxModes" id="dModes">
+        <button type="button" data-dm="vs" class="dxCard"><em>추천</em><b>기체 대전</b><span>같은 공역에서 1:1로 맞붙어요.<br>사격 · 베기 · 회피로 상대를 쓰러뜨리면 승리.</span><small>75초 · 2판 먼저 이기면 승리</small></button>
+        <button type="button" data-dm="score" class="dxCard"><b>점수 대결</b><span>각자 같은 120초 출격을 하고<br>점수가 높은 쪽이 승리해요.</span><small>120초 · 한 판</small></button>
       </div>
-      <div class="btns"><button class="btn primary" type="button" id="dCreate">방 만들기</button><button class="btn" type="button" id="dTut">쇼다운 튜토리얼 · 혼자 연습</button></div>
-      <div class="field" style="margin-top:18px"><label for="dCode">방 번호로 참가</label><div class="dJoin"><input id="dCode" class="num" inputmode="numeric" maxlength="4" placeholder="0000"><button class="btn" type="button" id="dJoin">참가</button></div></div>
-      <div class="err" id="dErr"></div>
-      <div class="btns"><button class="btn" type="button" id="dBack">돌아가기 <kbd>Esc</kbd></button></div>
-    </div>
-    <div class="frame pane dRoom">
-      <div class="pHead"><h2>대기실</h2><span class="lbl" id="dStatus">방 없음</span></div>
-      <div class="lbl">방 번호</div>
-      <div class="dCodeBig num" id="dCodeBig">— — — —</div>
-      <div class="dVs"><div><span class="lbl">1P</span><b id="dA">—</b></div><i>VS</i><div><span class="lbl">2P</span><b id="dB">대기 중…</b></div></div>
-      <div class="dCount num" id="dCount"></div>
-      <button class="btn primary" type="button" id="dReady" hidden>준비 완료 · 마우스 고정</button>
-      <p class="note" id="dNote">방을 만들면 4자리 번호가 나옵니다. 옆 PC에서 그 번호로 참가하세요.</p>
-    </div>
+      <p class="dxHint" id="dLore">PC 두 대로 겨룹니다. 순위와 출격 횟수에는 반영되지 않아요.</p>
+    </section>
+    <section class="dxS" id="dS2" hidden>
+      <h3 class="dxQ" id="dModeNote">기체 대전 · 방을 만들거나, 상대 방에 참가하세요</h3>
+      <div class="dxTiles">
+        <button type="button" class="dxCard big" id="dCreate"><b>방 만들기</b><span>4자리 방 번호가 나와요.<br>옆 PC의 상대에게 알려 주세요.</span></button>
+        <div class="dxCard big join"><b>번호로 참가</b><span>상대가 알려 준 4자리 번호를 넣고 참가.</span>
+          <div class="dJoin"><input id="dCode" class="num" inputmode="numeric" maxlength="4" placeholder="0000"><button class="btn primary" type="button" id="dJoin">참가</button></div></div>
+        <button type="button" class="dxCard big" id="dTut"><b>혼자 연습</b><span>상대 없이 훈련 교관과<br>기체 대전 규칙을 연습해요.</span></button>
+      </div>
+      <p class="err dxErr" id="dErr"></p>
+    </section>
+    <section class="dxS" id="dS3" hidden>
+      <div class="dxRoom">
+        <div class="dxCode"><span>방 번호</span><div class="dCodeBig num" id="dCodeBig">— — — —</div><p id="dStatus">방 없음</p></div>
+        <div class="dxVs"><div class="pl"><span>1P · 방장</span><b id="dA">—</b></div><i>VS</i><div class="pl"><span>2P</span><b id="dB">대기 중…</b></div></div>
+      </div>
+      <div class="dxLoad">
+        <div class="dxCol"><h4>내 기체</h4><div class="dUnits dxPick" id="dFrames"></div><p class="note" id="vsFrameNote"></p></div>
+        <div class="dxCol" id="dUnitField"><h4>옵션 유닛</h4><div class="dUnits dxPick" id="dUnits"></div><p class="note" id="vsUnitNote"></p></div>
+        <div class="dxCol" id="vsRules" hidden><h4>규칙 <small>방장만 바꿀 수 있어요</small></h4>
+          <label class="dxSw"><input type="checkbox" id="vsPassives" disabled><i></i><span>기체별 성능 차이</span></label>
+          <label class="dxSw"><input type="checkbox" id="vsSkills" disabled><i></i><span>옵션 유닛 R · F 사용</span></label>
+          <p class="note" id="vsRulesNote"></p></div>
+      </div>
+      <div class="dxGo"><div class="dCount num" id="dCount"></div><button class="btn primary dxReady" type="button" id="dReady" hidden>준비 완료</button><p class="dxHint" id="dNote"></p></div>
+    </section>
   </div>
 </section>
 

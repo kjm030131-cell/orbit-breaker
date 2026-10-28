@@ -12,19 +12,19 @@ addEventListener("blur",()=>{if(VS&&S.guard)vsGuard(false)});
 function vsLoadout(){vsSend({t:"loadout",frame:P?P.frame:"mk2",unit:G.unit})}
 function vsLobby(){
   const v=VS;$("vsRules").hidden=DMODE!=="vs";
-  if(!v){$("dUnitField").hidden=DMODE==="vs";$("vsFrameNote").textContent="기체 패시브 꺼짐: 두 기체 모두 장갑 100, 이동·회복 동일";$("vsUnitNote").textContent="옵션의 패시브·R·F 모두 꺼짐";$("vsRulesNote").textContent="방을 만든 뒤 방장이 설정할 수 있습니다. 기본값은 모두 꺼짐입니다.";$("vsPassives").checked=false;$("vsSkills").checked=false;$("vsPassives").disabled=$("vsSkills").disabled=true;return}
+  if(!v){$("dUnitField").hidden=DMODE==="vs";$("vsFrameNote").textContent="지금은 두 기체 성능이 같아요";$("vsUnitNote").textContent="";$("vsRulesNote").textContent="";$("vsPassives").checked=false;$("vsSkills").checked=false;$("vsPassives").disabled=$("vsSkills").disabled=true;return}
   const host=v.side==="a",lobby=v.phase==="wait"||v.phase==="lobby";
   $("vsPassives").checked=v.rules.passives;$("vsSkills").checked=v.rules.skills;
   $("vsPassives").disabled=$("vsSkills").disabled=!host||!lobby;
-  $("vsRulesNote").textContent=(host?"방장 설정":"방장이 정한 공통 규칙")+" · 변경 시 두 사람의 준비가 해제됩니다. 경기 중 변경 불가.";
-  $("dUnitField").hidden=!v.rules.skills;$("vsUnitNote").textContent=v.rules.skills?VS_UNIT_TEXT[G.unit].desc:"옵션의 패시브·R·F 모두 꺼짐";
-  $("vsFrameNote").textContent=v.rules.passives?"Mk-II: 장갑 110 · 스위프트: 장갑 90 / 이동 +15% / 부스트 회복 +10%":"기체 패시브 꺼짐: 두 기체 모두 장갑 100, 이동·회복 동일";
+  $("vsRulesNote").textContent=host?"바꾸면 두 사람 모두 다시 준비해야 해요":"방장이 정한 규칙이에요";
+  $("dUnitField").hidden=!v.rules.skills;$("vsUnitNote").textContent=v.rules.skills?VS_UNIT_TEXT[G.unit].desc:"";
+  $("vsFrameNote").textContent=v.rules.passives?"Mk-II 단단함 · 스위프트 빠름":"지금은 두 기체 성능이 같아요";
   for(const id of ["dFrames","dUnits"])for(const b of $(id).querySelectorAll("button"))b.disabled=!lobby||(id==="dFrames"&&!FRAMES[b.dataset.df].obj);
   for(const id of ["dCreate","dJoin"])$(id).disabled=true;
   const ps=v.players||{};$("dA").textContent=ps.a?ps.a.name+" · 방장"+(ps.a.ready?" · 준비":""):"—";$("dB").textContent=ps.b?ps.b.name+(ps.b.ready?" · 준비":""):"대기 중…";
   $("dReady").hidden=!(lobby&&ps.a&&ps.b);$("dReady").disabled=!P||!FRAMES[v.oppFrame||"mk2"].gltf;$("dReady").textContent=v.ready?"준비 취소":"준비 완료";
-  $("dStatus").textContent=ps.b?"두 사람의 준비를 기다립니다":"상대 기다리는 중";
-  $("dNote").textContent="기체와 규칙을 확인하고 두 사람 모두 준비하세요. 전투 화면을 클릭하면 마우스가 고정됩니다.";
+  $("dStatus").textContent=ps.b?"상대 입장 완료":"옆 PC에서 이 번호로 참가하세요";
+  $("dNote").textContent=!ps.b?"상대가 들어오면 준비 버튼이 나와요":v.ready?"상대가 준비하면 바로 시작해요":"기체를 고르고 준비 완료를 누르세요 · 두 사람 모두 준비하면 시작";
 }
 for(const id of ["vsPassives","vsSkills"])$(id).addEventListener("change",()=>{if(VS&&VS.side==="a")vsSend({t:"rules",passives:$("vsPassives").checked,skills:$("vsSkills").checked})});
 function vsOpen(code,name,create=false){

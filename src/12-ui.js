@@ -88,7 +88,7 @@ UI.key=function(e){
     pickUnit(UNIT_KEYS[j])
   }else if(e.code==="Escape"){if(SCREEN!=="play"&&SCREEN!=="launch")sfx("uiback");
     if(SCREEN==="form"||SCREEN==="rank")show("title");
-    else if(SCREEN==="duel")duelLeave();
+    else if(SCREEN==="duel")duelBack();
     else if(SCREEN==="load")show("form");
     else if(SCREEN==="brief")show(briefMode==="launch"?"load":"title");
     else if(SCREEN==="result")show("title");
