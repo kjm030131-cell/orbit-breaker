@@ -52,6 +52,7 @@ function update(rdt){
   if(CINE.on)cineUpdate(rdt);
 
   /* heat */
+  if(!VS){S.heat=0;S.over=0} // heat only exists in the 1:1 showdown (the room server limits spam there); solo has none
   if(S.heat>=100&&S.over<=0){S.over=1.6;popText("과열!");sfx("overheat")}
   if(S.over>0){S.over-=dt;S.heat=Math.max(0,S.heat-30*dt);if(S.over<=0){S.over=0;S.heat=40}}else S.heat=Math.max(0,S.heat-14*dt);
   S.attackCd-=dt;S.shotCd-=dt;S.bladeOn-=dt;
