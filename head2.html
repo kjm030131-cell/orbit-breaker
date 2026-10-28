@@ -48,7 +48,7 @@ button{font:inherit;color:inherit}
 /* title */
 #scrTitle{flex-direction:column;justify-content:space-between}
 #scrTitle{overflow-y:auto;gap:18px}
-@media (max-height:800px){.tMain{gap:12px}.logo img{width:min(400px,60vw)}.tagline{font-size:17px}.menu .mi{padding-top:7px!important;padding-bottom:7px!important}#miniBoard .mrow:nth-child(n+4){display:none}}
+@media (max-height:800px){.tMain{gap:12px}.logo img{width:min(400px,60vw)}.tagline{font-size:17px}.mi.pri{padding-block:14px}.mi.sec{padding-block:8px}.mi.ter{padding-block:5px}#miniBoard .mrow:nth-child(n+4){display:none}}
 .tTop{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}
 .event{font-family:var(--f-mono);font-size:12px;letter-spacing:.03em;color:var(--muted)}
 .event b{color:var(--amber);font-weight:500}
@@ -561,6 +561,36 @@ body.tut #radio{top:calc(96px + env(safe-area-inset-top,0px))}
 .hpRow.low .hpBar i{background:linear-gradient(90deg,#ff3a30,#ff7a50);animation:blow .5s steps(2) infinite}
 #hpV{min-width:34px;text-align:right;font-weight:700}
 body.versus #hpRow,body.tut #hpRow{display:none}
+
+/* ---- title: clean corners + 3-tier menu (10/28) ---- */
+#scrTitle .event,#scrTitle .tRight [data-settings],#installBtn{display:none!important}
+#netStatus:not(.off){display:none}
+#netStatus.off{font-size:14px;color:#ffcf7a;background:rgba(5,6,8,.78);border:1px solid rgba(255,178,26,.5);padding:7px 12px}
+#loadStatus:not(.err){display:none}
+#loadStatus.err{font-size:15px;color:#fff;background:rgba(120,20,14,.85);border:1px solid var(--red);padding:9px 14px}
+.menu{width:380px;gap:10px}
+.mi.pri,.mi.sec{background:transparent!important;border:0;border-style:solid;transition:filter .15s,transform .15s}
+.mi.pri{grid-template-columns:44px 1fr;gap:14px;padding:20px 30px 20px 24px;border-image:url(ui/btn_pri.webp) 30 60 fill/14px 30px stretch;color:#1d1300}
+.mi.pri .t{font-size:34px;font-weight:800;letter-spacing:.08em;text-shadow:0 1px 0 rgba(255,220,150,.45)}
+.mi.pri .k .ico{width:40px;height:40px;opacity:1}
+.mi.sec{grid-template-columns:30px 1fr;padding:12px 26px 12px 22px;border-image:url(ui/btn_sec.webp) 30 60 fill/12px 26px stretch}
+.mi.sec .t{font-size:21px;font-weight:700}
+.mi.sec .k .ico{width:28px;height:28px}
+.mi.pri:hover,.mi.pri:focus-visible,.mi.pri.sel{filter:brightness(1.14) drop-shadow(0 0 14px rgba(255,178,26,.45));transform:translateX(6px)}
+.mi.sec:hover,.mi.sec:focus-visible,.mi.sec.sel{filter:brightness(1.35);transform:translateX(6px)}
+#tutBtn.hot{animation:tbp2 1.6s ease-in-out infinite}
+@keyframes tbp2{50%{filter:brightness(1.4)}}
+.mSub{display:flex;flex-wrap:wrap;align-items:center;margin-top:2px;padding-left:4px}
+.mi.ter{display:inline-flex;padding:6px 14px;background:none!important;border:0;border-left:1px solid var(--line-2);border-radius:0}
+.mi.ter:first-child{border-left:0;padding-left:8px}
+.mi.ter .t{font-size:17px;font-weight:600;color:#b9b4a8;transition:color .15s}
+.mi.ter:hover .t,.mi.ter:focus-visible .t,.mi.ter.sel .t{color:var(--amber)}
+.logo img{--lw:min(560px,78vw);width:var(--lw);margin-block:calc(var(--lw)*-.055)}
+@media (max-height:800px){.logo img{--lw:min(400px,60vw)}}
+@media (max-height:660px){.logo img{--lw:min(320px,55vw)}}
+.mi.pri .t{color:#160c00;font-weight:900}
+@media (max-height:800px){.menu{gap:8px}.mi.pri{padding-block:14px}.mi.pri .t{font-size:30px}.mi.sec{padding-block:8px}.mi.ter{padding-block:4px}}
+@media (max-height:660px){.tagline{font-size:15px}.mi.pri{padding-block:10px}.mi.pri .t{font-size:26px}.mi.pri .k .ico{width:32px;height:32px}.mi.sec{padding-block:6px}.mi.sec .t{font-size:18px}#miniBoard .mrow:nth-child(n+3){display:none}}
 </style>
 <style>
 /* 1:1 part damage (v9): small per-part armour cells under each HP bar; broken parts turn red and struck through */
@@ -789,12 +819,14 @@ body.tut #radio{top:calc(150px + env(safe-area-inset-top,0px))}
     <h1 class="logo"><img src="ui/logo.webp" alt="ORBIT BREAKER"></h1>
     <div class="tagline"><i></i>120초 우주 메카 스코어 어택</div>
     <nav class="menu" id="menu">
-      <button class="mi" data-go="form" type="button"><span class="k"><img class="ico" src="ui/ic_play.webp" alt=""></span><span class="t">출격</span></button>
-      <button class="mi" id="tutBtn" type="button"><span class="k"><img class="ico" src="ui/ic_quality.webp" alt=""></span><span class="t">튜토리얼</span><span id="tutHint" hidden><b>처음이신가요?</b>조작과 이야기를 3분 만에 익혀요</span></button>
-      <button class="mi" data-go="duel" type="button"><span class="k"><img class="ico" src="ui/ic_versus.webp" alt=""></span><span class="t">1:1 쇼다운</span></button>
-      <button class="mi" data-go="rank" type="button"><span class="k"><img class="ico" src="ui/ic_trophy.webp" alt=""></span><span class="t">작전 기록</span></button>
-      <button class="mi" data-go="brief" type="button"><span class="k"><img class="ico" src="ui/ic_quality.webp" alt=""></span><span class="t">조작 교본</span></button>
-      <button class="mi" data-settings type="button"><span class="k"><img class="ico" src="ui/ic_gear.webp" alt=""></span><span class="t">설정</span></button>
+      <button class="mi pri" data-go="form" type="button"><span class="k"><img class="ico" src="ui/ic_play.webp" alt=""></span><span class="t">출격</span></button>
+      <button class="mi sec" id="tutBtn" type="button"><span class="k"><img class="ico" src="ui/ic_quality.webp" alt=""></span><span class="t">튜토리얼</span><span id="tutHint" hidden><b>처음이신가요?</b>조작과 이야기를 3분 만에 익혀요</span></button>
+      <button class="mi sec" data-go="duel" type="button"><span class="k"><img class="ico" src="ui/ic_versus.webp" alt=""></span><span class="t">1:1 쇼다운</span></button>
+      <div class="mSub">
+        <button class="mi ter" data-go="rank" type="button"><span class="t">작전 기록</span></button>
+        <button class="mi ter" data-go="brief" type="button"><span class="t">조작 교본</span></button>
+        <button class="mi ter" data-settings type="button"><span class="t">설정</span></button>
+      </div>
     </nav>
   </div>
   <div class="tFoot">

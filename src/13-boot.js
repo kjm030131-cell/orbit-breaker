@@ -1,6 +1,6 @@
 /* ================= load models ================= */
 function b64buf(s){const bin=atob(s||"");const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer}
-const fail=()=>{$("loadStatus").textContent="모델을 불러오지 못했습니다. 새로고침해 주세요."};let loaded=0;const okLoad=()=>{if(++loaded===2){try{if(!SHIP)buildShip();buildBits(G.unit)}catch(e){console.error(e)}$("loadStatus").textContent="XR-07 Mk-II · 기체 점검 완료";
+const fail=()=>{$("loadStatus").classList.add("err");$("loadStatus").textContent="모델을 불러오지 못했습니다. 새로고침해 주세요."};let loaded=0;const okLoad=()=>{if(++loaded===2){try{if(!SHIP)buildShip();buildBits(G.unit)}catch(e){console.error(e)}$("loadStatus").textContent="XR-07 Mk-II · 기체 점검 완료";
   lazyGLB("ship","ship_glb.js","SHIP_GLB_B64",g=>{SHIP_GLTF=g;attachShipModel()});
   lazyGLB("swift","swift_glb.js","SWIFT_GLB_B64",g=>loadFrame("swift",g))}};
 // models: the deployed build fetches meshopt-compressed .glb files; the artifact build parses embedded base64
