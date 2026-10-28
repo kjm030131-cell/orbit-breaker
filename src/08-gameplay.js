@@ -153,6 +153,7 @@ function hurt(b){
 /* ---- dodge / just dodge ---- */
 function dodge(){
   if(VS){
+    if(VS.phase==="fight"&&G.stagger>0&&!G.broke&&!PAUSED){vsSend({t:"dodge"});return} // stagger break-out, the room server decides
     if(!vsCanAct()||S.over>0||G.dodgeCd>0||S.attackCd>0||S.shotCd>0||S.boost<20)return;
     G.dodgeCd=.65;S.boost-=20;G.iframe=Math.max(G.iframe,.18);const d=new V3(),f=fwd(),r=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw));
     if(keys.KeyW)d.add(f);if(keys.KeyS)d.sub(f);if(keys.KeyA)d.add(r);if(keys.KeyD)d.sub(r);if(keys.Space)d.y+=1;if(keys.KeyC)d.y-=1;if(!d.lengthSq())d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(72));S.freeT=.32;vsSend({t:"dodge"});sfx("dodge");return;
@@ -178,9 +179,11 @@ function dodge(){
   if(just)justDodge();
 }
 function justDodge(){tutCount("just");
-  if(G.unit==="shield"&&!G.armor&&G.guardCd<=0){G.armor=1;G.guardCd=25}
-  G.crit=1.6;G.iframe=Math.max(G.iframe,.4);S.boost=Math.min(100,S.boost+20);addSpec(4);
-  popText("저스트 회피 · 다음 베기 크리티컬");sfx("just");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:16,life:.4,a:.85});
+  addSpec(12);if(G.unit==="shield"&&!G.armor&&G.guardCd<=0){G.armor=1;G.guardCd=25;popText("실드 비트 · 1회 피격 무효")}
+  S.slow=.75;G.crit=2.6;G.iframe=.9;S.boost=Math.min(100,S.boost+40);S.heat=Math.max(0,S.heat-25);
+  popText("저스트 회피 · 반격 찬스!");sfx("just");addScore(300,S.pos.clone().add(new V3(0,2,0)),"cyan");
+  const f=$("flash");f.style.background="#7fe0ff";flash(.28);setTimeout(()=>{f.style.background="#fff"},220);
+  emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:18,life:.45,a:.9});
 }
 
 

@@ -29,7 +29,9 @@ function update(rdt){
   // brakes hard when the keys are released. Dodges / knockbacks set S.freeT so they keep their old, longer glide.
   const moving=acc.lengthSq()>0;S.freeT=Math.max(0,(S.freeT||0)-dt);const drag=S.freeT>0?1.715:moving?2.6:4.2;
   // 1:1 chase: boosting toward the opponent is 25% faster, so a retreating player can be run down
-  let chase=1;if(VS&&boosting&&moving&&VS.remote){const to=VS.remote.root.position.clone().sub(S.pos);to.y=0;const ah=acc.clone().setY(0);if(to.lengthSq()>1&&ah.lengthSq()>.01&&ah.normalize().dot(to.normalize())>.7)chase=1.25}
+  let chase=1;if(VS&&boosting&&moving&&VS.remote){const to=VS.remote.root.position.clone().sub(S.pos),L=to.length();
+    if(L>4&&keys.KeyW&&!keys.Space&&!keys.KeyC&&camFwd().dot(to.clone().normalize())>.82){chase=1.25;acc.y+=clamp(to.y/12,-1,1)} // looking at them + W: track their height
+    else{const h=to.clone().setY(0),ah=acc.clone().setY(0);if(h.lengthSq()>1&&ah.lengthSq()>.01&&ah.normalize().dot(h.normalize())>.7)chase=1.25}}
   S.chase=chase>1;
   if(moving)acc.normalize().multiplyScalar((boosting&&!S.guard?94*chase:39.5)*(VS?vsSpeed()*(S.guard?.45:1):1)*((G.mega&&G.mega.slow)||G.vsBeam?.6:1));
   S.boost=clamp(S.boost+(boosting?-20:36*(VS?vsRegen():1))*dt,0,100);
@@ -133,7 +135,7 @@ function update(rdt){
   // HM-1 beam: swing the camera out over the left shoulder so a beam fired down the reticle line is seen side-on, not end-on
   S.megaCam=(S.megaCam||0)+((((G.mega&&!VS)||G.vsBeam)?1:0)-(S.megaCam||0))*(1-Math.exp(-7*rdt));if(S.megaCam>.002)want.add(new V3(Math.cos(S.yaw)*4.2*S.megaCam,1.1*S.megaCam,-Math.sin(S.yaw)*4.2*S.megaCam));
   if(S.demo){const pv=SCREEN==="load",a=S.demoT*(pv?.35:.25),r=pv?10.5:11;want.copy(S.pos).add(new V3(Math.sin(a+2.6)*r,(pv?.6:2.2)+Math.sin(a*.7)*(pv?.3:1),Math.cos(a+2.6)*r))}
-  camera.position.lerp(want,1-Math.pow(.0005,rdt));
+  camera.position.lerp(want,1-Math.pow(VS?.012:.0005,rdt));
   if(!VS&&S.camKick>0)camera.position.addScaledVector(camFwd(),-S.camKick*.45).y+=S.camKick*.12;
   S.shake=Math.max(0,S.shake-rdt*2.4);const sh=(VS?.45:1)*S.shake*S.shake*.9*(typeof SHAKE_K==='number'?SHAKE_K:1);
   camera.position.add(new V3((Math.random()-.5)*sh,(Math.random()-.5)*sh,(Math.random()-.5)*sh));

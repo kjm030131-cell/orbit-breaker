@@ -210,7 +210,7 @@ function hudUpdate(){
   setW("specBar",G.spec);setC("wSpec","ready",G.spec>=100);setT("specTxt",G.spec>=100?"READY":Math.floor(G.spec)+"%");setH("armorTag",!(G.armor>0));
   const sl=S.act&&S.act.startsWith("slash");setT("chainNow",sl?`콤보 ${S.combo+1} / 3`:"록온 돌진");
   setC("wBlade","act",S.bladeOn>0||sl);setC("wRifle","act",S.shotCd>0);setW("rifleCd",S.shotCd>0?(1-S.shotCd/(G.unit==="missile"?.24:.32))*100:100);
-  setT("warn",G.dead>0?(G.lives>0?"기체 대파 — 예비기 발진 준비":"전 기체 손실"):G.stagger>0?(VS?"피격 — 자세 제어 불능":"경직 — Shift로 풀기 (부스트 30)"):VS&&S.over>0?"과열 정지":VS&&S.heat>=80?"과열 임박":S.boost<15?"부스트 부족 — 회피 불가":"");
+  setT("warn",G.dead>0?(G.lives>0?"기체 대파 — 예비기 발진 준비":"전 기체 손실"):G.stagger>0?(G.broke?"자세 회복 중":"경직 — Shift로 풀기 (부스트 30)"):VS&&S.over>0?"과열 정지":VS&&S.heat>=80?"과열 임박":S.boost<15?"부스트 부족 — 회피 불가":"");
   {const cm=cleanMult(),nx=cm>=2?1:(G.clean%CLEAN_STEP)/CLEAN_STEP;setT("cleanV","×"+cm.toFixed(1));setW("cleanF",nx*100);setC("cleanBox","max",cm>=2)}
   if(!VS){const hp=Math.ceil(G.hp??100);if(HC.hp!==hp){HC.hp=hp;$("hpF").style.width=hp+"%";$("hpV").textContent=hp;$("hpRow").classList.toggle("low",hp<35)}}
   if(HC.lives!==G.lives){HC.lives=G.lives;[...$("lives").children].forEach((c,i)=>{if(c.tagName==="I")c.classList.toggle("lost",i>=G.lives)});$("livesTxt").textContent="기체 "+Math.max(0,G.lives)+" / "+MAX_LIVES}
