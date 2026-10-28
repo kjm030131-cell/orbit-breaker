@@ -25,7 +25,8 @@ async def main():
         try:
           t=await shot(f'f=../../out/boss.glb&yaw={yaw}&hide={i}','h')
         except Exception as ex:
-          open(f'{OUT}/err.txt','a').write(f'{yaw} {i} {ex}\n');continueim=Image.open('/tmp/s_h.png').convert('RGB').resize((384,384))
+          open(f'{OUT}/err.txt','a').write(f'{yaw} {i} {ex}\n');continue
+        im=Image.open('/tmp/s_h.png').convert('RGB').resize((384,384))
         ImageDraw.Draw(im).text((8,8),f'hide bone {i}',fill=(255,255,0));sheet.paste(im,((i%5)*384,(i//5)*384))
       sheet.save(f'{OUT}/boss_bones_yaw{yaw}.jpg',quality=80)
     open(f'{OUT}/info.json','w').write(json.dumps(info,indent=1))
