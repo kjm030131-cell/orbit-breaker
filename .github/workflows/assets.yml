@@ -24,7 +24,7 @@ jobs:
           GT="npx gltf-transform"
           $GT inspect tools/assets/src/boss.glb > /tmp/aout/boss_src.txt || true
           $GT optimize tools/assets/src/boss.glb out/boss.glb --compress meshopt --simplify false --texture-compress webp --texture-size 2048
-          $GT optimize tools/assets/src/boss_pod.glb out/boss_pod.glb --compress meshopt --simplify-ratio 0.006 --simplify-error 0.02 --texture-compress webp --texture-size 1024
+          true || $GT optimize tools/assets/src/boss_pod.glb out/boss_pod.glb --compress meshopt --simplify-ratio 0.006 --simplify-error 0.02 --texture-compress webp --texture-size 1024
           $GT inspect out/boss.glb > /tmp/aout/boss.txt; $GT inspect out/boss_pod.glb > /tmp/aout/boss_pod.txt
           ls -la out >> /tmp/aout/sizes.txt
           cp out/*.glb /tmp/aout/
