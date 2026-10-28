@@ -15,7 +15,8 @@ function mult(){return comboMult()*cleanMult()*(G.phase>=3?2:1)}
 function addScore(n,pos,cls){if(S.ended)return 0;const v=Math.round(n*mult());S.score+=v;if(pos&&SCREEN==="play")scorePop(pos,"+"+v.toLocaleString(),cls);return v}
 function onKill(e){if(SCREEN!=="play")return;tutCount("kill");hitMark("kill");impactPunch(.35);addSpec(4);G.kc++;G.kcT=KC_WINDOW;G.maxKC=Math.max(G.maxKC,G.kc);
   if(G.kc===5||G.kc===10||G.kc===20||G.kc===35)popText(`콤보 ×${comboMult()}`);
-  if(e.elite){addScore(1500,e.m.position.clone(),"big");popText("정예기 격파")}
+  if(e.elite){tutCount("elite");addScore(1500,e.m.position.clone(),"big");popText("정예기 격파")}
+  if(e.ms&&!e.blade)tutCount("ms");
   if(e.ms){addScore(e.blade?1800:1200,e.m.position.clone(),"big");popText(e.blade?"검투기 격파":"적 MS 격파")}}
 
 /* ---- floating score numbers ---- */
@@ -168,7 +169,7 @@ function dodge(){
   for(const b of G.ebolts){if(b.dead)continue;const rel=me.clone().sub(b.g.position),along=rel.dot(b.dir);if(along<0)continue;
     const miss=rel.clone().addScaledVector(b.dir,-along).length();if(along/b.speed<.15&&miss<2.4){just=true;b.dead=true}}
   for(const e of enemies){if(!e.ram||e.rs!=="charge"||!e.alive||e.launched>0)continue;const rel=me.clone().sub(e.m.position),along=rel.dot(e.rdir);if(along<0)continue;
-    if(along/RAM_SPEED<.22&&rel.clone().addScaledVector(e.rdir,-along).length()<3.2){just=true;e.dodged=true}}
+    if(along/RAM_SPEED<.22&&rel.clone().addScaledVector(e.rdir,-along).length()<3.2){just=true;e.dodged=true;tutCount("ramDodge")}}
   if(just)justDodge();
 }
 function justDodge(){tutCount("just");
