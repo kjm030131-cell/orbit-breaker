@@ -1,13 +1,13 @@
 /* ================= gameplay systems ================= */
 const PHASES=[
-  {at:0,name:"1단계 · 선발 정찰대",sub:"",count:12,elites:0,rams:0,ms:0,maxTele:2,fire:[4.5,7.5],tele:.9,bolt:85},
-  {at:25,name:"2단계 · 돌격 드론 출현",sub:"",count:14,elites:0,rams:2,ms:1,blade:1,maxTele:3,fire:[3,5],tele:.8,bolt:92},
-  {at:55,name:"3단계 · 정예 호위기",sub:"",count:14,elites:2,rams:2,ms:1,blade:1,maxTele:3,fire:[2.6,4.4],tele:.75,bolt:100},
-  {at:90,name:"최종 단계 · 지휘기 케르베로스",sub:"",count:12,elites:2,rams:3,ms:1,blade:1,maxTele:4,fire:[2.4,4],tele:.7,bolt:108}];
+  {at:0,name:"1단계 · 선발 정찰대",sub:"",count:7,gap:[2.2,3],elites:0,rams:0,ms:0,maxTele:2,fire:[4.5,7.5],tele:.9,bolt:85},
+  {at:25,name:"2단계 · 돌격 드론 출현",sub:"",count:9,gap:[2,2.8],elites:0,rams:1,ms:1,blade:0,maxTele:2,fire:[3.4,5.4],tele:.85,bolt:92},
+  {at:55,name:"3단계 · 정예 호위기",sub:"",count:9,gap:[1.9,2.6],elites:1,rams:2,ms:1,blade:1,maxTele:3,fire:[3,4.8],tele:.8,bolt:100},
+  {at:90,name:"최종 단계 · 지휘기 케르베로스",sub:"",count:6,gap:[2.6,3.4],elites:1,rams:1,ms:0,blade:1,maxTele:3,fire:[2.8,4.4],tele:.75,bolt:108}];
 // clean streak: every 15s without a hit adds +0.2 to the score multiplier (max ×2.0); a hit resets it
 const CLEAN_STEP=15;
 function cleanMult(){return Math.min(2,1+Math.floor(G.clean/CLEAN_STEP)*.2)}
-const G={phase:0,kc:0,kcT:0,maxKC:0,crit:0,iframe:0,stagger:0,dodgeCd:0,ebolts:[],aimN:0,focus:null,lives:3,dead:0,clean:0,guardCd:0,unit:"boost"};
+const G={phase:0,kc:0,kcT:0,maxKC:0,crit:0,iframe:0,stagger:0,dodgeCd:0,ebolts:[],aimN:0,focus:null,lives:3,dead:0,clean:0,guardCd:0,unit:"mega",spawnT:0,bigT:0};
 const MAX_LIVES=3;
 const KC_WINDOW=3.5;
 function comboMult(){const k=G.kc;return k>=35?3:k>=20?2.5:k>=10?2:k>=5?1.5:1}
@@ -46,14 +46,25 @@ function spawnEnemy(pos,elite,ram){
   enemies.push(e);return e;
 }
 function aroundPlayer(rMin,rMax,ySpread){const a=Math.random()*Math.PI*2,r=rMin+Math.random()*(rMax-rMin);return new V3(S.pos.x+Math.cos(a)*r,S.pos.y+(Math.random()-.5)*ySpread,S.pos.z+Math.sin(a)*r)}
-function spawnCluster(){const n=2+Math.floor(Math.random()*3),c=aroundPlayer(32,58,12);
-  for(let i=0;i<n;i++)spawnEnemy(c.clone().add(new V3().randomDirection().multiplyScalar(5+Math.random()*4)),false)}
-function fillEnemies(){if(VS||S.demo||CINE.on||TUT.on||INTRO.on)return;const ph=PHASES[G.phase];let alive=0,el=0,rm=0,ms=0,bl=0;for(const e of enemies)if(e.alive&&e.launched<=0&&!e.isBoss&&!e.isWP){alive++;if(e.elite)el++;if(e.ram)rm++;if(e.blade)bl++;else if(e.ms)ms++}
-  if(bl<(ph.blade||0)&&SCREEN==="play"&&S.started&&Math.random()<.03&&spawnMS(aroundPlayer(38,50,6),true))return;
-  if(ms<(ph.ms||0)&&SCREEN==="play"&&S.started&&Math.random()<.03&&spawnMS(aroundPlayer(34,46,8)))return;
-  if(EN_MESH&&el<ph.elites&&SCREEN==="play"){spawnEnemy(aroundPlayer(30,40,8),true);return}
-  if(EN_MESH&&rm<ph.rams&&SCREEN==="play"&&Math.random()<.02){spawnEnemy(aroundPlayer(45,60,10),false,true);return}
-  let guard=0;while(alive<ph.count&&guard++<8){spawnCluster();alive+=3}}
+// mostly in front of the camera (within ~100 deg), so new waves are seen arriving instead of appearing behind the player
+function aheadPlayer(rMin,rMax,ySpread){const fa=Math.atan2(Math.sin(S.yaw),Math.cos(S.yaw)),a=Math.random()<.75?fa+(Math.random()-.5)*1.75:Math.random()*Math.PI*2,r=rMin+Math.random()*(rMax-rMin);
+  return new V3(S.pos.x+Math.sin(a)*r,S.pos.y+(Math.random()-.5)*ySpread,S.pos.z+Math.cos(a)*r)}
+function spawnCluster(n){n=n||2+Math.floor(Math.random()*2);const c=aheadPlayer(40,62,12);
+  for(let i=0;i<n;i++){const e=spawnEnemy(c.clone().add(new V3().randomDirection().multiplyScalar(5+Math.random()*4)),false);if(e&&S.started)e.fireT=Math.max(e.fireT,2.5+Math.random()*2);
+    if(e&&SCREEN==="play")emit(ADD,{pos:e.m.position.clone(),tex:TX.ring,color:0xff4030,s0:2,s1:9,life:.35,a:.6})}}
+// waves trickle in: the field is topped up one small cluster at a time with a per-phase gap, not refilled the instant something dies.
+// Before the sortie starts (title demo / catapult) the field is filled at once.
+function fillEnemies(dt){if(VS||S.demo||CINE.on||TUT.on||INTRO.on)return;const ph=PHASES[G.phase];let alive=0,el=0,rm=0,ms=0,bl=0;for(const e of enemies)if(e.alive&&e.launched<=0&&!e.isBoss&&!e.isWP){alive++;if(e.elite)el++;if(e.ram)rm++;if(e.blade)bl++;else if(e.ms)ms++}
+  const live=SCREEN==="play"&&S.started;
+  if(!live){let guard=0;while(alive<ph.count&&guard++<8){spawnCluster(3);alive+=3}return}
+  dt=dt||0;G.spawnT-=dt;G.bigT-=dt;
+  if(G.bigT<=0){
+    if(bl<(ph.blade||0)&&spawnMS(aheadPlayer(40,52,6),true)){G.bigT=7;return}
+    if(ms<(ph.ms||0)&&spawnMS(aheadPlayer(36,48,8))){G.bigT=6;return}
+    if(EN_MESH&&el<ph.elites){spawnEnemy(aheadPlayer(32,42,8),true);G.bigT=6;return}
+    if(EN_MESH&&rm<ph.rams){spawnEnemy(aheadPlayer(48,62,10),false,true);G.bigT=3.5;return}}
+  if(G.spawnT>0||alive>=ph.count)return;
+  const need=ph.count-alive;spawnCluster(Math.min(need,need>4?3:2));G.spawnT=ph.gap[0]+Math.random()*(ph.gap[1]-ph.gap[0])}
 function eliteBlocks(e,from){if(!e.elite)return false;const to=from.clone().sub(e.m.position).setY(0).normalize();
   return to.dot(new V3(Math.sin(e.yaw),0,Math.cos(e.yaw)))>.3}
 function shieldFlash(e){const s=e.m.userData.shield;if(s)s.hit=1;fxElectric(e.m.position.clone().add(new V3(0,1,0)),6)}
@@ -138,13 +149,14 @@ function dodge(){
   if(VS){
     if(!vsCanAct()||S.over>0||G.dodgeCd>0||S.attackCd>0||S.shotCd>0||S.boost<25)return;
     G.dodgeCd=.65;S.boost-=25;G.iframe=Math.max(G.iframe,.18);const d=new V3(),f=fwd(),r=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw));
-    if(keys.KeyW)d.add(f);if(keys.KeyS)d.sub(f);if(keys.KeyA)d.add(r);if(keys.KeyD)d.sub(r);if(keys.Space)d.y+=1;if(keys.KeyC)d.y-=1;if(!d.lengthSq())d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(72));vsSend({t:"dodge"});sfx("dodge");return;
+    if(keys.KeyW)d.add(f);if(keys.KeyS)d.sub(f);if(keys.KeyA)d.add(r);if(keys.KeyD)d.sub(r);if(keys.Space)d.y+=1;if(keys.KeyC)d.y-=1;if(!d.lengthSq())d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(72));S.freeT=.32;vsSend({t:"dodge"});sfx("dodge");return;
   }
   if(SCREEN!=="play"||S.ended||PAUSED||G.dodgeCd>0||G.stagger>0||G.dead>0||S.over>0||S.boost<15)return;
+  if(G.mega){if(G.mega.mode!=="r")return;megaEnd(false)} // a dodge cancels the R beam; the F burst is committed
   G.dodgeCd=.45;S.boost-=15;G.iframe=Math.max(G.iframe,.22);
   const f=fwd(),r=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw)),d=new V3();
   if(keys.KeyW)d.add(f);if(keys.KeyS)d.sub(f);if(keys.KeyA)d.add(r);if(keys.KeyD)d.sub(r);if(keys.Space)d.y+=1;if(keys.KeyC)d.y-=1;
-  if(d.lengthSq()===0)d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(72));sfx("dodge");tutCount("dodge");
+  if(d.lengthSq()===0)d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(72));S.freeT=.32;sfx("dodge");tutCount("dodge");
   for(let i=0;i<10;i++){const k=i/10;emit(ADD,{pos:S.pos.clone().addScaledVector(d,-k*6/72).add(new V3(0,.8,0)),tex:TX.streak,color:0x7fe0ff,s0:5,s1:1,life:.25+k*.2,a:.45*(1-k)})}
   for(let i=0;i<6;i++)emit(ADD,{pos:S.pos.clone().add(new V3((Math.random()-.5)*1.5,Math.random()*2.5-.5,(Math.random()-.5)*1.5)),color:0x7fe0ff,s0:2,s1:.3,life:.35,a:.5});
   let just=false;
@@ -158,7 +170,7 @@ function dodge(){
 function justDodge(){tutCount("just");
   addSpec(12);if(G.unit==="shield"&&!G.armor&&G.guardCd<=0){G.armor=1;G.guardCd=25;popText("실드 비트 · 1회 피격 무효")}
   S.slow=.75;G.crit=2.6;G.iframe=.9;S.boost=Math.min(100,S.boost+40);S.heat=Math.max(0,S.heat-25);
-  popText("저스트 회피");sfx("just");addScore(300,S.pos.clone().add(new V3(0,2,0)),"cyan");
+  popText("저스트 회피 · 반격 찬스!");sfx("just");addScore(300,S.pos.clone().add(new V3(0,2,0)),"cyan");
   const f=$("flash");f.style.background="#7fe0ff";flash(.28);setTimeout(()=>{f.style.background="#fff"},220);
   emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:18,life:.45,a:.9});
 }
@@ -170,7 +182,7 @@ function updateAim(T){
   for(const e of enemies)e.aim=false;G.aimN=0;
   const show=SCREEN==="play"&&target&&!target.isWP&&!target.isBoss&&!target.isRemote&&!S.ended&&S.over<=0&&G.stagger<=0;
   if(!show){AIM_DOTS.forEach(s=>s.visible=false);return}
-  const next=(clockT-S.lastSlash<.75)?(S.combo+1)%3:0,heavy=next===2||G.crit>0,L=heavy?80:58;
+  const next=(clockT-S.lastSlash<COMBO_WIN)?(S.combo+1)%3:0,heavy=next===2||G.crit>0,L=heavy?80:58;
   const o=target.m.position,dir=launchDir(next),rad=G.crit>0?4.8:target.rad;
   AIM_DOTS.forEach((s,i)=>{const k=(i+1)/AIM_DOTS.length;s.visible=true;s.position.copy(o).addScaledVector(dir,k*L);
     const pulse=((k*6-T*3)%1+1)%1;s.material.opacity=(1-k)*.55+.15*pulse;s.material.color.set(G.crit>0?0x7fe0ff:0xffb21a)});
@@ -193,13 +205,13 @@ function phaseBanner(p){const b=$("phase");$("phaseName").textContent=p.name;$("
 function resetGameplay(){
   for(const b of G.ebolts){scene.remove(b.g);b.g.children.forEach(c=>c.material.dispose())}
   for(const e of enemies)clearTele(e);
-  Object.assign(G,{phase:0,kc:0,kcT:0,maxKC:0,crit:0,iframe:0,stagger:0,dodgeCd:0,ebolts:[],aimN:0,focus:null,lives:MAX_LIVES,dead:0,clean:0,guardCd:0});
+  Object.assign(G,{spawnT:1.5,bigT:4,phase:0,kc:0,kcT:0,maxKC:0,crit:0,iframe:0,stagger:0,dodgeCd:0,ebolts:[],aimN:0,focus:null,lives:MAX_LIVES,dead:0,clean:0,guardCd:0});
   AIM_DOTS.forEach(s=>s.visible=false);resetItems();resetUnits();resetBoss();if(P)P.root.visible=true;
 }
 
 /* ---- armour, destruction, reserve units ---- */
 function destroyMech(dir){
-  G.lives--;G.clean=0;G.spec=Math.floor(G.spec*.5);G.dead=2.2;G.stagger=2.4;G.iframe=5;G.focus=null;G.kc=0;G.kcT=0;S.act=null;S.dash=0;S.dashT=null;S.pending=null;S.bladeOn=0;
+  megaEnd(true);G.lives--;G.clean=0;G.spec=Math.floor(G.spec*.5);G.dead=2.2;G.stagger=2.4;G.iframe=5;G.focus=null;G.kc=0;G.kcT=0;S.act=null;S.dash=0;S.dashT=null;S.pending=null;S.bladeOn=0;
   const c=S.pos.clone();fxExplosion(c,2.2);fxExplosion(c.clone().add(new V3(1.5,1,0)),1.3);sfx("destroyed");S.shake=1.6;S.slow=.9;flash(.55);
   if(P)P.root.visible=false;S.vel.multiplyScalar(.15);
   const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");

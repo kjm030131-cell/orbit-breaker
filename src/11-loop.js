@@ -1,5 +1,5 @@
 let RET_ON=false,RET_EL=null,LW_ON=false;
-const _SAB_C=new THREE.Color(0xff3aa8),_SAB_HOT=new THREE.Color(0xff2030);
+const _SAB_C=new THREE.Color(0xff3aa8),_SAB_HOT=new THREE.Color(0xff2030),_SAB_CRIT=new THREE.Color(0x6fe6ff); // cyan blade = counter window after a just dodge
 /* ================= main loop ================= */
 const clock=new THREE.Clock();
 // Focus camera: eases toward the focused target with a turn-rate cap. Up close (dash / pass-by) the direction
@@ -23,11 +23,16 @@ function update(rdt){
 
   /* movement */
   const f=fwd(),right=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw)),acc=new V3();
-  if(SCREEN==="play"&&!S.ended&&S.over<=0&&G.stagger<=0&&!G.ob&&(!VS||vsCanAct())){if(keys.KeyW)acc.add(f);if(keys.KeyS)acc.sub(f);if(keys.KeyA)acc.add(right);if(keys.KeyD)acc.sub(right);if(keys.Space)acc.y+=1;if(keys.KeyC)acc.y-=1}
+  if(SCREEN==="play"&&!S.ended&&S.over<=0&&G.stagger<=0&&(!VS||vsCanAct())){if(keys.KeyW)acc.add(f);if(keys.KeyS)acc.sub(f);if(keys.KeyA)acc.add(right);if(keys.KeyD)acc.sub(right);if(keys.Space)acc.y+=1;if(keys.KeyC)acc.y-=1}
   const boosting=(keys.ShiftLeft||keys.ShiftRight)&&S.boost>0&&acc.lengthSq()>0&&SCREEN==="play";
-  if(acc.lengthSq()>0)acc.normalize().multiplyScalar((boosting&&!S.guard?62:26)*(VS?vsSpeed()*(S.guard?.45:1):1));
-  S.boost=clamp(S.boost+(boosting?-38:22*(VS?vsRegen():(G.unit==="boost"?1.3:1)))*dt,0,100);
-  S.vel.addScaledVector(acc,dt);S.vel.multiplyScalar(Math.pow(.18,dt));
+  // responsive handling: same top speeds as before (≈15 m/s cruise, ≈36 m/s boost) but reached in ~0.3 s, and the frame
+  // brakes hard when the keys are released. Dodges / knockbacks set S.freeT so they keep their old, longer glide.
+  const moving=acc.lengthSq()>0;S.freeT=Math.max(0,(S.freeT||0)-dt);const drag=S.freeT>0?1.715:moving?2.6:4.2;
+  if(moving)acc.normalize().multiplyScalar((boosting&&!S.guard?94:39.5)*(VS?vsSpeed()*(S.guard?.45:1):1)*(G.mega&&G.mega.slow?.35:1));
+  S.boost=clamp(S.boost+(boosting?-38:22*(VS?vsRegen():1))*dt,0,100);
+  S.vel.addScaledVector(acc,dt);S.vel.multiplyScalar(Math.exp(-drag*dt));
+  // buffered inputs: a click that lands up to ~0.2 s before the current swing / shot recovers fires as soon as it can
+  if(S.bufT>0){S.bufT-=dt;if(S.buf==="a"&&S.attackCd<=0&&!S.dash){S.bufT=0;attack()}else if(S.buf==="s"&&S.shotCd<=0){S.bufT=0;shoot()}}
   const prevFace=S.face;
   if(VS&&S.vsLunge>0){S.vsLunge=Math.max(0,S.vsLunge-dt);S.vel.copy(S.vsDir);if(!S.vsLunge)S.vel.multiplyScalar(.2)}
   else if(S.dash>0&&S.dashT&&S.dashT.alive&&S.dashT.launched<=0){
@@ -71,7 +76,7 @@ function update(rdt){
     if(CINE.on){m.rotation.x=0;m.rotation.z=0}else{attitude(m,localV,dt,T);bodyMotion(m,dt)}
     solvePose(dt,localV,boosting,T);
     const heatC=new THREE.Color().setHSL(.07-S.heat/100*.07,1,.55+S.heat/400);
-    P.inner.material.color.copy(S.over>0?new THREE.Color(0xff2030):heatC);SABER_T.value=T;saberTexTick();if(P.saber)P.saber.uniforms.uColor.value.copy(S.over>0?_SAB_HOT:_SAB_C);
+    P.inner.material.color.copy(S.over>0?new THREE.Color(0xff2030):heatC);SABER_T.value=T;saberTexTick();if(P.saber)P.saber.uniforms.uColor.value.copy(S.over>0?_SAB_HOT:G.crit>0&&!VS?_SAB_CRIT:_SAB_C);
     P.eye.material.color.setHSL(.02,1,.45+Math.sin(T*3)*.05+S.heat/400);
     const want=(S.bladeOn>0&&S.over<=0)?1:0;
     P.bladeLen+=(want-P.bladeLen)*(1-Math.pow(want?1e-7:1e-4,rdt));
@@ -110,7 +115,7 @@ function update(rdt){
       if(e.launched<=0){explode(e,e.chain);addScore(100,em.position.clone())}
     }else enemyAI(e,dt,T)}
   for(let i=enemies.length-1;i>=0;i--)if(!enemies[i].alive)enemies.splice(i,1);
-  fillEnemies();
+  fillEnemies(dt);
 
   /* fx */
   fieldStep(dt,T);
@@ -121,6 +126,8 @@ function update(rdt){
   if(!(INTRO.on&&introCamera(rdt))&&!(CINE.on&&cineCamera(rdt))){
   const cf=camFwd(),dist=S.demo?12:8.6;
   const want=S.pos.clone().addScaledVector(cf,-dist).add(new V3(0,2.4,0));
+  // HM-1 beam: swing the camera out over the left shoulder so a beam fired down the reticle line is seen side-on, not end-on
+  S.megaCam=(S.megaCam||0)+(((G.mega&&!VS)?1:0)-(S.megaCam||0))*(1-Math.exp(-7*rdt));if(S.megaCam>.002)want.add(new V3(Math.cos(S.yaw)*4.2*S.megaCam,1.1*S.megaCam,-Math.sin(S.yaw)*4.2*S.megaCam));
   if(S.demo){const pv=SCREEN==="load",a=S.demoT*(pv?.35:.25),r=pv?10.5:11;want.copy(S.pos).add(new V3(Math.sin(a+2.6)*r,(pv?.6:2.2)+Math.sin(a*.7)*(pv?.3:1),Math.cos(a+2.6)*r))}
   camera.position.lerp(want,1-Math.pow(.0005,rdt));
   if(!VS&&S.camKick>0)camera.position.addScaledVector(camFwd(),-S.camKick*.45).y+=S.camKick*.12;

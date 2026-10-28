@@ -1,9 +1,9 @@
 /* ================= option units: the chosen pack decides R skill, F special and a passive ================= */
 const UNITS={
-  boost:{name:"오버부스트 유닛",en:"OB-3",color:0xffb21a,css:"#ffb21a",
-    r:"돌진 관통베기",rd:"조준 방향으로 초고속 돌진, 경로의 적을 모두 베어 날림",cd:7,
-    f:"궤도 파쇄",fd:"주변 42m의 적을 모두 바깥으로 날림",
-    p:"부스트 회복 +30%"},
+  mega:{name:"하이퍼 메가 런처 유닛",en:"HM-1",color:0xff4fd8,css:"#ff5ad8",
+    r:"메가 빔",rd:"0.6초 충전 후 조준 방향으로 관통 빔 한 방, 경로의 적을 모두 날림",cd:9,
+    f:"하이퍼 빔",fd:"1초 충전 후 초대형 빔을 5초간 계속 조사, 마우스로 전장을 쓸어 넘김",
+    p:"빔 라이플 명중 시 필살 게이지 +2"},
   pods:{name:"원격 포드 유닛",en:"RF-6",color:0x48d8ff,css:"#48d8ff",
     r:"포드 강습",rd:"포드 3기가 록온 대상을 직접 타격해 날림",cd:8,
     f:"올 레인지",fd:"포드가 주변 적을 한 점으로 끌어모은 뒤 사방으로 폭산",
@@ -17,7 +17,7 @@ const UNITS={
     f:"카운터 필드",fd:"4초간 무적 · 모든 적탄 반사, 종료 시 충격파",
     p:"저스트 회피 시 1회 피격 무효 (25초마다)"}};
 const UNIT_KEYS=Object.keys(UNITS);
-Object.assign(G,{unitCd:0,proj:[],marks:[],marking:false,markT:0,ob:0,obDir:new V3(),obHit:null,barrier:0,cfield:0,podGuard:0,podsOut:0,podsPull:null});
+Object.assign(G,{unitCd:0,proj:[],marks:[],marking:false,markT:0,mega:null,barrier:0,cfield:0,podGuard:0,podsOut:0,podsPull:null});
 
 /* ---- unit visuals riding on the mech ---- */
 const BIT={g:new THREE.Group(),items:[],kind:null};scene.add(BIT.g);
@@ -79,13 +79,10 @@ function projHit(p){const e=p.tgt,at=e.m.position.clone();
 
 /* ---- R skill ---- */
 function unitSkill(){
-  if(VS){vsSkill(false);return}if(SCREEN!=="play"||S.ended||G.dead>0||G.stagger>0||G.specT>=0||G.cfield>0)return;
+  if(VS){vsSkill(false);return}if(SCREEN!=="play"||S.ended||G.dead>0||G.stagger>0||G.specT>=0||G.cfield>0||G.mega)return;
   if(G.unitCd>0){sfx("deny");return}
   const u=G.unit;tutCount("unit");
-  if(u==="boost"){
-    const dir=aimDir();G.ob=.34;G.obDir.copy(dir);G.obHit=new Set();G.iframe=Math.max(G.iframe,.45);G.unitCd=UNITS.boost.cd;
-    S.act=null;S.dash=0;S.dashT=null;S.pending=null;S.bladeOn=1.2;startAct("lunge");S.face=Math.atan2(dir.x,dir.z);
-    sfx("dash");sfx("ignite");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0xffb21a,s0:2,s1:14,life:.3});S.shake=.5;
+  if(u==="mega"){megaStart("r");G.unitCd=UNITS.mega.cd;
   }else if(u==="pods"){
     const t=target;if(!t){sfx("deny");popText("포드 강습 · 표적 없음");return}
     G.unitCd=UNITS.pods.cd;G.podsOut=1.4;sfx("throw");
@@ -131,7 +128,7 @@ function reflectBolt(b){
 /* ---- F specials by unit ---- */
 function unitSpecial(){
   const u=G.unit;
-  if(u==="boost"){cutin("궤도 파쇄","OB-3");return}
+  if(u==="mega"){cutin("하이퍼 메가 빔","HM-1");megaStart("f");return}
   if(u==="pods"){cutin("올 레인지","RF-6");G.podsPull={t:0,c:S.pos.clone().addScaledVector(aimDir(),16)};G.podsOut=2.4;return}
   if(u==="missile"){cutin("풀 버스트","MP-12");
     const list=enemies.filter(e=>targetable(e)&&!e.isBoss&&e.m.position.distanceTo(S.pos)<60).sort((a,b)=>a.m.position.distanceTo(S.pos)-b.m.position.distanceTo(S.pos)).slice(0,14);
@@ -140,7 +137,7 @@ function unitSpecial(){
 }
 function unitSpecialBurst(){ // called at the special's strike frame
   const u=G.unit;
-  if(u==="boost"){specialBurst();return}
+  if(u==="mega")return; // the beam itself does the work (megaTick)
   if(u==="pods"){const c=G.podsPull?G.podsPull.c:S.pos.clone();S.hitstop=.12;S.shake=1.2;flash(.4);sfx("specBurst");
     emit(ADD,{pos:c,tex:TX.ring,color:0x48d8ff,s0:3,s1:70,life:.6});emit(ADD,{pos:c,tex:TX.flare,color:0xffffff,s0:14,s1:26,life:.2});flashLight(c,0x48d8ff,14,100,.5);
     let n=0;for(const e of enemies){if(!isMob(e))continue;const d=e.m.position.clone().sub(c),dist=d.length();if(dist>30)continue;
@@ -153,18 +150,10 @@ function isMob(e){return e.alive&&e.launched<=0&&!e.isBoss&&!e.isWP}
 
 /* ---- per-frame ---- */
 function unitsTick(dt,rdt,T){
+  megaVsTick(rdt,T);
   if(VS){stepBits(rdt,T);barrier.visible=vsSkills()&&G.barrier>0;if(barrier.visible){barrier.position.copy(S.pos).add(new V3(0,.8,0));barrier.scale.setScalar(1);barrier.rotation.y+=rdt;barrier.material.opacity=.25;}return;}
   G.unitCd=Math.max(0,G.unitCd-dt);G.podGuard=Math.max(0,G.podGuard-dt);G.podsOut=Math.max(0,G.podsOut-dt);
-  // overboost pierce
-  if(G.ob>0){G.ob-=dt;S.vel.copy(G.obDir).multiplyScalar(95);S.face=Math.atan2(G.obDir.x,G.obDir.z);
-    if(dt>0)emit(ADD,{pos:S.pos.clone(),tex:TX.streak,color:0xffb060,vel:G.obDir.clone().multiplyScalar(-30),s0:2,s1:.6,sx:4,life:.25,a:.8});
-    for(const e of enemies){if(!targetable(e)||G.obHit.has(e))continue;if(e.m.position.distanceTo(S.pos)>5.2)continue;G.obHit.add(e);
-      const at=e.m.position.clone();
-      if(e.isWP){wpDamage(e,3,at);continue}
-      const side=at.clone().sub(S.pos);side.addScaledVector(G.obDir,-side.dot(G.obDir));if(side.lengthSq()<.01)side.set(0,1,0);
-      knock(e,side.normalize().addScaledVector(G.obDir,.6).normalize(),44,2);e.rad=Math.max(e.rad,4.4);hitFlash(e);
-      fxSlashHit(at,0xff8a2a,true);sfx("heavy",at);S.hitstop=.05;addScore(300,at,"big");addSpec(3)}
-    if(G.ob<=0){G.ob=0;S.vel.multiplyScalar(.25);S.act=null;S.bladeOn=.4}}
+  megaTick(dt,rdt,T);
   // missile marking
   if(G.marking){G.markT+=rdt;if(G.marks.length<6&&G.markT>.16){G.markT=0;
       const t=coneTarget(Math.cos(24*Math.PI/180),70,G.marks);if(t){G.marks.push(t);sfx("lock")}}
@@ -186,6 +175,6 @@ function unitsTick(dt,rdt,T){
 }
 function resetUnits(){
   for(const p of G.proj){scene.remove(p.s);p.s.material.dispose()}
-  Object.assign(G,{unitCd:0,proj:[],marks:[],marking:false,markT:0,ob:0,obHit:null,barrier:0,cfield:0,podGuard:0,podsOut:0,podsPull:null});
+  megaEnd(true);Object.assign(G,{unitCd:0,proj:[],marks:[],marking:false,markT:0,mega:null,barrier:0,cfield:0,podGuard:0,podsOut:0,podsPull:null});
   if(BIT.kind!==G.unit)buildBits(G.unit);
 }

@@ -148,6 +148,12 @@ function loopsInit(){const a=AC;
   const ag=a.createGain();ag.gain.value=0;const af=a.createBiquadFilter();af.type="lowpass";af.frequency.value=220;
   [55,55.4,82.5].forEach(f=>{const o=a.createOscillator();o.type="sawtooth";o.frequency.value=f;o.connect(af);o.start()});af.connect(ag);ag.connect(AMBB);LOOP.amb={g:ag};
 }
+// HM-1 beam: a low detuned saw drone under band-passed noise "roar"; level set by megaLoop(k), 0 = silent
+function megaLoopInit(){const a=AC;if(LOOP.mega||!a)return;const g=a.createGain();g.gain.value=0;const lp=a.createBiquadFilter();lp.type="lowpass";lp.frequency.value=900;lp.connect(g);
+  const os=[41,41.6,82.3,123.7].map((f,i)=>{const o=a.createOscillator();o.type=i<2?"sawtooth":"square";o.frequency.value=f;const og=a.createGain();og.gain.value=i<2?.5:.12;o.connect(og);og.connect(lp);o.start();return o});
+  const ns=a.createBufferSource();ns.buffer=NOISE;ns.loop=true;const nf=a.createBiquadFilter();nf.type="bandpass";nf.frequency.value=1400;nf.Q.value=.8;const ng=a.createGain();ng.gain.value=.9;ns.connect(nf);nf.connect(ng);ng.connect(g);ns.start();
+  g.connect(SFXB);LOOP.mega={g,lp,os,nf}}
+function megaLoop(k){if(!AUD.ready)return;megaLoopInit();const L=LOOP.mega;if(!L)return;setP(L.g.gain,k*.32,.06);setP(L.lp.frequency,500+k*1400,.08);setP(L.nf.frequency,900+k*1500,.08);L.os.forEach((o,i)=>setP(o.frequency,[41,41.6,82.3,123.7][i]*(1+k*.18),.1))}
 function audioFrame(st){if(!AUD.ready)return;
   setP(LOOP.hum.g.gain,st.hum*.13,.04);const sw=clamp(st.swing/60,0,1);
   setP(LOOP.hum.f.frequency,380+sw*520,.03);LOOP.hum.o.forEach((o,i)=>setP(o.frequency,[55,55.7,110][i]*(1+sw*.12),.04));

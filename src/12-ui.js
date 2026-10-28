@@ -125,7 +125,7 @@ $("pilotForm").addEventListener("submit",async e=>{
 });
 
 /* ================= loadout ================= */
-const U_SHORT={boost:"부스트",pods:"포드",missile:"미사일",shield:"실드"};
+const U_SHORT={mega:"메가",boost:"부스트",pods:"포드",missile:"미사일",shield:"실드"};
 function renderFrames(){if(P&&FRAMES[P.frame]){$("pvName").textContent=FRAMES[P.frame].name;$("pvSub").textContent=FRAMES[P.frame].kr}$("frames").innerHTML=Object.keys(FRAMES).map(k=>{const F=FRAMES[k];return `<button type="button" class="fr ${P&&P.frame===k?"sel":""}" data-frame="${k}" ${F.obj?"":"disabled"}><b>${F.name}</b><span>${F.obj?F.kr:"기체 데이터 수신 중…"}</span></button>`}).join("")}
 function onFrameLoaded(){if(SCREEN==="load")renderFrames();if(SCREEN==="duel"){dFrameBtns();if(VS)vsLobby();}const want=PILOT.frame;if(want&&FRAMES[want].obj&&(!P||P.frame!==want))setFrame(want)}
 $("frames").addEventListener("click",e=>{const b=e.target.closest("[data-frame]");if(!b||b.disabled)return;if(setFrame(b.dataset.frame)){sfx("ui");PILOT.frame=b.dataset.frame;buildBits(G.unit)}renderFrames()});
@@ -213,7 +213,7 @@ function hudUpdate(){
   setT("warn",G.dead>0?(G.lives>0?"기체 대파 — 예비기 발진 준비":"전 기체 손실"):G.stagger>0?"피격 — 자세 제어 불능":S.over>0?"과열 정지 — X 연타로 강제 냉각":S.heat>=80?"과열 임박":S.boost<15?"부스트 부족 — 회피 불가":"");
   {const cm=cleanMult(),nx=cm>=2?1:(G.clean%CLEAN_STEP)/CLEAN_STEP;setT("cleanV","×"+cm.toFixed(1));setW("cleanF",nx*100);setC("cleanBox","max",cm>=2)}
   if(HC.lives!==G.lives){HC.lives=G.lives;[...$("lives").children].forEach((c,i)=>{if(c.tagName==="I")c.classList.toggle("lost",i>=G.lives)});$("livesTxt").textContent="기체 "+Math.max(0,G.lives)+" / "+MAX_LIVES}
-  {const u=UNITS[G.unit],cd=G.unitCd;setW("unitCd",cd>0?(1-cd/u.cd)*100:100);setC("wUnit","ready",cd<=0);setC("wUnit","act",G.ob>0||G.barrier>0||G.marking);
+  {const u=UNITS[G.unit],cd=G.unitCd;setW("unitCd",cd>0?(1-cd/u.cd)*100:100);setC("wUnit","ready",cd<=0);setC("wUnit","act",!!G.mega||G.barrier>0||G.marking);
    setT("unitName",G.marking?`${u.r} · ${G.marks.length}/6`:cd>0?`${u.r} ${cd.toFixed(1)}`:u.r)}
   {const b=BOSS.e;setH("bossBar",!b);if(b){const tr=$("bossBar").querySelectorAll(".bossTrack b");
     BOSS.wps.forEach((w,i)=>{if(tr[i])tr[i].style.width=(w.alive?w.hp/WP_HP*100:0)+"%"});setC("bossBar","down",b.down>0);

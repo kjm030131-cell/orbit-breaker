@@ -18,17 +18,20 @@ function pickTarget(){
 function toggleFocus(){if(SCREEN!=="play"||S.ended||G.dead>0)return;if(G.focus){G.focus=null;sfx("unfocus");return}
   const t=VS&&VS.tgt&&targetable(VS.tgt)?VS.tgt:coneTarget(FOCUS_CONE,64);if(t){G.focus=t;sfx("focus")}else sfx("deny")}
 let target=null;
+const COMBO_WIN=.9; // time after a swing in which the next click continues the 3-hit string
 function startAct(name,at){S.act=name;S.actT=at||0;S.actHit=false}
 function attack(){
   if(VS){
+    if(S.attackCd>0&&S.attackCd<.2&&!(S.bufT>0)){S.buf="a";S.bufT=.2}
     if(!vsCanAct()||!P||VS.skillInput||S.over>0||S.attackCd>0||S.shotCd>0)return;
     S.combo=(clockT-S.lastSlash<1.3)?(S.combo+1)%3:0;S.lastSlash=clockT;
     const name="slash"+(S.combo+1);S.attackCd=ACT[name].dur+(S.combo===2?.45:.25);S.shotCd=S.attackCd;S.pending=null;S.dash=0;S.dashT=null;S.bladeOn=1.3;S.heat=Math.min(100,S.heat+(S.combo===2?12:8));
     const t=pickTarget();if(t&&t.m.position.distanceTo(S.pos)<=18){S.dashT=t;const d=t.m.position.clone().sub(S.pos);if(d.length()>5){S.vsLunge=Math.min(.16,(d.length()-4.2)/75);S.vsDir=d.normalize().multiplyScalar(75)}}
     startAct(name);vsSend({t:"swing"});sfx("ignite");return;
   }
-  if(!P||S.over>0||S.attackCd>0||G.stagger>0||G.specT>=0)return;
-  const now=clockT;S.combo=(now-S.lastSlash<.75)?(S.combo+1)%3:0;S.lastSlash=now;
+  if(S.attackCd>0&&S.attackCd<.22&&!(S.bufT>0)){S.buf="a";S.bufT=.22}
+  if(!P||S.over>0||S.attackCd>0||G.stagger>0||G.specT>=0||G.mega)return;
+  const now=clockT;S.combo=(now-S.lastSlash<COMBO_WIN)?(S.combo+1)%3:0;S.lastSlash=now;
   const name="slash"+(S.combo+1);S.attackCd=S.combo===2?.42:.26;
   if(S.bladeOn<=0){sfx("ignite");emit(ADD,{pos:new V3(),follow:P.hiltGlowRef||P.beam,color:0xffc080,s0:2.5,s1:.5,life:.25})}
   S.bladeOn=1.3;S.heat=Math.min(100,S.heat+(S.combo===2?12:8));
@@ -46,7 +49,8 @@ function shoot(){
     S.aimPt=to.clone();S.aimT=.75;S.bladeOn=0;P.bladeLen=0;S.dashT=null;S.pending=null;startAct("shoot");
     setTimeout(()=>{if(VS!==v||v.round!==round||token!==v.shotToken||!vsCanAct())return;P.root.updateMatrixWorld(true);const from=new V3();P.muzzle.getWorldPosition(from);const dir=to.clone().sub(from).normalize();vsSend({t:"shot",from:from.toArray(),dir:dir.toArray()});fxMuzzle(from,dir,0x40e8ff);sfx("shot");S.heat=Math.min(100,S.heat+4);S.camKick=1},70);return;
   }
-  if(!P||S.over>0||S.shotCd>0||G.stagger>0||G.specT>=0)return;S.shotCd=G.unit==="missile"?.24:.32;
+  if(S.shotCd>0&&S.shotCd<.18&&!(S.bufT>0)){S.buf="s";S.bufT=.18}
+  if(!P||S.over>0||S.shotCd>0||G.stagger>0||G.specT>=0||G.mega)return;S.shotCd=G.unit==="missile"?.24:.32;
   if(P.bladeLen>.04||S.bladeOn>0){S.bladeOn=0;P.bladeLen=0;S.pending=null;S.dash=0;S.act=null;P.rifleS=1;P.J.rifle.scale.setScalar(1);P.J.rifle.updateMatrixWorld(true)}
   // aimed rifle: shots fly down the reticle line; only a target sitting right on the reticle (~2.5 deg) gets a light assist
   const ad=aimDir();let t=null;if(target&&!target.isRemote){const tv=target.m.position.clone().sub(camera.position);if(tv.normalize().dot(ad)>Math.cos(.044))t=target}
@@ -69,13 +73,16 @@ function slashStrike(){ // called on the strike frame of a slash action
   if(e.blade&&bladeParry(e,at))return;
   if(e.isWP){wpDamage(e,3,at);S.hitstop=.08;S.shake=.6;flash(.18);fxSlashHit(at,0xff8a2a,true);sfx("heavy",at);addSpec(2);S.vel.multiplyScalar(.1);S.dashT=null;return}
   if(eliteBlocks(e,S.pos)){shieldFlash(e);fxImpact(at,0x48d8ff);sparks(at,null,0xbff4ff,24,.4,26);sfx("block",at);
-    S.vel.copy(S.pos.clone().sub(e.m.position).normalize().multiplyScalar(30));G.stagger=.3;S.hitstop=.06;S.shake=.6;S.act=null;S.dashT=null;S.combo=0;
+    S.vel.copy(S.pos.clone().sub(e.m.position).normalize().multiplyScalar(30));S.freeT=.25;G.stagger=.3;S.hitstop=.06;S.shake=.6;S.act=null;S.dashT=null;S.combo=0;
     popText("방어됨 · 뒤를 노려라");return}
   const crit=G.crit>0,big=heavy||crit,idx=S.act==="slash2"?1:heavy?2:0;
   const dir=launchDir(idx);
-  knock(e,dir,crit?62:heavy?52:36,big?2.2:1.8);hitFlash(e);if(crit){e.rad=Math.max(e.rad,4.8);G.crit=0}
+  knock(e,dir,crit?62:heavy?52:36,big?2.2:1.8);hitFlash(e);if(big)e.rad=Math.max(e.rad,heavy&&crit?5.4:4.9);if(crit)G.crit=0;
   S.hitstop=crit?.17:heavy?.13:.085;S.shake=big?.85:.55;flash(big?.28:.16);impactPunch(crit?1.4:heavy?1:.6);hitMark(big?"kill":"hit");sfx("thud",at,big?1:0);sfx("sizzle",at);
   fxSlashHit(at,crit?0x7fe0ff:0xff8a2a,big);sfx(big?"heavy":"hit",at);
+  if(big){ // finisher: a beat of slow motion after the stop, a burst of debris and light; no extra camera shake
+    S.slow=Math.max(S.slow,crit?.32:.2);fxFlip(at,crit?7:5.5,.5);chunks(at,crit?7:5,22,.8);flashLight(at,crit?0x7fe0ff:0xff8a40,crit?9:7,40,.25);
+    sparks(at,dir,crit?0xbff4ff:0xffc080,42,.45,crit?36:26,.6)}
   if(crit)popText("크리티컬");addSpec(2);
   addScore((heavy?260:150)*(crit?2:1),at,crit?"cyan":"");S.heat=Math.min(100,S.heat+3);S.vel.multiplyScalar(.1);S.dashT=null;
 }
