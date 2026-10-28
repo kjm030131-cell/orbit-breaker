@@ -1,7 +1,7 @@
 /* ================= server-coordinated 1:1 mech battle ================= */
 let VS=null;
 const VS_HP=100,VS_ROUND=75,VS_WIN=2;
-const VS_UNIT_TEXT={mega:{r:"메가 빔",f:"하이퍼 빔",desc:"R: 0.7초 충전 후 직선 빔 20 피해 · F: 0.9초 충전 후 굵은 빔 30 피해 · 라이플 명중 시 필살 게이지 +6"},pods:{r:"포드 교차사격",f:"올 레인지",desc:"R: 3발 교차사격 · F: 7발 확산사격 · 20초마다 1발 요격"},missile:{r:"미사일 연사",f:"풀 버스트",desc:"R: 3발 연사 · F: 6발 연사 · 라이플 간격 0.3초"},shield:{r:"반사 장벽",f:"카운터 필드",desc:"R: 1초 방어, 첫 0.25초 반사 · F: 2초 방어 후 12m 충격파 · 저스트 회피 장갑"}};
+const VS_UNIT_TEXT={mega:{r:"메가 빔",f:"하이퍼 빔",desc:"R: 0.7초 충전 후 0.6초 지속 빔(최대 20) · F: 0.9초 충전 후 2.4초 굵은 빔을 마우스로 쓸기(최대 36, 가드도 깎음) · 라이플 명중 시 필살 +6"},pods:{r:"포드 교차사격",f:"올 레인지",desc:"R: 3발 교차사격 · F: 7발 확산사격 · 20초마다 1발 요격"},missile:{r:"미사일 연사",f:"풀 버스트",desc:"R: 3발 연사 · F: 6발 연사 · 라이플 간격 0.3초"},shield:{r:"반사 장벽",f:"카운터 필드",desc:"R: 1초 방어, 첫 0.25초 반사 · F: 2초 방어 후 12m 충격파 · 저스트 회피 장갑"}};
 function vsNow(){return Date.now()+(VS?VS.off:0)}
 function vsCanAct(){return !!VS&&VS.phase==="fight"&&!S.ended&&!PAUSED&&S.started&&G.stagger<=0&&vsNow()<VS.endAt}
 function vsSkills(){return !!VS&&VS.rules.skills}
@@ -31,7 +31,7 @@ function vsOpen(code,name,create=false){
   if(VS)vsClose();VS={code,name,side:null,phase:"wait",hp:100,maxHp:100,oppHp:100,oppMaxHp:100,rules:{passives:false,skills:false},players:{},wins:[0,0],round:0,oppName:"",remote:null,tgt:null,sendT:0,pingT:0,off:0,ready:false};const v=VS;
   const base=window.PVP_URL||((location.protocol==="https:"?"wss://":"ws://")+location.host+"/pvp");
   if(code==="local"){v.ws=vstLocalSocket(v,name);v.local=true;$("dCodeBig").textContent="연 습";vsLobby();return}
-  try{v.ws=new WebSocket(base+"?room="+code+"&name="+encodeURIComponent(name)+"&v=6&create="+(create?1:0))}catch(e){VS=null;duelErr("대전 서버에 연결할 수 없습니다.");return}
+  try{v.ws=new WebSocket(base+"?room="+code+"&name="+encodeURIComponent(name)+"&v=7&create="+(create?1:0))}catch(e){VS=null;duelErr("대전 서버에 연결할 수 없습니다.");return}
   v.ws.onmessage=e=>{if(VS!==v)return;let m;try{m=JSON.parse(e.data)}catch{return}vsMsg(m)};
   v.ws.onclose=()=>{if(VS!==v)return;if(["wait","lobby"].includes(v.phase)){vsClose();duelErr("대전 서버 연결이 종료됐습니다. 방을 다시 만들어 주세요.")}else if(v.phase!=="end"&&!v.matchDone)vsEnd("disconnect")};
   v.ws.onerror=()=>{if(VS===v)duelErr("대전 서버에 연결할 수 없습니다.")};
@@ -71,7 +71,7 @@ function vsMsg(m){if(!VS)return;const v=VS;
     if(["busy","stagger"].includes(m.reason)&&m.retryAt<q.expires){q.sent=false;q.notBefore=m.retryAt+35;return;}
     v.skillInput=null;const why={disabled:"방장이 옵션 스킬을 꺼 두었습니다",phase:"전투 중에 사용할 수 있습니다",heat:"과열 해제 후 사용하세요",charge:"필살기 게이지가 부족합니다",cooldown:"스킬 재사용 대기 중입니다",busy:"공격 동작이 끝난 뒤 사용하세요",stagger:"피격 경직 중입니다"};popText(why[m.reason]||"스킬을 사용할 수 없습니다");sfx("deny");return;
   }
-  if(m.t==="beam"){megaVsBeam(new V3(...m.from),new V3(...m.dir),!!m.heavy);return}
+  if(m.t==="beam"){megaVsBeam(m.side===v.side,!!m.heavy,(m.dur||600)/1000);return}
   if(m.t==="skill"){if(m.side===v.side)v.skillInput=null;vsSkillFX(m);return}
   if(m.t==="roundEnd"){if(v.phase==="end")return;v.phase="roundEnd";v.matchDone=m.done;v.wins=m.wins;S.started=false;S.vel.set(0,0,0);S.act=null;S.vsLunge=0;S.dash=0;G.focus=null;vsClearShots();
     for(const b of G.ebolts){scene.remove(b.g);b.g.traverse(o=>{if(o.material)o.material.dispose()})}G.ebolts=[];
@@ -113,6 +113,7 @@ function vsFocusCamera(rdt){if(!G.focus||!targetable(G.focus))return;const d=G.f
 function vsSkillFX(m){const mine=m.side===VS.side,pos=mine?S.pos:VS.tgt&&VS.tgt.m.position;if(!pos)return;emit(ADD,{pos:pos.clone(),tex:TX.ring,color:UNITS[m.unit].color,s0:2,s1:m.special?24:12,life:.45});sfx(m.special?"specCharge":"throw",pos);if(m.unit==="mega"){const R=VS.remote;megaVsFx(()=>mine?megaMuzzle():R&&R.root?R.root.position.clone().add(new V3(0,1.2,0)):pos.clone(),new V3(...m.dir),!!m.special)}if(mine){popText(VS_UNIT_TEXT[m.unit][m.special?"f":"r"])}}
 function vsSpawn(){const v=VS,a=v.side==="a";S.guard=false;v.gp=100;v.rdisp=null;v.rvel=null;v.rs=null;const i=enemies.indexOf(v.tgt);if(i>=0)enemies.splice(i,1);vsClearShots();restart();S.vsLunge=0;S.shotCd=S.attackCd=0;S.aimT=0;S.face=S.yaw=a?0:Math.PI;S.pitch=-.05;S.pos.set(0,0,a?-26:26);S.vel.set(0,0,0);S.time=VS_ROUND;G.focus=null;target=null;v.shotToken=(v.shotToken||0)+1;v.skillInput=null;v.correctTo=null;P.root.visible=true;camera.position.copy(S.pos).addScaledVector(camFwd(),-10).add(new V3(0,2.8,0));camera.fov=68;camera.updateProjectionMatrix();applyQuality();
   const want=FRAMES[v.oppFrame]&&FRAMES[v.oppFrame].gltf?v.oppFrame:"mk2";if(v.remote&&v.remote.frame!==want){scene.remove(v.remote.root);v.remote=null}if(!v.remote)v.remote=buildPlayer(FRAMES[want].gltf,want,true);
+  if(!v.remote.halo){const h=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff3a30,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false}));h.scale.setScalar(9);h.position.y=1;v.remote.root.add(h);v.remote.halo=h}
   scene.add(v.remote.root);v.remote.root.visible=true;v.remote.root.position.set(0,0,a?26:-26);v.remote.root.rotation.y=a?Math.PI:0;
   v.remote.act=null;v.remote.guard=false;v.tgt={m:v.remote.root,v:new V3(),spin:new V3(),alive:true,launched:0,isRemote:true,rad:3,tele:0,flash:0,fireT:99};enemies.push(v.tgt);buildBits(G.unit);
   $("pName").textContent=v.name;$("pDept").textContent="1:1 기체 대전";$("pSortie").textContent="비순위";$("uIconR").src=`ui/r_${G.unit}.webp`;$("uIconF").src=`ui/f_${G.unit}.webp`;
@@ -126,7 +127,7 @@ function vsTick(rdt){if(!VS)return;const v=VS;vsFlushSkill();if(v.correctTo){con
   if(v.phase==="count"){const left=v.roundAt-vsNow(),t=Math.ceil(left/1000);if(t>0&&t<=3&&t!==v.lastT){v.lastT=t;phaseBanner({name:String(t),sub:`라운드 ${v.round} · 화면 클릭으로 마우스 고정`});sfx("tick")}if(left<=0){v.phase="fight";S.started=true;G.focus=null;sfx("go");popText("FIGHT · Q 길게: 사벨 가드 · 맞기 직전 가드 = 패리");music("battle")}}
   if(v.phase==="fight")S.time=Math.max(0,(v.endAt-vsNow())/1000);
   if(!v.remote||SCREEN!=="play")return;
-  v.sendT-=rdt;if(v.sendT<=0&&P&&["fight","count"].includes(v.phase)){v.sendT=1/30;const j=[];for(const k in P.SP)j.push(...P.SP[k].x.map(x=>+x.toFixed(3)));vsSend({t:"pose",p:S.pos.toArray().map(x=>+x.toFixed(2)),v:S.vel.toArray().map(x=>+x.toFixed(1)),f:+S.face.toFixed(3),j,bl:P.bladeLen,r:P.rifleS,boosting:vsCanAct()&&S.over<=0&&S.boost>0&&(keys.ShiftLeft||keys.ShiftRight)&&["KeyW","KeyA","KeyS","KeyD","Space","KeyC"].some(k=>keys[k])})}
+  v.sendT-=rdt;if(v.sendT<=0&&P&&["fight","count"].includes(v.phase)){v.sendT=1/30;const j=[];for(const k in P.SP)j.push(...P.SP[k].x.map(x=>+x.toFixed(3)));vsSend({t:"pose",a:aimDir().toArray().map(x=>+x.toFixed(3)),p:S.pos.toArray().map(x=>+x.toFixed(2)),v:S.vel.toArray().map(x=>+x.toFixed(1)),f:+S.face.toFixed(3),j,bl:P.bladeLen,r:P.rifleS,boosting:vsCanAct()&&S.over<=0&&S.boost>0&&(keys.ShiftLeft||keys.ShiftRight)&&["KeyW","KeyA","KeyS","KeyD","Space","KeyC"].some(k=>keys[k])})}
   // follow the remote state
   const R=VS.remote,s=VS.rs;
   if(s){if(s.fr&&s.fr!==VS.oppFrame){VS.oppFrame=s.fr}

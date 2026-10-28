@@ -10,7 +10,10 @@ function buildMixRig(gltf,remote){
   // remember the bind pose once; clones (PvP opponent) are made later from an already-posed scene
   if(!gltf.userData.mixRest){gltf.scene.traverse(o=>{if(o.isBone){o.userData.restQ=o.quaternion.clone();o.userData.restP=o.position.clone()}});gltf.userData.mixRest=true}
   const scene=remote&&THREE.SkeletonUtils?THREE.SkeletonUtils.clone(gltf.scene):gltf.scene;scene.position.set(0,0,0);scene.rotation.set(0,0,0);scene.scale.set(1,1,1);
-  scene.traverse(o=>{if(o.isBone&&o.userData.restQ){o.quaternion.copy(o.userData.restQ);o.position.copy(o.userData.restP)}});scene.updateMatrixWorld(true);
+  // rest pose by bone name from the ORIGINAL scene: SkeletonUtils.clone JSON-copies userData, so a clone's restQ is a
+  // plain {_x,..} object and copying it gave NaN quaternions (the PvP opponent rendered as nothing)
+  const rest={};gltf.scene.traverse(o=>{if(o.isBone&&o.userData.restQ)rest[o.name]=o.userData});
+  scene.traverse(o=>{const r=o.isBone&&rest[o.name];if(r){o.quaternion.copy(r.restQ);o.position.copy(r.restP)}});scene.updateMatrixWorld(true);
   let skin=null;scene.traverse(o=>{if(o.isSkinnedMesh&&!skin)skin=o;if(o.isMesh)o.frustumCulled=false});
   const P0={},J={},drv=new THREE.Group();
   for(const [k,p,n] of MIX_ORDER){const m=mixBone(scene,n);P0[k]=m?m.getWorldPosition(new V3()):(p?P0[p].clone():new V3());

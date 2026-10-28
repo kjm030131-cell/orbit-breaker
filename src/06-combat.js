@@ -49,9 +49,9 @@ function shoot(){
     S.shotCd=vsSkills()&&G.unit==="missile"?.3:.4;S.attackCd=S.shotCd;
     const v=VS,round=v.round,token=v.shotToken=(v.shotToken||0)+1;
     // skill aim: only an opponent sitting within ~6 deg of the reticle gets a (half-strength) lead; otherwise the shot goes exactly where you aim
-    const ad=aimDir(),onAim=target&&target.isRemote&&target.m.position.clone().sub(camera.position).normalize().dot(ad)>Math.cos(6*Math.PI/180);
+    const ad=aimDir(),onAim=target&&target.isRemote&&target.m.position.clone().sub(camera.position).normalize().dot(ad)>Math.cos(10*Math.PI/180);
     const to=onAim?target.m.position.clone():camera.position.clone().addScaledVector(ad,180);
-    if(onAim&&VS.rvel){const d=to.distanceTo(S.pos);to.addScaledVector(VS.rvel,Math.min(.5,d/170)*.45)}
+    if(onAim&&VS.rvel){const d=to.distanceTo(S.pos);to.addScaledVector(VS.rvel,Math.min(.5,d/170)*.7)}
     S.aimPt=to.clone();S.aimT=.75;S.bladeOn=0;P.bladeLen=0;S.dashT=null;S.pending=null;startAct("shoot");
     setTimeout(()=>{if(VS!==v||v.round!==round||token!==v.shotToken||!vsCanAct())return;P.root.updateMatrixWorld(true);const from=new V3();P.muzzle.getWorldPosition(from);const dir=to.clone().sub(from).normalize();vsSend({t:"shot",from:from.toArray(),dir:dir.toArray()});fxMuzzle(from,dir,0x40e8ff);sfx("shot");S.heat=Math.min(100,S.heat+4);S.camKick=1},70);return;
   }

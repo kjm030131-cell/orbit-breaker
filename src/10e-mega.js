@@ -4,8 +4,8 @@
 // muzzle that follows the reticle with a turn-rate cap (heavier for F), pierces drones and stops at map cover.
 const MEGA_C=0xff4fd8,MEGA_DEEP=0x9a2cff;
 const MEGA_CFG={
-  r:{charge:.6,fire:.9,w:3,hitR:3.6,range:150,turn:1.6,knockV:42,score:260,wp:2,label:"메가 빔"},
-  f:{charge:1.0,fire:5,w:10,hitR:11,range:210,turn:.9,knockV:52,score:300,wp:3,label:"하이퍼 메가 빔"}};
+  r:{charge:.6,fire:.9,w:3,hitR:3.6,range:150,turn:3.5,knockV:42,score:260,wp:2,label:"메가 빔"},
+  f:{charge:1.0,fire:5,w:10,hitR:11,range:210,turn:2.4,knockV:52,score:300,wp:3,label:"하이퍼 메가 빔"}};
 function megaTex(){const t=(FXOK.mbeam?FXT.mbeam:FXT.beam).clone();t.wrapS=THREE.RepeatWrapping;t.needsUpdate=true;return t}
 // tube body: an open cylinder with a view-facing core and a soft rim, so the beam has volume even seen from behind the
 // mech (crossed ribbons alone go edge-on there). The painted beam strip scrolls along it for the streaky energy look.
@@ -100,8 +100,12 @@ function megaTick(dt,rdt,T){const m=G.mega;if(!m)return;
 const VS_MEGA=[];
 function megaVsFx(fromFn,dir,special){const ch=fromFn();
   emit(ADD,{pos:ch,tex:FXOK.mcharge?FXT.mcharge:TX.glow,color:MEGA_C,s0:2,s1:special?9:5,life:special?.9:.7,a:.9,spin:6});sfx("megaCharge",ch)}
-function megaVsBeam(from,dir,special){const b=megaBeamMesh(special?7:3);VS_MEGA.push({b,from,dir:dir.clone().normalize(),t:0,life:special?1.8:.5,L:special?190:150});
-  sfx("megaFire",from);flashLight(from,MEGA_C,12,80,.4)}
-function megaVsTick(rdt,T){for(let i=VS_MEGA.length-1;i>=0;i--){const v=VS_MEGA[i];v.t+=rdt;const u=v.t/v.life;
-  if(u>=1||!VS){megaBeamFree(v.b);VS_MEGA.splice(i,1);continue}
-  megaBeamPose(v.b,v.from,v.dir,v.L,Math.min(1,v.t/.06)*(u>.7?(1-u)/.3:1),T)}}
+// the room server runs the beam (ticks along the shooter's live aim); this only draws it from the same live source
+function megaVsBeam(mine,heavy,dur){if(mine){S.attackCd=Math.max(S.attackCd,dur+.15);S.shotCd=Math.max(S.shotCd,dur+.15);S.act=null;S.bladeOn=0}const b=megaBeamMesh(heavy?7:3.4);VS_MEGA.push({b,mine,heavy,t:0,life:dur,L:heavy?190:150});const from=mine?megaMuzzle():S.pos;
+  sfx("megaFire",from);flashLight(from,MEGA_C,12,80,.4);if(mine){impactPunch(heavy?1.2:.7);flash(heavy?.3:.15)}}
+function megaVsTick(rdt,T){let mineOn=false;for(let i=VS_MEGA.length-1;i>=0;i--){const v=VS_MEGA[i];v.t+=rdt;const u=v.t/v.life;
+  if(u>=1||!VS){megaBeamFree(v.b);VS_MEGA.splice(i,1);if(VS)sfx("megaEnd");continue}
+  let from,dir;if(v.mine){from=megaMuzzle();dir=megaWant(from,v.L);mineOn=true}
+  else{const R=VS.remote,rs=VS.rs;if(!R)continue;from=R.root.position.clone().add(new V3(0,1.2,0));dir=rs&&rs.a?new V3(...rs.a).normalize():new V3(Math.sin(R.root.rotation.y),0,Math.cos(R.root.rotation.y))}
+  megaBeamPose(v.b,from,dir,vsCoverRay(from,dir,v.L),Math.min(1,v.t/.06)*(u>.85?(1-u)/.15:1),T)}
+  if(G.vsBeam!==mineOn||mineOn)megaLoop(mineOn?(VS_MEGA.some(v=>v.mine&&v.heavy)?1.4:.9):0);G.vsBeam=mineOn}

@@ -17,13 +17,16 @@ const FLAYOUT=[
   ["rock1",132,0,62,30,.9,.4],["rock1",-132,10,245,26,1.7,1.1],
   ["rock3",70,-5,55,16,1,0],["rock3",-78,0,75,20,2,.5],["rock3",20,10,186,12,.4,.9],["rock3",-20,-15,262,18,2.9,.3],["rock3",112,-25,145,15,1.3,1.6]];
 
-// cover a mesh with spheres along its longest axis (cheap collision for beams, drones and the player)
-function fieldSpheres(o){const bb=o.mesh.geometry.boundingBox,sz=bb.getSize(new V3()),c=bb.getCenter(new V3());
-  const ax=sz.x>=sz.y&&sz.x>=sz.z?"x":sz.y>=sz.z?"y":"z",others=["x","y","z"].filter(k=>k!==ax),L=sz[ax];
-  const r=Math.max(.05,(sz[others[0]]+sz[others[1]])/4*.85),n=Math.max(1,Math.round(L/(2*r)));o.mesh.updateMatrixWorld(true);
-  const sc=o.mesh.scale.x;o.sph=[];for(let i=0;i<n;i++){const p=c.clone();p[ax]=bb.min[ax]+r+(n>1?(L-2*r)*i/(n-1):L/2-r);
-    o.sph.push({c:p.applyMatrix4(o.mesh.matrixWorld),r:r*sc})}
-  o.center=c.clone().applyMatrix4(o.mesh.matrixWorld);o.rad=Math.max(...o.sph.map(s=>s.c.distanceTo(o.center)+s.r))}
+// cover a mesh with spheres that follow its actual surface: the world-space vertices are bucketed into a grid
+// (cell ≈ 1/7 of the longest side) and every occupied cell gets a sphere at its vertex centroid. The old version used a
+// single row of spheres along the longest axis, which left wide panels and lumpy rocks hollow (you flew through them).
+function fieldSpheres(o){const m=o.mesh;m.updateMatrixWorld(true);const pa=m.geometry.attributes.position,v=new V3(),bb=new THREE.Box3();
+  for(let i=0;i<pa.count;i++){v.fromBufferAttribute(pa,i).applyMatrix4(m.matrixWorld);bb.expandByPoint(v)}
+  const sz=bb.getSize(new V3()),L=Math.max(sz.x,sz.y,sz.z),cell=Math.max(2.4,L/7),cells=new Map();
+  for(let i=0;i<pa.count;i++){v.fromBufferAttribute(pa,i).applyMatrix4(m.matrixWorld);const k=Math.floor((v.x-bb.min.x)/cell)+","+Math.floor((v.y-bb.min.y)/cell)+","+Math.floor((v.z-bb.min.z)/cell);
+    let c=cells.get(k);if(!c){c={s:new V3(),n:0};cells.set(k,c)}c.s.add(v);c.n++}
+  o.sph=[];for(const c of cells.values())if(c.n>=2)o.sph.push({c:c.s.divideScalar(c.n),r:cell*.72});
+  o.center=bb.getCenter(new V3());o.rad=Math.max(...o.sph.map(s=>s.c.distanceTo(o.center)+s.r),1)}
 function fieldPlace(name,tpl){for(const L of FLAYOUT){if(L[0]!==name)continue;const d=FDEF[name],mat=d.hp?tpl.material.clone():tpl.material;
   const m=new THREE.Mesh(tpl.geometry,mat),bb=tpl.geometry.boundingBox,sz=bb.getSize(new V3());
   m.scale.setScalar(L[4]/Math.max(sz.x,sz.y,sz.z));m.position.set(L[1],L[2],L[3]);m.rotation.set(L[6]||0,L[5]||0,0);FIELD.g.add(m);
@@ -34,7 +37,7 @@ function fieldPlace(name,tpl){for(const L of FLAYOUT){if(L[0]!==name)continue;co
 function loadField(){if(!window.GLB_BASE||FIELD.load)return;FIELD.load=1;
   for(const name of Object.keys(FDEF))glb("obj_"+name,null,g=>{let tpl=null;g.scene.traverse(x=>{if(x.isMesh&&!tpl)tpl=x});if(!tpl)return;
     if(!tpl.geometry.attributes.normal)tpl.geometry.computeVertexNormals();if(/wreck|engine|station|satellite/.test(name))tpl.material.side=THREE.DoubleSide;tpl.material.envMap=ENV;tpl.material.envMapIntensity=.45;
-    fieldPlace(name,tpl);FIELD.ready=true});
+    FIELD.tpl=FIELD.tpl||{};FIELD.tpl[name]=tpl;fieldPlace(name,tpl);FIELD.ready=true});
   // small drifting debris: swap the placeholder icosahedra for a low-poly rock, re-centred on the battlefield
   glb("obj_rock_lo",null,g=>{let tpl=null;g.scene.traverse(x=>{if(x.isMesh&&!tpl)tpl=x});if(!tpl)return;tpl.material.envMap=ENV;tpl.material.envMapIntensity=.3;
     const sz=tpl.geometry.boundingBox.getSize(new V3()),k=1/Math.max(sz.x,sz.y,sz.z);
@@ -58,17 +61,18 @@ function fieldCrash(e){ // launched drone hits an object: crushed, bonus
   if(e.isBoss){const nrm=e.m.position.clone().sub(o.center).normalize();e.v.reflect(nrm).multiplyScalar(.5);S.shake=Math.max(S.shake,.8);sfx("heavy",e.m.position);fieldDamage(o,3,e.m.position);return}
   e.launched=0;fieldDamage(o,2,e.m.position);addScore(250+e.chain*120,e.m.position.clone(),"big");popText(e.chain?`충돌 격파 · 연쇄 ×${e.chain}`:"충돌 격파");S.hitstop=Math.max(S.hitstop,.05)}
 function fieldBolt(b){ // player beam vs object: cover blocks it, breakables take damage
-  if(!FIELD.ready||inVS())return false;const o=fieldHitAt(b.g.position,.4);if(!o)return false;
+  if(inVS()){if(!vsCoverAt(b.g.position,.2))return false;fxImpact(b.g.position,0x40e8ff);b.target=null;b.life=0;return true}
+  if(!FIELD.ready)return false;const o=fieldHitAt(b.g.position,.4);if(!o)return false;
   fieldDamage(o,1,b.g.position.clone());b.target=null;b.life=0;return true}
 function fieldBlock(p){return FIELD.ready&&!inVS()&&!!fieldHitAt(p,.3)}
 function fieldSlash(heavy){if(!FIELD.ready||inVS())return false;const at=S.pos.clone().addScaledVector(new V3(Math.sin(S.face),0,Math.cos(S.face)),3.5);
   const o=fieldHitAt(at,4);if(!o)return false;fieldDamage(o,heavy?3:2,at);sfx("hit",at);S.hitstop=Math.max(S.hitstop,.04);return true}
-function fieldPush(){if(!FIELD.ready||inVS())return;for(const o of FIELD.obs){if(!o.alive||o.center.distanceTo(S.pos)>o.rad+3)continue;
+function fieldPush(){if(inVS()){vsCoverStep();return}if(!FIELD.ready)return;for(const o of FIELD.obs){if(!o.alive||o.center.distanceTo(S.pos)>o.rad+3)continue;
   for(const s of o.sph){const d=S.pos.clone().sub(s.c),L=d.length(),min=s.r+2.2;if(L>=min)continue;d.divideScalar(L||1);S.pos.copy(s.c).addScaledVector(d,min);
     const vn=S.vel.dot(d);if(vn<0)S.vel.addScaledVector(d,-vn*1.2)}}}
 function fieldReset(){if(!FIELD)return;for(const o of FIELD.obs){o.alive=true;o.hp=o.def.hp;o.respawn=0;o.mesh.visible=true;o.mesh.scale.setScalar(o.mesh.scale.x);if(o.glow)o.glow.visible=true}}
 // inside the catapult cut-scene the hangar has open gaps: keep the battlefield out of view until launch
-function fieldStep(dt,T){const show=!inVS()&&!CINE.on;FIELD.g.visible=show;if(FIELD.dvis!==show){FIELD.dvis=show;for(const d of debris)d.visible=show}if(!FIELD.ready||inVS())return;
+function fieldStep(dt,T){const show=!inVS()&&!CINE.on;VSC.g.visible=inVS();FIELD.g.visible=show;if(FIELD.dvis!==show){FIELD.dvis=show;for(const d of debris)d.visible=show}if(!FIELD.ready||inVS())return;
   for(const o of FIELD.obs){if(o.flash>0){o.flash-=dt*4;o.mesh.material.emissive.setRGB(Math.max(0,o.flash)*.9,Math.max(0,o.flash)*.35,0)}
     if(o.glow&&o.alive)o.glow.material.opacity=.55+.35*Math.sin(T*3+o.center.x);
     if(!o.alive){o.respawn-=dt;if(o.respawn<=0&&o.center.distanceTo(S.pos)>o.rad+25){o.alive=true;o.hp=o.def.hp;o.mesh.visible=true;if(o.glow)o.glow.visible=true;emit(ADD,{pos:o.center,tex:TX.ring,color:0x6fb8ff,s0:2,s1:o.rad*2,life:.6,a:.5})}}}
@@ -76,3 +80,19 @@ function fieldStep(dt,T){const show=!inVS()&&!CINE.on;FIELD.g.visible=show;if(FI
   if(SCREEN==="play"&&S.started&&!S.ended){const d=S.pos.clone().sub(FIELD.C),L=d.length();FIELD.warnT-=dt;
     if(L>FIELD.R){S.vel.addScaledVector(d.normalize(),-(L-FIELD.R)*4*dt);if(FIELD.warnT<=0){FIELD.warnT=3;popText("작전 구역 경계 · 복귀하세요")}}}}
 setTimeout(loadField,1200);
+
+/* ---- 1:1 cover: same asteroid list the room server judges with (LOCAL_ARENA.VS_COVER) ---- */
+const VSC={g:new THREE.Group(),built:false};scene.add(VSC.g);VSC.g.visible=false;
+function vsCoverList(){return LOCAL_ARENA.VS_COVER}
+function vsCoverBuild(){if(VSC.built||!FIELD.tpl)return;const tl=FIELD.tpl;if(!tl.rock1||!tl.rock3)return;
+  for(const c of vsCoverList()){const tpl=tl[c[0]];if(!tpl)continue;const sz=tpl.geometry.boundingBox.getSize(new V3()),m=new THREE.Mesh(tpl.geometry,tpl.material);
+    m.scale.setScalar(c[4]/Math.max(sz.x,sz.y,sz.z));m.rotation.set(c[6]||0,c[5]||0,0);
+    // centre the rock's bounding box on the judged sphere so what you see is what blocks
+    const ctr=tpl.geometry.boundingBox.getCenter(new V3()).multiplyScalar(m.scale.x).applyEuler(m.rotation);m.position.set(c[1],c[2],c[3]).sub(ctr);VSC.g.add(m)}
+  VSC.built=true}
+function vsCoverAt(p,pad){for(const c of vsCoverList()){const dx=p.x-c[1],dy=p.y-c[2],dz=p.z-c[3];if(dx*dx+dy*dy+dz*dz<(c[7]+(pad||0))**2)return c}return null}
+function vsCoverRay(from,dir,range){let best=range;for(const c of vsCoverList()){const o=new V3(c[1],c[2],c[3]),t=o.clone().sub(from).dot(dir);if(t<=0||t>range)continue;
+  const d=o.distanceTo(from.clone().addScaledVector(dir,t));if(d<c[7])best=Math.min(best,t-Math.sqrt(c[7]*c[7]-d*d))}return best}
+function vsCoverStep(){VSC.g.visible=inVS();if(!VSC.g.visible)return;vsCoverBuild();
+  for(const c of vsCoverList()){const d=S.pos.clone().sub(new V3(c[1],c[2],c[3])),L=d.length(),min=c[7]+2.2;if(L>=min)continue;d.divideScalar(L||1);
+    S.pos.set(c[1],c[2],c[3]).addScaledVector(d,min);const vn=S.vel.dot(d);if(vn<0)S.vel.addScaledVector(d,-vn*1.2)}}
