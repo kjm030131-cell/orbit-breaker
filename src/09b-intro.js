@@ -3,14 +3,15 @@
 // a text from the pilot's sister → title card → hands straight over to the catapult cutscene.
 const INTRO={on:false,t:0,skip:false,done:null,meteors:[],props:[],nextBoom:0,nextMet:0,cue:{}};
 // world V5 (10/29): narrator lines vo/vo_nar01..05.mp3 play on cue when present; the subtitles run either way
+// subtitles: pages of up to two lines ("\n"); a line's pages share its recorded duration by length, no trailing full stops
 const INTRO_LINES=[
-  {at:.8,dur:8.4,card:"2189년.",sub:"지구 전력의 70%는, 궤도 위 태양광 발전망 헬리오스에서 내려온다.",vo:"vo_nar01"},
-  {at:10,dur:12.4,txt:"3년 전, 제로 데이. 궤도의 나라들, 아르고스 연합이 지구로 가는 전력을 끊었다. 그날 이후, 궤도는 전쟁터가 되었다.",vo:"vo_nar02"},
-  {at:23.2,dur:8.5,txt:"정부는 말한다. 저 위에서 싸우는 건, 사람이 타지 않은 무인기뿐이라고. 사람들은, 그 말을 믿었다.",vo:"vo_nar03"},
-  {at:32.5,dur:12.1,txt:"격추된 기체는 대기권으로 떨어져, 불탄다. 교전이 있는 밤이면, 뉴스는 이렇게 전한다. 오늘 밤, 유성우 예보.",vo:"vo_nar04"},
-  {at:45.4,dur:12.7,txt:"모두가 안다. 저건 별이 아니라는 걸. 그래도 전쟁이 너무 길어졌다. 그래서 사람들은 오늘 밤에도, 떨어지는 불빛에 소원을 빈다.",vo:"vo_nar05"},
+  {at:.8,dur:8.4,card:"2189년",sub:"지구 전력의 70%는\n궤도 위 태양광 발전망, 헬리오스에서 내려온다",vo:"vo_nar01"},
+  {at:10,dur:12.4,txt:["3년 전, 제로 데이\n궤도의 나라들, 아르고스 연합이 지구로 가는 전력을 끊었다","그날 이후\n궤도는 전쟁터가 되었다"],vo:"vo_nar02"},
+  {at:23.2,dur:8.5,txt:["정부는 말한다\n저 위에서 싸우는 건, 사람이 타지 않은 무인기뿐이라고","사람들은\n그 말을 믿었다"],vo:"vo_nar03"},
+  {at:32.5,dur:12.1,txt:["격추된 기체는\n대기권으로 떨어져, 불탄다","교전이 있는 밤이면, 뉴스는 이렇게 전한다\n오늘 밤, 유성우 예보"],vo:"vo_nar04"},
+  {at:45.4,dur:12.7,txt:["모두가 안다\n저건 별이 아니라는 걸","그래도 전쟁이 너무 길어졌다\n그래서 사람들은 오늘 밤에도, 떨어지는 불빛에 소원을 빈다"],vo:"vo_nar05"},
   {at:58.4,txt:""},
-  {at:68.6,dur:5.3,txt:"하지만 그들은 모른다. 그 조종석에, 사람이 타고 있다는 걸.",vo:"vo_nar06"},
+  {at:68.6,dur:5.3,txt:["하지만 그들은 모른다\n그 조종석에, 사람이 타고 있다는 걸"],vo:"vo_nar06"},
   {at:74.4,txt:""}];
 // key times (timed to the recorded narration): black card → battle (9.6) → meteor rain (44) → sister's text (59) → black + reveal line (68) → logo (74.6) → end (82)
 const INTRO_END=82;
@@ -22,11 +23,12 @@ function playIntro(){return new Promise(res=>{
   Object.assign(INTRO,{on:true,t:0,skip:false,done:res,nextBoom:10.2,nextMet:30,cue:{}});
   for(const e of enemies)e.m.visible=false;if(P)P.root.visible=false;
   for(let i=0;i<7;i++)introProp(new V3(-60+Math.random()*120,-4+Math.random()*26,60+Math.random()*70),new V3((Math.random()-.5)*14,(Math.random()-.5)*3,-6-Math.random()*8));
+  for(const id of ["inLine","inSub","inMsgA"]){const el=$(id);el.style.whiteSpace="pre-line";if(id==="inLine")el.style.lineHeight="1.65"}
   const o=$("intro");o.hidden=false;o.className="on black";$("inCard").textContent="";$("inSub").textContent="";$("inLine").textContent="";$("inMsg").className="";$("inMsgA").textContent="";$("inMsgB").textContent="";$("inTitle").className="";
 })}
 function introClear(){for(const m of INTRO.meteors)fxMeteorFree(m.spr);for(const o of INTRO.props){scene.remove(o.m);o.m.material.dispose()}INTRO.props.length=0;INTRO.meteors.length=0}
 function endIntro(){INTRO.on=false;introClear();$("intro").hidden=true;if(P)P.root.visible=true;const r=INTRO.done;INTRO.done=null;if(r)r()}
-function introType(el,txt,t0,cps){const n=Math.max(0,Math.min(txt.length,((INTRO.t-t0)*(cps||26))|0));if(el.textContent.length!==n)el.textContent=txt.slice(0,n)}
+function introType(el,txt,t0,cps){const n=Math.max(0,Math.min(txt.length,((INTRO.t-t0)*(cps||26))|0)),v=txt.slice(0,n);if(el.textContent!==v)el.textContent=v}
 function introUpdate(rdt){
   rdt=Math.min(rdt,.1);const t0=INTRO.t;INTRO.t+=rdt;const t=INTRO.t,cross=a=>t0<a&&t>=a,o=$("intro");
   if(INTRO.skip||t>=INTRO_END){endIntro();return}
@@ -36,12 +38,13 @@ function introUpdate(rdt){
   // overlay state is derived from t (robust to long frames / skipping); cross() only fires sounds
   const black=t<9.6||t>=68,cls="on"+(black?" black":"");if(o.className!==cls)o.className=cls;if(t>=9.6&&$("inCard").textContent){$("inCard").textContent="";$("inSub").textContent=""}
   const mc=t>=59.2&&t<68?(t>=64.4?"on reply":"on"):"";if($("inMsg").className!==mc)$("inMsg").className=mc;const tc=t>=74.6?"on":"";if($("inTitle").className!==tc)$("inTitle").className=tc;
-  for(let i=1;i<INTRO_LINES.length;i++){const L=INTRO_LINES[i],nx=INTRO_LINES[i+1];if(t>=L.at&&(!nx||t<nx.at))introType($("inLine"),L.txt,L.at,L.dur?L.txt.length/(L.dur*.8):15)}
+  for(let i=1;i<INTRO_LINES.length;i++){const L=INTRO_LINES[i],nx=INTRO_LINES[i+1];if(t>=L.at&&(!nx||t<nx.at)){const pg=Array.isArray(L.txt)?L.txt:[L.txt],tot=pg.reduce((n,x)=>n+x.length,0)||1,D=L.dur||4;let p0=L.at;
+    for(let j=0;j<pg.length;j++){const d=D*pg[j].length/tot;if(t<p0+d||j===pg.length-1){introType($("inLine"),pg[j],p0,pg[j].length/Math.max(.5,d*.75));break}p0+=d}}}
   // the sister's message, and the reply
   if(cross(59.2))sfx("uiok");
-  if(t>59.5)introType($("inMsgA"),"오빠, 오늘 밤 유성우 예보 떴어. 다들 무인기라고 하는데… 오빠는 괜찮은 거지? 무사히 오게 해 달라고 빌었어.",59.5,20);
+  if(t>59.5)introType($("inMsgA"),"오빠 오늘 밤 유성우 예보 떴어\n다들 무인기라고 하는데... 오빠는 괜찮은 거지?\n무사히 오게 해 달라고 빌었어",59.5,20);
   if(cross(64.4))sfx("ui");
-  if(t>64.8)introType($("inMsgB"),"…응. 금방 갈게.",64.8,8);
+  if(t>64.8)introType($("inMsgB"),"응... 금방 갈게",64.8,8);
   if(cross(74.6))sfx("phase");
   // battle: wrecks blow up and start falling, burning
   for(const p of INTRO.props){p.m.position.addScaledVector(p.v,rdt);p.m.rotation.z+=rdt*.3}
