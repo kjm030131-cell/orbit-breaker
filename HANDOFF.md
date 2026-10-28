@@ -212,3 +212,10 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
   6초(ARMOR_REPAIR) 안 맞으면 복구, 손상 중 한 대 더 = 기체 대파(기존 destroyMech). 반응 장갑 아이템은 그 앞의 1회 방어로 그대로.
 - 피격 방향 표시(#threats, threatMarks()): 조준 중인 적·돌격 드론·날아오는 적탄 중 화면 밖/뒤에 있는 것을 레티클 주변 원에 화살표로. 조준 고정·돌진·탄은 빨간 점멸.
 - 글씨 노출 시간: 가운데 알림(popText)을 큐로 바꿔 각 0.9초 이상·마지막 1.6초, 컷인 1.9초, 단계 배너 3.4초, 점수 숫자 1.4초, 무전 4.6초.
+
+## 21. 글꼴·글자 위치 정리 (10/28)
+- 한글 = Pretendard(제목 800~900 굵게), 숫자·영문 코드 = Saira Semi Condensed(OFL, @fontsource 로 lib/fonts 자체 호스팅, build_deploy 가 lib/saira.css 생성).
+  --f-mono 가 Saira 스택이라 숫자·영문만 Saira, 한글은 Pretendard 로 자동 대체. head2.html 맨 끝 "type & alignment pass" 블록이 덮어쓰기 규칙.
+- 무전창 화면 맨 위 중앙(폭 ≤620px), 가운데 알림 31% 지점·40px, 좌측 HUD 230px 폭에 라벨·값 기준선 정렬, 무기 이름 한 줄, 브리핑 번호 간격 축소.
+- 높이 820px 이하 화면에서는 기체 선택 화면을 좌우 2단으로(넘침 방지).
+- 기획서 라이선스 표기에 Saira Semi Condensed(SIL OFL 1.1) 추가.
