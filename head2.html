@@ -562,21 +562,34 @@ body.tut #radio{top:calc(96px + env(safe-area-inset-top,0px))}
 #hpV{min-width:34px;text-align:right;font-weight:700}
 body.versus #hpRow,body.tut #hpRow{display:none}
 
-/* ---- title: clean corners + 3-tier menu (10/28) ---- */
+/* ---- title (10/28): cinematic backdrop, wide 3-column layout, leaderboard, 3-tier menu ---- */
+#scrTitle:not([hidden]){display:grid;grid-template-columns:minmax(330px,min(600px,36vw)) minmax(0,1fr) minmax(300px,min(420px,26vw));grid-template-rows:auto minmax(0,1fr) auto;column-gap:32px;row-gap:10px;overflow:hidden auto}
+#scrTitle{background:radial-gradient(ellipse 70% 75% at 52% 48%,rgba(0,0,0,0) 55%,rgba(0,0,0,.55) 100%),linear-gradient(90deg,rgba(4,5,7,.9) 0%,rgba(4,5,7,.6) 24%,rgba(4,5,7,0) 42%,rgba(4,5,7,0) 62%,rgba(4,5,7,.55) 78%,rgba(4,5,7,.85) 100%),linear-gradient(0deg,rgba(4,5,7,.55),rgba(4,5,7,0) 24%);transition:opacity .45s}
+#scrTitle .tTop{grid-column:1/-1;grid-row:1;min-height:0}
+#scrTitle .tMain{grid-column:1;grid-row:2;align-self:center;min-width:0;max-width:none;gap:24px}
+#scrTitle .tFoot{grid-column:1/-1;grid-row:3;justify-content:flex-start}
 #scrTitle .event,#scrTitle .tRight [data-settings],#installBtn{display:none!important}
 #netStatus:not(.off){display:none}
 #loadStatus:not(.err){display:none}
 #loadStatus.err{font-size:15px;color:#fff;background:rgba(120,20,14,.85);border:1px solid var(--red);padding:9px 14px}
-.menu{width:380px;gap:10px}
-.mi.pri,.mi.sec{background:transparent!important;border:0;border-style:solid;transition:filter .15s,transform .15s}
-.mi.pri{grid-template-columns:44px 1fr;gap:14px;padding:20px 30px 20px 24px;border-image:url(ui/btn_pri.webp) 30 60 fill/14px 30px stretch;color:#1d1300}
-.mi.pri .t{font-size:34px;font-weight:800;letter-spacing:.08em;text-shadow:0 1px 0 rgba(255,220,150,.45)}
+.logo img{--lw:min(560px,100%);width:var(--lw);max-width:none;margin-block:calc(var(--lw)*-.055)}
+/* menu */
+.menu{width:380px;max-width:100%;gap:10px}
+.mi.pri,.mi.sec{position:relative;background:transparent!important;border:0;border-style:solid;transition:filter .15s,transform .15s}
+.mi.pri{grid-template-columns:44px 1fr auto;gap:14px;padding:20px 30px 20px 24px;border-image:url(ui/btn_pri.webp) 30 60 fill/14px 30px stretch;color:#160c00}
+.mi.pri .t{font-size:34px;font-weight:900;letter-spacing:.08em;color:#160c00;text-shadow:0 1px 0 rgba(255,220,150,.45)}
+.mi.pri .s{font:700 13px var(--f-mono);letter-spacing:.22em;color:rgba(22,12,0,.78)}
 .mi.pri .k .ico{width:40px;height:40px;opacity:1}
-.mi.sec{grid-template-columns:30px 1fr;padding:12px 26px 12px 22px;border-image:url(ui/btn_sec.webp) 30 60 fill/12px 26px stretch}
+.mi.sec{grid-template-columns:30px 1fr auto;padding:12px 26px 12px 22px;border-image:url(ui/btn_sec.webp) 30 60 fill/12px 26px stretch}
 .mi.sec .t{font-size:21px;font-weight:700}
+.mi.sec .s{font:600 12px var(--f-mono);letter-spacing:.2em;color:var(--muted)}
 .mi.sec .k .ico{width:28px;height:28px}
-.mi.pri:hover,.mi.pri:focus-visible,.mi.pri.sel{filter:brightness(1.14) drop-shadow(0 0 14px rgba(255,178,26,.45));transform:translateX(6px)}
+.mi.pri::after,.mi.sec::after{content:"";position:absolute;inset:7px 12px;pointer-events:none;background:linear-gradient(105deg,rgba(255,255,255,0) 38%,rgba(255,240,210,.32) 50%,rgba(255,255,255,0) 62%) no-repeat;background-size:260% 100%;background-position:170% 0}
+.mi.pri:hover::after,.mi.pri.sel::after,.mi.sec:hover::after,.mi.sec.sel::after{animation:miSweep .75s ease-out}
+@keyframes miSweep{from{background-position:170% 0}to{background-position:-70% 0}}
+.mi.pri:hover,.mi.pri:focus-visible,.mi.pri.sel{filter:brightness(1.14) drop-shadow(0 0 16px rgba(255,178,26,.45));transform:translateX(6px)}
 .mi.sec:hover,.mi.sec:focus-visible,.mi.sec.sel{filter:brightness(1.35);transform:translateX(6px)}
+.mi.sec:hover .s,.mi.sec.sel .s{color:var(--amber)}
 #tutBtn.hot{animation:tbp2 1.6s ease-in-out infinite}
 @keyframes tbp2{50%{filter:brightness(1.4)}}
 .mSub{display:flex;flex-wrap:wrap;align-items:center;margin-top:2px;padding-left:4px}
@@ -584,12 +597,66 @@ body.versus #hpRow,body.tut #hpRow{display:none}
 .mi.ter:first-child{border-left:0;padding-left:8px}
 .mi.ter .t{font-size:17px;font-weight:600;color:#b9b4a8;transition:color .15s}
 .mi.ter:hover .t,.mi.ter:focus-visible .t,.mi.ter.sel .t{color:var(--amber)}
-.logo img{--lw:min(560px,78vw);width:var(--lw);margin-block:calc(var(--lw)*-.055)}
-@media (max-height:800px){.logo img{--lw:min(400px,60vw)}}
-@media (max-height:660px){.logo img{--lw:min(320px,55vw)}}
-.mi.pri .t{color:#160c00;font-weight:900}
-@media (max-height:800px){.menu{gap:8px}.mi.pri{padding-block:14px}.mi.pri .t{font-size:30px}.mi.sec{padding-block:8px}.mi.ter{padding-block:4px}}
-@media (max-height:660px){.tagline{font-size:15px}.mi.pri{padding-block:10px}.mi.pri .t{font-size:26px}.mi.pri .k .ico{width:32px;height:32px}.mi.sec{padding-block:6px}.mi.sec .t{font-size:18px}#miniBoard .mrow:nth-child(n+3){display:none}}
+/* leaderboard */
+.tBoard{grid-column:3;grid-row:2;align-self:center;height:min(100%,640px);min-height:0;display:flex;flex-direction:column;padding:18px 18px 16px;position:relative;
+  background:linear-gradient(180deg,rgba(16,18,22,.84),rgba(8,9,12,.74));border:1px solid rgba(255,255,255,.08);border-top:2px solid var(--amber);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%)}
+.tBoard::before{content:"";position:absolute;right:0;top:0;width:64px;height:2px;background:#fff6dd;opacity:.6}
+.lbHead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px}
+.lbT{font:800 24px var(--f-kdisp);color:var(--bone);line-height:1.15}
+.lbT b{display:block;font:700 12px var(--f-mono);letter-spacing:.3em;color:var(--amber);margin-bottom:4px}
+#miniCount{font:600 14px var(--f-kdisp);color:#b9b4a8;white-space:nowrap}
+.lbCols,.lbr{display:grid;grid-template-columns:40px minmax(0,1.15fr) minmax(0,1fr) auto;gap:10px;align-items:center;padding:0 10px}
+.lbCols{padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.1);font:600 12px var(--f-kdisp);color:var(--muted)}
+.lbCols .sc{text-align:right}
+.lbRows{flex:1;min-height:0;display:grid;grid-template-rows:repeat(10,minmax(25px,1fr))}
+.lbr{border-bottom:1px solid rgba(255,255,255,.045);font-size:16px;min-height:0}
+.lbr>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lbr .r{font:600 15px var(--f-mono);color:var(--muted)}
+.lbr .medal{display:block;width:28px;height:28px;object-fit:contain}
+.lbr .nm{font-weight:700;color:var(--bone)}
+.lbr .dp{font-size:14px;color:#9d978b}
+.lbr .sc{font:600 17px var(--f-mono);color:var(--bone);text-align:right}
+.lbr.p1{background:linear-gradient(90deg,rgba(255,178,26,.2),rgba(255,178,26,0) 85%)}.lbr.p1 .sc{color:var(--amber)}
+.lbr.p2,.lbr.p3{background:linear-gradient(90deg,rgba(255,255,255,.06),rgba(255,255,255,0) 80%)}
+.lbr.me{box-shadow:inset 3px 0 0 #7fe0ff}
+.lbr.empty>span{color:rgba(255,255,255,.2)}
+.lbr.flash{animation:lbFlash 1.6s ease-out}
+@keyframes lbFlash{0%{background-color:rgba(255,200,90,.55)}100%{background-color:rgba(255,200,90,0)}}
+.lbAll{margin-top:12px;display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);color:var(--bone);font:700 15px var(--f-kdisp);padding:10px 14px;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.lbAll:hover,.lbAll:focus-visible{background:rgba(255,178,26,.14);border-color:var(--amber);color:var(--amber);outline:none}
+/* entrance (every visit) + fade from black (first visit only) */
+#scrTitle.enter .logo{animation:tLogo .95s cubic-bezier(.2,.7,.2,1) .15s backwards}
+#scrTitle.enter .tagline{animation:tUp .6s ease-out .45s backwards}
+#scrTitle.enter .menu>.mi:nth-child(1){animation:tLeft .55s cubic-bezier(.2,.7,.2,1) .55s backwards}
+#scrTitle.enter .menu>.mi:nth-child(2){animation:tLeft .55s cubic-bezier(.2,.7,.2,1) .63s backwards}
+#scrTitle.enter .menu>.mi:nth-child(3){animation:tLeft .55s cubic-bezier(.2,.7,.2,1) .71s backwards}
+#scrTitle.enter .mSub{animation:tLeft .55s cubic-bezier(.2,.7,.2,1) .79s backwards}
+#scrTitle.enter .tBoard{animation:tRight .7s cubic-bezier(.2,.7,.2,1) .6s backwards}
+#scrTitle.enter .lbr{animation:tUp .4s ease-out backwards}
+#scrTitle.enter .lbr:nth-child(1){animation-delay:0.80s}#scrTitle.enter .lbr:nth-child(2){animation-delay:0.84s}#scrTitle.enter .lbr:nth-child(3){animation-delay:0.89s}#scrTitle.enter .lbr:nth-child(4){animation-delay:0.93s}#scrTitle.enter .lbr:nth-child(5){animation-delay:0.97s}#scrTitle.enter .lbr:nth-child(6){animation-delay:1.02s}#scrTitle.enter .lbr:nth-child(7){animation-delay:1.06s}#scrTitle.enter .lbr:nth-child(8){animation-delay:1.11s}#scrTitle.enter .lbr:nth-child(9){animation-delay:1.16s}#scrTitle.enter .lbr:nth-child(10){animation-delay:1.20s}
+#scrTitle.first::after{content:"";position:fixed;inset:0;background:#000;pointer-events:none;z-index:5;animation:tBlack 1.1s ease-out forwards}
+@keyframes tLogo{from{opacity:0;transform:scale(1.08);filter:blur(8px) brightness(2.2)}}
+@keyframes tUp{from{opacity:0;transform:translateY(12px)}}
+@keyframes tLeft{from{opacity:0;transform:translateX(-30px)}}
+@keyframes tRight{from{opacity:0;transform:translateX(40px)}}
+@keyframes tBlack{to{opacity:0}}
+/* attract mode (30 s idle on the title): only the backdrop plays */
+body.attract #scrTitle{opacity:0;transition:opacity 1.4s}
+body.attract{cursor:none}
+/* sizes */
+@media (max-height:800px){.logo img{--lw:min(400px,100%)}#scrTitle .tMain{gap:14px}.tagline{font-size:17px}.menu{gap:8px}.mi.pri{padding-block:14px}.mi.pri .t{font-size:30px}.mi.sec{padding-block:8px}.mi.ter{padding-block:4px}.tBoard{padding:14px 16px 12px}.lbHead{margin-bottom:8px}.lbr{font-size:15px}}
+@media (max-height:660px){.logo img{--lw:min(320px,100%)}.tagline{font-size:15px}.mi.pri{padding-block:10px}.mi.pri .t{font-size:26px}.mi.pri .k .ico{width:32px;height:32px}.mi.sec{padding-block:6px}.mi.sec .t{font-size:18px}.lbT{font-size:20px}.lbAll{padding:7px 12px;margin-top:8px}}
+@media (max-width:1180px){.mi .s{display:none}.lbr{font-size:15px}.lbr .sc{font-size:16px}}
+@media (max-width:900px){
+  #scrTitle:not([hidden]){display:flex;flex-direction:column;gap:18px}
+  #scrTitle:not([hidden])>*{flex:none}
+  #scrTitle{background:rgba(5,6,8,.78)}
+  #scrTitle .tMain{grid-column:1;grid-row:2}
+  .tBoard{grid-column:1;grid-row:3;height:auto;max-width:520px;width:100%;align-self:flex-start}
+  .lbRows{grid-template-rows:repeat(10,30px)}
+  #scrTitle .tFoot{grid-row:4}
+}
 </style>
 <style>
 /* 1:1 part damage (v9): small per-part armour cells under each HP bar; broken parts turn red and struck through */
@@ -812,26 +879,28 @@ body.tut #radio{top:calc(150px + env(safe-area-inset-top,0px))}
   <p>이동·회피·사격·3연속 베기·저스트 회피까지 3분이면 익혀요.<br>튜토리얼은 출격 횟수(학번당 3회)에 포함되지 않아요.</p>
   <div class="btns"><button class="btn primary" type="button" id="taTut">튜토리얼 시작 <kbd>Enter</kbd></button><button class="btn" type="button" id="taGo">바로 출격 <kbd>Esc</kbd></button></div></div></div>
 <!-- title -->
-<section class="screen shade" id="scrTitle">
+<section class="screen" id="scrTitle">
   <div class="tTop"><div class="event">제3회 SW융합대학 학술제 · <b>E-SPORTS</b> 공식 종목</div><div class="tRight"><button class="sndBtn" type="button" id="installBtn" hidden>앱으로 설치</button><button class="sndBtn icoBtn" type="button" data-settings><img class="ico" src="ui/ic_gear.webp" alt="">설정</button><div class="status" id="netStatus"><span class="dot"></span>기록 서버 연결 중</div></div></div>
   <div class="tMain">
     <h1 class="logo"><img src="ui/logo.webp" alt="ORBIT BREAKER"></h1>
     <div class="tagline"><i></i>120초 우주 메카 스코어 어택</div>
     <nav class="menu" id="menu">
-      <button class="mi pri" data-go="form" type="button"><span class="k"><img class="ico" src="ui/ic_play.webp" alt=""></span><span class="t">출격</span></button>
-      <button class="mi sec" id="tutBtn" type="button"><span class="k"><img class="ico" src="ui/ic_quality.webp" alt=""></span><span class="t">튜토리얼</span><span id="tutHint" hidden><b>처음이신가요?</b>조작과 이야기를 3분 만에 익혀요</span></button>
-      <button class="mi sec" data-go="duel" type="button"><span class="k"><img class="ico" src="ui/ic_versus.webp" alt=""></span><span class="t">1:1 쇼다운</span></button>
+      <button class="mi pri" data-go="form" type="button"><span class="k"><img class="ico" src="ui/ic_play.webp" alt=""></span><span class="t">출격</span><span class="s">SORTIE</span></button>
+      <button class="mi sec" id="tutBtn" type="button"><span class="k"><img class="ico" src="ui/ic_quality.webp" alt=""></span><span class="t">튜토리얼</span><span class="s">TRAINING</span><span id="tutHint" hidden><b>처음이신가요?</b>조작과 이야기를 3분 만에 익혀요</span></button>
+      <button class="mi sec" data-go="duel" type="button"><span class="k"><img class="ico" src="ui/ic_versus.webp" alt=""></span><span class="t">1:1 쇼다운</span><span class="s">SHOWDOWN</span></button>
       <div class="mSub">
-        <button class="mi ter" data-go="rank" type="button"><span class="t">작전 기록</span></button>
         <button class="mi ter" data-go="brief" type="button"><span class="t">조작 교본</span></button>
         <button class="mi ter" data-settings type="button"><span class="t">설정</span></button>
       </div>
     </nav>
   </div>
-  <div class="tFoot">
-    <div class="frame miniBoard"><h3 class="lbl"><span>상위 파일럿</span><span id="miniCount"></span></h3><div id="miniBoard"></div></div>
-    <div class="status" id="loadStatus">XR-07 Mk-II 기체 데이터 로딩 중…</div>
-  </div>
+  <aside class="tBoard" aria-label="실시간 순위">
+    <div class="lbHead"><div class="lbT"><b>LEADERBOARD</b>실시간 순위</div><span id="miniCount"></span></div>
+    <div class="lbCols"><span>#</span><span>파일럿</span><span>학과</span><span class="sc">최고점</span></div>
+    <div class="lbRows" id="miniBoard"></div>
+    <button class="lbAll" data-go="rank" type="button"><span>전체 순위 보기</span><span>›</span></button>
+  </aside>
+  <div class="tFoot"><div class="status" id="loadStatus">XR-07 Mk-II 기체 데이터 로딩 중…</div></div>
 </section>
 
 <!-- pilot registration -->

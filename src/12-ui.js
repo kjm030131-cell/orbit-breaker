@@ -40,8 +40,14 @@ function tableHTML(rows,extra){
   if(!rows.length)return '<div class="empty">아직 작전 기록이 없습니다.<br>첫 번째 파일럿이 되어 보세요.</div>';
   return `<table class="board"><thead><tr><th>#</th><th>파일럿</th><th>학과</th><th class="s">최고점</th></tr></thead><tbody>${rowsHTML(rows,0)}${extra||""}</tbody></table>`}
 function renderBoards(){
-  $("miniBoard").innerHTML=BOARD.length?BOARD.slice(0,5).map((r,i)=>`<div class="mrow ${i===0?"top":""}"><span class="r">${i<3?`<img class="medal" src="ui/medal${i+1}.webp" alt="${i+1}">`:String(i+1).padStart(2,"0")}</span><span>${esc(r.name)}</span><span class="sc">${(r.best||0).toLocaleString()}</span></div>`).join(""):'<div class="note">아직 기록이 없습니다.</div>';
-  $("miniCount").textContent=BOARD.length?BOARD.length+" PILOTS":"";
+  { // title leaderboard: always 10 slots; rows whose best changed since the last render flash once
+    const prev=renderBoards.prev||{},seen={};
+    let h="";for(let n=1;n<=10;n++){const r=BOARD[n-1];
+      if(!r){h+=`<div class="lbr empty"><span class="r">${String(n).padStart(2,"0")}</span><span class="nm">—</span><span class="dp"></span><span class="sc">—</span></div>`;continue}
+      const key=(r.sid||r.name)+"",best=r.best||0;seen[key]=best;const fl=renderBoards.prev&&prev[key]!==best;
+      h+=`<div class="lbr ${n<=3?"p"+n:""} ${r.me||(r.sid&&r.sid===PILOT.sid)?"me":""} ${fl?"flash":""}"><span class="r">${n<=3?`<img class="medal" src="ui/medal${n}.webp" alt="${n}">`:String(n).padStart(2,"0")}</span><span class="nm">${esc(r.name)}</span><span class="dp">${esc(r.dept)}</span><span class="sc">${best.toLocaleString()}</span></div>`}
+    renderBoards.prev=seen;$("miniBoard").innerHTML=h;
+    $("miniCount").textContent=BOARD.length?BOARD.length+"명 참가":"첫 기록에 도전하세요";}
   $("fullBoard").innerHTML=tableHTML(BOARD);$("rankCount").textContent=BOARD.length+"명 참가";
   const me=BOARD.findIndex(r=>r.me||(r.sid&&r.sid===PILOT.sid));
   $("rBoard").innerHTML=tableHTML(BOARD.slice(0,10),me>=10?`<tr><td colspan="4" class="d" style="text-align:center;padding:4px">⋯</td></tr>`+rowsHTML([BOARD[me]],me):"");
@@ -63,7 +69,7 @@ function show(name){
   for(const k in SCR)$(SCR[k]).hidden=k!==name;
   $("hud").hidden=name!=="play";
   SCREEN=name;S.demo=!(name==="play"||name==="launch");
-  if(name==="title"){markMenu();PILOT.sid=PILOT.sid}
+  if(name==="title"){markMenu();PILOT.sid=PILOT.sid;if(TITLE)titleEnter()}
   if(name==="form"){if(prev==="title"){["fName","fDept","fSid"].forEach(id=>$(id).value="");$("fErr").textContent="";meter(null)}setTimeout(()=>$("fName").focus(),60)}
   if(name==="load"){renderUnits();setTimeout(()=>$("loadGo").focus(),60)}
   if(name==="brief"){const l=briefMode==="launch";$("briefStep").textContent=l?"3 / 3":"조작법";$("launchBtn").hidden=!l;$("launchNote").hidden=!l;setTimeout(()=>(l?$("launchBtn"):$("briefBack")).focus(),60)}

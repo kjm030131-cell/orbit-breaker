@@ -14,7 +14,7 @@ function update(rdt){
   if(VS){S.hitstop=Math.min(S.hitstop,.12);S.slow=Math.min(S.slow,.4)}
   if(S.hitstop>0){S.hitstop-=rdt;dt=0}else if(S.slow>0){S.slow-=rdt;dt*=.3}
   clockT+=rdt;const T=clock.elapsedTime;
-  if(S.demo){S.demoT+=rdt;S.yaw=Math.sin(S.demoT*.15)*.9+Math.PI*.15}
+  if(S.demo){S.demoT+=rdt;S.yaw=Math.sin(S.demoT*.15)*.9+Math.PI*.15;titleYaw()}
   else if(VS&&G.focus&&SCREEN==="play"){vsFocusCamera(rdt)}
   else if(G.focus&&SCREEN==="play"&&targetable(G.focus)){focusCamera(rdt)}
   else if(!locked&&!VS){if(Math.abs(mouseX)>.25)S.yaw-=Math.sign(mouseX)*(Math.abs(mouseX)-.25)*1.8*rdt}
@@ -124,12 +124,12 @@ function update(rdt){
   fillEnemies(dt);
 
   /* fx */
-  fieldStep(dt,T);
+  fieldStep(dt,T);titleStep(rdt);
   const fdt=Math.min(rdt,.05);stepShip(rdt,T);stepPool(ADD,fdt);stepPool(NORM,fdt);stepFxArt(fdt);stepSparks(fdt);stepChunks(fdt);stepLights(fdt);stepBolts(dt);stepStreaks(fdt);
   for(const d of debris){d.rotation.x+=d.userData.spin.x*rdt;d.rotation.y+=d.userData.spin.y*rdt}
 
   /* camera */
-  if(!(INTRO.on&&introCamera(rdt))&&!(CINE.on&&cineCamera(rdt))){
+  if(!(INTRO.on&&introCamera(rdt))&&!(CINE.on&&cineCamera(rdt))&&!titleCamera(rdt)){
   const cf=camFwd(),dist=S.demo?12:VS?11.2:8.6; // 1:1 mechs are drawn VS_MS bigger: pull the camera back to match
   const want=S.pos.clone().addScaledVector(cf,-dist).add(new V3(0,VS?3.2:2.4,0));
   // HM-1 beam: swing the camera out over the left shoulder so a beam fired down the reticle line is seen side-on, not end-on
