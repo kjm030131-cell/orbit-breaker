@@ -12,7 +12,7 @@ function vsPartsReset(R,scale){if(!R)return;vsPartsHome(R);R.broken={};R.stumpT=
   for(const k in VS_PART){const b=vsPartBone(R,k);if(b)b.scale.setScalar(1)}
   const h=R.home;if(h.blade&&h.blade.parent!==h.bladeParent){h.bladeParent.add(h.blade);h.blade.position.copy(h.bladePos)}
   if(R.muzzle&&R.muzzle.parent!==h.muzzleParent){h.muzzleParent.add(R.muzzle);R.muzzle.position.copy(h.muzzlePos)}
-  if(R.eye)R.eye.visible=true;vsBodyVisible(R,true)}
+  if(R.eye)R.eye.visible=true;vsBodyVisible(R,true);R.root.visible=true}
 function vsBodyVisible(R,on){R.root.traverse(o=>{if(o.isMesh&&o.material===R.mat)o.visible=on})}
 function vsBreakPart(R,k,mine){if(!R||!R.broken||R.broken[k])return;R.broken[k]=true;const b=vsPartBone(R,k);if(!b)return;
   R.root.updateMatrixWorld(true);const at=b.getWorldPosition(new V3());
@@ -64,7 +64,8 @@ function vsCockpitTick(rdt){const on=!!(VS&&VS.fp&&P&&SCREEN==="play");if(!on&&!
   C.g.position.copy(camera.position);C.g.quaternion.copy(camera.quaternion);C.t-=rdt;if(C.t<=0){C.t=.1;vsCockpitScreens(C)}
   C.sparkT-=rdt;if(C.sparkT<=0){C.sparkT=.25+Math.random()*.5;const p=camera.localToWorld(new V3((Math.random()-.5)*1.6,.52,-.62));sparks(p,new V3(0,-1,0).applyQuaternion(camera.quaternion),0xffc070,4,.3,5,.5)}}
 // own head lost: switch to the cockpit
-function vsHeadLost(){const v=VS;if(!v||v.fp)return;v.fp=true;vsBodyVisible(P,false);flash(.45);S.slow=Math.max(S.slow||0,.35);sfx("destroyed");
+function vsHeadLost(){const v=VS;if(!v||v.fp)return;v.fp=true;P.root.visible=false; // whole mech incl. the saber: from inside the chest it would slash across the view
+  flash(.45);S.slow=Math.max(S.slow||0,.35);sfx("destroyed");
   cutin("메인 카메라 손실","콕핏 개방 · 육안으로 싸워야 합니다")}
 function vsPartsMsg(m){const v=VS;if(!v)return;const mine=m.side===v.side,R=mine?P:v.remote;vsBreakPart(R,m.part,mine);if(mine&&m.part==="head"){vsHeadLost();return}
   const n=VS_PART[m.part].name;if(mine)popText(m.part==="armR"?"오른팔 파괴 · 공격 속도 저하":m.part==="armL"?"왼팔 파괴 · 가드 약화":n+" 파괴");

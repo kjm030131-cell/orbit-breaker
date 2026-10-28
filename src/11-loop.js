@@ -95,7 +95,7 @@ function update(rdt){
     const tipL=tip.clone().sub(m.position),swingSp=P.prevTip&&rdt>0?tipL.distanceTo(P.prevTip)/rdt:0;P.prevTip=tipL;
     const live=SCREEN==="play"||SCREEN==="launch";
     audioFrame({hum:live?P.bladeLen:0,swing:swingSp,thrust:live?(S.dash>0?1.2:boosting?1:clamp(S.vel.length()/45,0,.4)):0,amb:live?1:0});
-    stepTrail(Math.min(rdt,.05),base,tip,P.beam.visible&&(swinging||S.act==="lunge"),S.over>0?_SAB_HOT:_SAB_C);
+    stepTrail(Math.min(rdt,.05),base,tip,P.beam.visible&&P.root.visible&&(swinging||S.act==="lunge"),S.over>0?_SAB_HOT:_SAB_C);
     const fls=(CINE.on?CINE.thr:boosting?2.6:S.dash>0?3.4:1)*(1+Math.sin(T*50)*.12);
     P.flames.forEach((g,i)=>{g.scale.set(1+(fls-1)*.15,fls*(1+Math.sin(T*37+i)*.1),1+(fls-1)*.15)});
     if((boosting||S.dash>0||(CINE.on&&CINE.thr>1.4))&&rdt>0){const p=new V3();P.flames[(Math.random()*2)|0].getWorldPosition(p);
