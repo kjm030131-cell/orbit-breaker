@@ -80,7 +80,7 @@ function bladeParry(e,at){S.lastStrikeT=clockT;
   if(e.bs==="strike"){e.hitDone=true;bladeClash(e,true);S.dashT=null;return true} // slash met its swing head-on
   bladeClash(e,false);S.dashT=null;return true}
 // rifle bolts: deflected while it guards, only chip its posture while it reels
-function bladeShot(e,at){if(e.stun>0||e.bs==="rec"){sparks(at,null,0xffc080,20,.3,10);sfx("hit",at);e.flash=1;bladePost(e,POST_SHOT,at,null)}else bladeDeflect(e,at)}
+function bladeShot(e,at){if(e.stun>0||e.bs==="rec"){sparks(at,null,0xffc080,20,.3,10);sfx("hit",at);sfx("hitmark");e.flash=1;bladePost(e,POST_SHOT,at,null)}else bladeDeflect(e,at)}
 let _deflT=0;function bladeDeflect(e,at){sparks(at,null,0xff8a80,26,.35,14);fxImpact(at,0xff5060);sfx("block",at);sfx("sizzle",at);hitMark("block");
   if(T_NOW()-_deflT>2.5){_deflT=T_NOW();popText("빔 튕겨냄 · 근접으로 베어라")}}
 function T_NOW(){return performance.now()/1000}

@@ -61,7 +61,7 @@ function vsMsg(m){if(!VS)return;const v=VS;
     else{popText("패리당함 · 경직!");G.stagger=.75;S.act=null;S.vsLunge=0;sfx("clash");sfx("deny");S.shake=.6}vsSparks(.9);return}
   if(m.t==="guardBreak"){const mine=m.side===v.side;sfx("heavy");sfx("clash");vsSparks(1.2);if(mine){S.guard=false;G.stagger=.9;popText("가드 브레이크!");const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on")}else{popText("가드 브레이크! 몰아쳐요");S.hitstop=.1;impactPunch(.9);hitMark("kill")}return}
   if(m.t==="damage"){if(m.side===v.side){v.hp=m.hp;vsDamageFX(new V3(...m.dir),m.kind==="melee",m)}else{v.oppHp=m.hp;const at=v.tgt&&v.tgt.m.position.clone().add(new V3(0,.8,0));if(m.kind==="chip")return;
-      const mel=m.kind==="melee";sfx(mel?(m.heavy?"heavy":"hit"):"hit",at);sfx("thud",at,m.heavy?1:0);if(mel)sfx("sizzle",at);if(at){fxImpact(at,mel?0xff8a2a:0x40d8ff);if(mel)fxSlashHit(at,0xff8a2a,!!m.heavy)}
+      const mel=m.kind==="melee";sfx(mel?(m.heavy?"heavy":"hit"):"hit",at);if(!mel)sfx(m.part==="head"?"headmark":"hitmark");sfx("thud",at,m.heavy?1:0);if(mel)sfx("sizzle",at);if(at){fxImpact(at,mel?0xff8a2a:0x40d8ff);if(mel)fxSlashHit(at,0xff8a2a,!!m.heavy)}
       hitMark(m.heavy?"kill":"hit");impactPunch(mel?(m.heavy?1:.55):.2);if(mel)S.hitstop=m.heavy?.11:.065;if(v.remote&&mel){v.remote.act=null;v.remote.hitT=.25}}return}
   if(m.t==="block"){const mine=m.side===v.side;
     if(m.kind==="guard"||m.kind==="guardShot"){sfx(m.kind==="guard"?"clash":"block");vsSparks(m.heavy?.8:.5);if(mine){popText(`가드 · ${m.gp}%`);S.hitstop=.05;S.vel.addScaledVector(vsAway(),m.heavy?16:9)}else{hitMark("block");popText(m.kind==="guard"?"막힘 · 가드를 깎아요":"빔 막힘");S.hitstop=.04}return}

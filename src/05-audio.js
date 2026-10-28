@@ -67,6 +67,20 @@ function sfx(k,pos,arg){const a=AC;if(!a||!AUD.ready||a.state!=="running")return
  case "thud":{const H=arg?1:0,o=bus(pos,1,.12);osc(a,o,"sine",H?150:120,H?30:40,t,H?.34:.2,H?.8:.45);osc(a,o,"triangle",H?230:180,55,t,.09,.3);nzf(a,o,"lowpass",1100,110,t,.13,H?.55:.3,.7);break}
  case "ignite":{const o=bus(null,.8,.25);osc(a,o,"sawtooth",70,180,t,.35,.09,.02);osc(a,o,"sawtooth",71.5,182,t,.35,.07,.02);nzf(a,o,"bandpass",600,4200,t,.3,.22,2);osc(a,o,"sine",1400,2600,t,.12,.05);break}
  case "slash":{const n=arg||0,o=bus(pos,.9,.2),p=1+n*.12;nzf(a,o,"bandpass",4200*p,380,t,.26,.5,1.2,.02);osc(a,o,"sawtooth",420*p,110,t,.24,.07,.015);osc(a,o,"sine",260*p,90,t+.02,.2,.12);break}
+ /* hit markers (10/29): dry, punchy "you landed it" feedback layered on the impact. Not positional, no reverb.
+    hitmark  = click transient + hollow "pock" body + tight low thump + spark tick (~80 ms)
+    headmark = the same, plus a sharp crack, a brighter second "pock" 28 ms later and a glassy sensor shatter (~120 ms) */
+ case "hitmark":case "headmark":{const Hd=k==="headmark";if(a.currentTime-(AUD.hmT||0)<(Hd?.02:.045))break;AUD.hmT=a.currentTime;
+   const o=bus(null,Hd?1:.85,0),d=shaper(a);d.connect(o);
+   nzf(a,o,"highpass",5200,4200,t,.012,.42,.7,.001);
+   osc(a,o,"triangle",1250,700,t,.05,.3,.001);osc(a,o,"sine",900,520,t,.06,.24,.001);
+   nzf(a,o,"bandpass",1700,1300,t,.04,.38,4,.001);
+   osc(a,d,"sine",190,72,t,.085,.55,.002);
+   nzf(a,o,"bandpass",7200,6000,t,.03,.1,2,.001);
+   if(Hd){nzf(a,o,"highpass",3200,2200,t,.045,.6,1.4,.001);const t2=t+.028;
+     osc(a,o,"triangle",2100,1500,t2,.06,.24,.001);osc(a,o,"sine",3100,2600,t2,.045,.09,.001);
+     nzf(a,o,"bandpass",5200,6800,t2,.09,.22,3,.002);osc(a,d,"sine",150,60,t2,.09,.4,.002);duck(.75,.15)}
+   break}
  case "hit":case "heavy":{const H=k==="heavy",o=bus(pos,1,H?.45:.3),d=shaper(a);d.connect(o);
    nzf(a,o,"highpass",6000,3000,t,.025,.6);
    osc(a,d,"sine",H?120:170,H?30:42,t,H?.55:.32,H?.95:.8);
