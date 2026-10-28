@@ -8,7 +8,7 @@ let locked=false,mouseX=0,clockT=0;
 document.addEventListener("pointerlockchange",()=>{locked=document.pointerLockElement===renderer.domElement;if(locked)wasLocked=true;else if(SCREEN==="play"&&wasLocked&&!S.ended){$("pauseLabel").textContent=VS?(VS.local?"TRAINING":"ONLINE MATCH"):"Paused";$("pauseTitle").textContent=VS?"대전은 계속 진행 중입니다":"일시정지";$("pauseNote").textContent=VS?"대전 시간은 멈추지 않습니다.":"작전이 멈춰 있습니다";$("pQuit").textContent=VS?"대전 나가기":"작전 종료";$("pQuitNote").hidden=!!VS||!SERVER;PAUSED=true;for(const k in keys)keys[k]=false;$("pause").hidden=false;muffle(true);audioFrame({hum:0,swing:0,thrust:0,amb:0})}});
 renderer.domElement.addEventListener("contextmenu",e=>e.preventDefault());
 function lock(){try{const p=renderer.domElement.requestPointerLock();if(p&&p.catch)p.catch(()=>{})}catch(_){}}
-renderer.domElement.addEventListener("mousedown",e=>{if(SCREEN!=="play"||S.ended||PAUSED)return;if(!locked&&(wasLocked||VS))lock();if(e.button===0)attack();else if(e.button===2)shoot()});
+renderer.domElement.addEventListener("mousedown",e=>{if(SCREEN!=="play"||S.ended||PAUSED)return;if(!locked&&(wasLocked||VS||TUT.on))lock();if(e.button===0)attack();else if(e.button===2)shoot()});
 // mouse sensitivity (per PC, remembered): slider on the title bar and the pause screen
 let SENS=1;try{SENS=clamp(+localStorage.getItem("ob.sens")||1,.3,2.5)}catch(e){}
 function setSens(v){SENS=clamp(+v||1,.3,2.5);try{localStorage.setItem("ob.sens",SENS)}catch(e){}document.querySelectorAll(".sensIn").forEach(i=>{i.value=SENS});document.querySelectorAll(".sensV").forEach(s=>s.textContent=SENS.toFixed(2))}

@@ -47,7 +47,7 @@ const VST_STEPS=[
    say:[[VST_OP,"마지막은 스파링. 교관이 공격과 가드, 회피를 섞어요."],[VST_OP,"상대가 시동 거는 순간 먼저 베면 카운터 히트예요."]],enter(){VST.c.dmg=0},done:c=>(c.dmg||0)>=60}];
 function vstStepGo(i){VST.step=i;VST.t=0;VST.c={};VST.busy=false;const st=VST_STEPS[i];if(!st){vstFinish();return}
   const b=VST.bot;b.next=Date.now()+1500;b.cueAt=0;if(VST.arena&&VST.arena.s.players.b){VST.arena.handle("b",{t:"guard",on:false},Date.now())}b.guard=false;
-  $("tutObj").hidden=false;$("tutObjTxt").textContent=st.obj;$("tutObjProg").textContent=st.prog(VST.c);$("tutObjN").textContent=`${i+1} / ${VST_STEPS.length}`;
+  $("tutObj").hidden=false;$("tutObjHow").textContent="";$("tutSkip").hidden=true;$("tutObjTxt").textContent=st.obj;$("tutObjProg").textContent=st.prog(VST.c);$("tutObjN").textContent=`${i+1} / ${VST_STEPS.length}`;
   const o=$("tutObj");o.classList.remove("new","ok");void o.offsetWidth;o.classList.add("new");
   const tok=VST.sayTok=(VST.sayTok||0)+1;st.say.forEach((l,k)=>setTimeout(()=>{if(VST.on&&VST.sayTok===tok)radio(l[0],l[1])},k*4300));if(st.enter)st.enter()}
 function vstFinish(){$("tutObj").hidden=true;cutin("쇼다운 훈련 완료","이제 실전에서 붙어 보세요");sfx("phase");
