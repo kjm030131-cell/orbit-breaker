@@ -17,8 +17,8 @@ function spawnBoss(){
     sp.position.set(Math.sin(a)*sc*.62,-.05*sc,Math.cos(a)*sc*.62);sp.rotation.y=a;ring.add(sp);sp.position.set(Math.sin(a)*sc*.62,Math.cos(a)*sc*.62,0);sp.rotation.set(0,0,a)}
   const eye=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff2040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
   eye.position.set(0,(.655-.5)*sc,.2*sc);eye.scale.set(3,3,1);g.add(eye);g.userData.eye=eye;}
-  const from=S.pos.clone().addScaledVector(fwd(),95).add(new V3(0,14,0));g.position.copy(from);scene.add(g);
-  const e={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:0,flash:0,elite:false,rad:BOSS_GLTF?17:9,isBoss:true,down:0,yaw:Math.atan2(S.pos.x-from.x,S.pos.z-from.z),tele:0,teleDir:new V3(),fireT:99};
+  const from=S.pos.clone().addScaledVector(fwd(),BOSS_GLTF?150:95).add(new V3(0,14,0));g.position.copy(from);scene.add(g);
+  const e={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:0,flash:0,elite:false,rad:BOSS_GLTF?30:9,isBoss:true,down:0,yaw:Math.atan2(S.pos.x-from.x,S.pos.z-from.z),tele:0,teleDir:new V3(),fireT:99};
   enemies.push(e);BOSS.e=e;BOSS.atkT=4;BOSS.mode=0;BOSS.down=0;BOSS.introT=3.2;
   buildWPs();
   sfx("radio");setTimeout(()=>{if(!S.ended){sfx("phase");cutin("케르고그모스 출현","아르고스 지휘기")}},400);
@@ -75,8 +75,8 @@ function bossAI0(b,dt,T){
     if(b.down<=0){b.down=0;buildWPs();sfx("phase");popText("케르고그모스 재기동 · 약점 포드 복구");m.userData.mat.emissive.setRGB(0,0,0)}
     return}
   // approach, then circle at a fixed stand-off
-  const big=!!m.userData.anim,keep=big?60:40;if(d>keep+4)m.position.addScaledVector(to,dt*(BOSS.introT>0?22:7));else if(d<keep-8)m.position.addScaledVector(to,-dt*6);
-  const side=new V3(-to.z,0,to.x);m.position.addScaledVector(side,dt*4*Math.sin(b.phase*.35));m.position.y+=(S.pos.y+(big?10:6)-m.position.y)*dt*.6;
+  const big=!!m.userData.anim,keep=big?100:40;if(d>keep+4)m.position.addScaledVector(to,dt*(BOSS.introT>0?22:7));else if(d<keep-8)m.position.addScaledVector(to,-dt*6);
+  const side=new V3(-to.z,0,to.x);m.position.addScaledVector(side,dt*4*Math.sin(b.phase*.35));m.position.y+=(S.pos.y+(big?18:6)-m.position.y)*dt*.6;
   BOSS.introT=Math.max(0,BOSS.introT-dt);
   const want=Math.atan2(S.pos.x-m.position.x,S.pos.z-m.position.z);let dy=Math.atan2(Math.sin(want-b.yaw),Math.cos(want-b.yaw));b.yaw+=clamp(dy,-.9*dt,.9*dt);
   m.rotation.set(0,b.yaw,Math.sin(b.phase*.6)*.05);if(ring)ring.rotation.z+=dt*.5;
@@ -85,7 +85,7 @@ function bossAI0(b,dt,T){
   bossPods(b,dt);const es=big?BOSS_EYE:3;
   if(BOSS.tele>0){BOSS.tele-=dt;const k=1-BOSS.tele/BOSS_TELE;m.userData.eye.scale.setScalar(es*(1+k*1.7)+Math.sin(T*40)*es*.4);
     if(BOSS.tele<=0)bossFire(b)}
-  else{BOSS.atkT-=dt;if(BOSS.atkT<=0&&d<(big?100:70)){BOSS.tele=BOSS_TELE;sfx("tele",m.position,1);sfx("tele",m.position,0)}}
+  else{BOSS.atkT-=dt;if(BOSS.atkT<=0&&d<(big?150:70)){BOSS.tele=BOSS_TELE;sfx("tele",m.position,1);sfx("tele",m.position,0)}}
 }
 function bossFire(b){
   const from=b.m.userData.anim?b.m.userData.eye.getWorldPosition(new V3()):b.m.position.clone().add(new V3(0,1.5,0)),base=S.pos.clone().sub(from).normalize();
