@@ -9,7 +9,7 @@ const INTRO_LINES=[
   {at:13.5,txt:"그리고, 소원을 빈다."},
   {at:17.6,txt:""}];
 const INTRO_END=30.2;
-function introMeteor(pos,vel,big){INTRO.meteors.push({p:pos.clone(),v:vel.clone(),life:big?6:4.2,big:!!big})}
+function introMeteor(pos,vel,big){INTRO.meteors.push({p:pos.clone(),v:vel.clone(),life:big?6:4.2,big:!!big,spr:fxMeteorNew()})}
 function introProp(pos,vel){if(!EN_MESH)return null;const m=new THREE.Mesh(EN_MESH.geometry,EN_MESH.material.clone());m.scale.setScalar(E_SCALE);m.position.copy(pos);
   m.rotation.y=Math.atan2(vel.x,vel.z);scene.add(m);const o={m,v:vel.clone(),hp:1};INTRO.props.push(o);return o}
 function playIntro(){return new Promise(res=>{
@@ -19,7 +19,7 @@ function playIntro(){return new Promise(res=>{
   for(let i=0;i<7;i++)introProp(new V3(-60+Math.random()*120,-4+Math.random()*26,60+Math.random()*70),new V3((Math.random()-.5)*14,(Math.random()-.5)*3,-6-Math.random()*8));
   const o=$("intro");o.hidden=false;o.className="on black";$("inCard").textContent="";$("inSub").textContent="";$("inLine").textContent="";$("inMsg").className="";$("inMsgA").textContent="";$("inMsgB").textContent="";$("inTitle").className="";
 })}
-function introClear(){for(const o of INTRO.props){scene.remove(o.m);o.m.material.dispose()}INTRO.props.length=0;INTRO.meteors.length=0}
+function introClear(){for(const m of INTRO.meteors)fxMeteorFree(m.spr);for(const o of INTRO.props){scene.remove(o.m);o.m.material.dispose()}INTRO.props.length=0;INTRO.meteors.length=0}
 function endIntro(){INTRO.on=false;introClear();$("intro").hidden=true;if(P)P.root.visible=true;const r=INTRO.done;INTRO.done=null;if(r)r()}
 function introType(el,txt,t0,cps){const n=Math.max(0,Math.min(txt.length,((INTRO.t-t0)*(cps||26))|0));if(el.textContent.length!==n)el.textContent=txt.slice(0,n)}
 function introUpdate(rdt){
@@ -45,10 +45,10 @@ function introUpdate(rdt){
     introProp(new V3(-60+Math.random()*120,-4+Math.random()*26,90+Math.random()*60),new V3((Math.random()-.5)*14,(Math.random()-.5)*3,-6-Math.random()*8))}
   if(t>12.5&&t<27&&t>=INTRO.nextMet){INTRO.nextMet=t+(t<19?.12:.35);introMeteor(new V3(-120+Math.random()*240,40+Math.random()*30,120+Math.random()*140),new V3(10+Math.random()*10,-60-Math.random()*30,-20-Math.random()*20),false)}
   for(let i=INTRO.meteors.length-1;i>=0;i--){const m=INTRO.meteors[i];m.life-=rdt;m.v.y-=rdt*(m.big?4:12);m.p.addScaledVector(m.v,rdt);
-    const k=m.big?1:.7;emit(ADD,{pos:m.p.clone(),color:0xffb050,s0:(m.big?5:3.4)*k,s1:.4,life:m.big?.9:.55,a:.85});
+    const k=m.big?1:.7;if(m.spr)fxMeteorSet(m.spr,m.p,m.v,(m.big?34:20)*Math.min(1,m.v.length()/40+.4),Math.min(1,m.life*1.5));else emit(ADD,{pos:m.p.clone(),color:0xffb050,s0:(m.big?5:3.4)*k,s1:.4,life:m.big?.9:.55,a:.85});
     emit(ADD,{pos:m.p.clone(),color:0xfff0c0,s0:(m.big?2.6:1.8)*k,s1:.2,life:.12,a:1});
     if(m.big&&Math.random()<.4)emit(NORM,{pos:m.p.clone(),tex:TX.smoke,color:0x55504a,vel:new V3(0,2,0),s0:2,s1:6,life:1.4,a:.18,drag:1});
-    if(m.life<=0)INTRO.meteors.splice(i,1)}
+    if(m.life<=0){fxMeteorFree(m.spr);INTRO.meteors.splice(i,1)}}
 }
 function introCamera(rdt){const t=INTRO.t,pos=new V3(),lk=new V3();let fov=50;
   if(t<13){const k=clamp((t-3.5)/9.5,0,1),e=k*k*(3-2*k);pos.set(lerp(-44,-20,e),lerp(24,14,e),lerp(8,36,e));lk.set(lerp(-6,8,e),lerp(2,-4,e),115);fov=lerp(46,52,e)}

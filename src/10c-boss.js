@@ -58,7 +58,7 @@ function bossDown(){const b=BOSS.e;if(!b)return;b.down=5;BOSS.downs++;BOSS.tele=
 function bossDie(b,chainN){
   b.alive=false;BOSS.dead=true;const p=b.m.position.clone();
   for(let i=0;i<6;i++)setTimeout(()=>{fxExplosion(p.clone().add(new V3().randomDirection().multiplyScalar(5)),2+Math.random());sfx("boom",p,4)},i*150);
-  fxExplosion(p,3.2);flashLight(p,0xffa040,20,160,.9);S.shake=1.8;S.slow=1.1;flash(.6);
+  fxExplosion(p,3.2);fxBigExplosion(p,120);flashLight(p,0xffa040,20,160,.9);S.shake=1.8;S.slow=1.1;flash(.6);
   addScore(12000,p,"big");if(SCREEN==="play")S.kills=(S.kills||0)+1;onKill(b);
   for(const w of BOSS.wps)if(w.alive){w.alive=false;disposeEnemy(w)}
   setTimeout(()=>{scene.remove(b.m);b.m.traverse(o=>{if(o.material)o.material.dispose()})},50);clearTele(b);

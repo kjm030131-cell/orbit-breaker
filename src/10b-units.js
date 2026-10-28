@@ -64,7 +64,7 @@ function stepProj(dt){
     else p.vel.multiplyScalar(Math.pow(.6,dt));
     p.s.position.addScaledVector(p.vel,dt);
     if(dt>0)emit(ADD,{pos:p.s.position.clone(),color:p.kind==="pod"?0x48d8ff:0xff7a3a,s0:p.kind==="pod"?1:.9,s1:.1,life:.22,a:.7});
-    if(dt>0&&p.kind==="missile"&&Math.random()<.5)emit(NORM,{pos:p.s.position.clone(),tex:TX.smoke,color:0x7a7f88,s0:.5,s1:2.2,life:.6,a:.25,drag:2});
+    if(dt>0&&p.kind==="missile"&&Math.random()<.5)emit(NORM,FXBOK.puff?{pos:p.s.position.clone(),tex:FXB.puff,color:0xd8dce4,s0:.6,s1:3,rot:Math.random()*6.28,life:.75,a:.42,drag:2}:{pos:p.s.position.clone(),tex:TX.smoke,color:0x7a7f88,s0:.5,s1:2.2,life:.6,a:.25,drag:2});
     if(p.life<=0){scene.remove(p.s);p.s.material.dispose();G.proj.splice(i,1)}}
 }
 function projHit(p){const e=p.tgt,at=e.m.position.clone();

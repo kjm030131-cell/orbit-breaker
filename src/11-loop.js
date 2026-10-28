@@ -125,7 +125,7 @@ function update(rdt){
 
   /* fx */
   fieldStep(dt,T);titleStep(rdt);
-  const fdt=Math.min(rdt,.05);stepShip(rdt,T);stepPool(ADD,fdt);stepPool(NORM,fdt);stepFxArt(fdt);stepSparks(fdt);stepChunks(fdt);stepLights(fdt);stepBolts(dt);stepStreaks(fdt);
+  const fdt=Math.min(rdt,.05);stepShip(rdt,T);stepPool(ADD,fdt);stepPool(NORM,fdt);stepFxArt(fdt);stepFxBig(fdt);stepSparks(fdt);stepChunks(fdt);stepLights(fdt);stepBolts(dt);stepStreaks(fdt);
   for(const d of debris){d.rotation.x+=d.userData.spin.x*rdt;d.rotation.y+=d.userData.spin.y*rdt}
 
   /* camera */

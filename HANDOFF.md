@@ -413,3 +413,8 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 - src/05-audio.js BGM: tracks 에 등록된 곡은 불러오면 생성형 음악 대신 반복 재생(1.5초 페이드인, 전환 시 0.8초 페이드아웃), 실패하면 생성형 그대로.
   전투·보스·결과 곡이 오면 BGM.tracks 에 battle 등 추가(보스·결과는 music() 호출 지점도 추가 필요). 볼륨은 tracks.*.vol.
 - build_deploy: bgm/ 복사, bgm/*.mp3 참조에도 ?v= 캐시 무효화.
+
+## 43. 이펙트 2차 (10/29 04:20, src/01d-fxbig.js)
+- ui/fx_meteor(재진입 불꽃 꼬리, 가산), fx_bigexpl(4x4 대폭발 연속그림, 알파), fx_shockwave(충격파 링, 가산), fx_puff(연기, 알파) — 사용자 GPT 제작.
+- 유성: fxMeteorNew/Set/Free 스프라이트 풀(28) — 메인화면(12i-title)·오프닝(09b-intro) 유성에 사용, 풀이 차면 예전 입자로.
+- 보스 격파: bossDie 에 fxBigExplosion(p,120) 한 줄(대폭발 + 충격파 2겹). 미사일 꼬리 연기 = fx_puff. stepFxBig 은 11-loop 의 stepFxArt 옆.

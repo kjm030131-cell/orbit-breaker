@@ -6,7 +6,7 @@ const TITLE_D=new V3(Math.cos(1.885),0,Math.sin(1.885)); // horizontal heading t
 const TITLE_ON=()=>SCREEN==="title"&&S.demo&&!INTRO.on&&!CINE.on&&!(typeof TUT!=="undefined"&&TUT.on);
 function titleYaw(){if(!TITLE_ON())return;S.yaw=Math.atan2(-TITLE_D.x,-TITLE_D.z)-.62+Math.sin(TITLE.t*.21)*.18}
 function titleStep(rdt){
-  if(!TITLE_ON()){if(TITLE.met.length)TITLE.met.length=0;titleAttract(false);
+  if(!TITLE_ON()){if(TITLE.met.length){for(const m of TITLE.met)fxMeteorFree(m.spr);TITLE.met.length=0}titleAttract(false);
     if(TITLE.shipHid){TITLE.shipHid=false;if(typeof SHIP!=="undefined"&&SHIP)SHIP.g.visible=true}return}
   // clean hero shot: battlefield objects, drifting rocks and the carrier stay out of the title backdrop
   // (fieldStep, which runs just before this, restores the field and rocks once the title is left)
@@ -20,16 +20,16 @@ function titleStep(rdt){
   const lowQ=QLEVEL==="low";
   if(t>=TITLE.nextMet&&TITLE.met.length<(lowQ?3:6)){TITLE.nextMet=t+.35+Math.random()*.55;
     const p=camera.position.clone().addScaledVector(fwd,110+Math.random()*90).addScaledVector(R,-60+Math.random()*150).addScaledVector(U,30+Math.random()*45);
-    TITLE.met.push({p,v:R.clone().multiplyScalar(-(14+Math.random()*14)).addScaledVector(U,-(38+Math.random()*20)),life:2.6+Math.random()*1.2,big:false})}
+    TITLE.met.push({p,v:R.clone().multiplyScalar(-(14+Math.random()*14)).addScaledVector(U,-(38+Math.random()*20)),life:2.6+Math.random()*1.2,big:false,spr:fxMeteorNew()})}
   if(t>=TITLE.nextBig){TITLE.nextBig=t+5+Math.random()*4;
     const p=camera.position.clone().addScaledVector(fwd,80+Math.random()*40).addScaledVector(R,10+Math.random()*50).addScaledVector(U,26+Math.random()*14);
-    TITLE.met.push({p,v:R.clone().multiplyScalar(-(10+Math.random()*6)).addScaledVector(U,-(20+Math.random()*8)),life:4.2,big:true})}
+    TITLE.met.push({p,v:R.clone().multiplyScalar(-(10+Math.random()*6)).addScaledVector(U,-(20+Math.random()*8)),life:4.2,big:true,spr:fxMeteorNew()})}
   for(let i=TITLE.met.length-1;i>=0;i--){const m=TITLE.met[i];m.life-=rdt;m.p.addScaledVector(m.v,rdt);
     const fade=Math.min(1,m.life*1.5),k=m.big?1.5:1;
-    emit(ADD,{pos:m.p.clone(),color:0xffa848,s0:3.2*k,s1:.3,life:m.big?.8:.5,a:.8*fade});
+    if(m.spr)fxMeteorSet(m.spr,m.p,m.v,(m.big?30:18),fade);else emit(ADD,{pos:m.p.clone(),color:0xffa848,s0:3.2*k,s1:.3,life:m.big?.8:.5,a:.8*fade});
     emit(ADD,{pos:m.p.clone(),color:0xfff0c8,s0:1.5*k,s1:.2,life:.1,a:fade});
     if(m.big&&Math.random()<.25)emit(NORM,{pos:m.p.clone(),tex:TX.smoke,color:0x4a4640,vel:new V3(0,1.5,0),s0:2,s1:7,life:1.6,a:.14,drag:1});
-    if(m.life<=0)TITLE.met.splice(i,1)}
+    if(m.life<=0){fxMeteorFree(m.spr);TITLE.met.splice(i,1)}}
 }
 // returns true when it placed the camera (title only)
 function titleCamera(rdt){if(!TITLE_ON())return false;const t=TITLE.t,sw=Math.sin(t*.07)*.32;
