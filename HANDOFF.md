@@ -395,6 +395,6 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 
 ## 40. 게임 이름 ARCLIGHT · 새 로고 (10/29 02:10)
 - 제목 ORBIT BREAKER → ARCLIGHT (부제 없음). 주소·저장소·localStorage 키(ob.*)는 그대로.
-- ui/logo.webp = 사용자 생성 워드마크(빛줄기 버전)에서 빛줄기를 지우고 A 다리를 복원한 글자만 이미지(1707×251).
+- ui/logo_arclight.webp (캐시 때문에 새 이름) = 사용자 생성 워드마크(빛줄기 버전)에서 빛줄기를 지우고 A 다리를 복원한 글자만 이미지(1707×251).
   빛줄기는 CSS `.logo .beam`(A 가로획 자리, left -1.6% · width 23.2% · top 52.6%) — 메인 등장 때 beamFire, 이후 beamIdle 반짝임. 인트로 타이틀 카드(#inTitle)도 같은 로고.
 - 앱 아이콘: build_deploy 가 로고의 A + 빛줄기로 생성. 앱 이름·탭 제목·관리자 화면·CSV 파일명도 ARCLIGHT.

@@ -572,7 +572,7 @@ body.versus #hpRow,body.tut #hpRow{display:none}
 #netStatus:not(.off){display:none}
 #loadStatus:not(.err){display:none}
 #loadStatus.err{font-size:15px;color:#fff;background:rgba(120,20,14,.85);border:1px solid var(--red);padding:9px 14px}
-/* ARCLIGHT wordmark (ui/logo.webp, 1707x251, letters only) + the light beam that forms the A's crossbar, drawn in CSS so it can fire */
+/* ARCLIGHT wordmark (ui/logo_arclight.webp, 1707x251, letters only) + the light beam that forms the A's crossbar, drawn in CSS so it can fire */
 .logo{position:relative;width:fit-content;max-width:100%;--lw:min(600px,100%)}
 .logo img{width:var(--lw);max-width:100%;margin:0;filter:drop-shadow(0 4px 18px rgba(0,0,0,.55))}
 .logo .beam{position:absolute;left:-1.6%;width:23.2%;top:52.6%;height:clamp(2px,calc(var(--lw)*.0052),5px);transform:translateY(-50%);transform-origin:8% 50%;pointer-events:none;border-radius:50%;
@@ -967,7 +967,7 @@ body:not(.versus):not(.tut) #hud[hidden]~#feed{display:none}
 <section class="screen" id="scrTitle">
   <div class="tTop"><div class="event">제3회 SW융합대학 학술제 · <b>E-SPORTS</b> 공식 종목</div><div class="tRight"><button class="sndBtn" type="button" id="installBtn" hidden>앱으로 설치</button><button class="sndBtn icoBtn" type="button" data-settings><img class="ico" src="ui/ic_gear.webp" alt="">설정</button><div class="status" id="netStatus"><span class="dot"></span>기록 서버 연결 중</div></div></div>
   <div class="tMain">
-    <h1 class="logo"><img src="ui/logo.webp" alt="ARCLIGHT"><i class="beam" aria-hidden="true"></i></h1>
+    <h1 class="logo"><img src="ui/logo_arclight.webp" alt="ARCLIGHT"><i class="beam" aria-hidden="true"></i></h1>
     <div class="tagline"><i></i>120초 우주 메카 스코어 어택</div>
     <nav class="menu" id="menu">
       <button class="mi pri" data-go="form" type="button"><span class="k"><img class="ico" src="ui/ic_play.webp" alt=""></span><span class="t">출격</span><span class="s">SORTIE</span></button>
@@ -1157,7 +1157,7 @@ body:not(.versus):not(.tut) #hud[hidden]~#feed{display:none}
 <div id="intro" hidden><div class="ib"></div><div class="lb top"></div><div class="lb bot"></div>
   <div id="inCardBox"><div id="inCard"></div><div id="inSub"></div></div><div id="inLine"></div>
   <div id="inMsg"><div class="mh">다현</div><div class="bA" id="inMsgA"></div><div class="bB" id="inMsgB"></div></div>
-  <div id="inTitle"><h2 class="logo"><img src="ui/logo.webp" alt="ARCLIGHT"><i class="beam" aria-hidden="true"></i></h2></div><div class="skip lbl">Space — 건너뛰기</div></div>
+  <div id="inTitle"><h2 class="logo"><img src="ui/logo_arclight.webp" alt="ARCLIGHT"><i class="beam" aria-hidden="true"></i></h2></div><div class="skip lbl">Space — 건너뛰기</div></div>
 <div id="tutEnd" hidden><p id="tutEndA"></p><p id="tutEndB"></p><div class="btns"><button class="btn primary" type="button" id="tutGo">실전 출격</button><button class="btn" type="button" id="tutBack">메인으로</button></div></div>
 <div id="cine" hidden><div class="lb top"></div><div class="lb bot"></div><div class="cTag"><span class="lbl">CATAPULT 02 · LAUNCH SEQUENCE</span></div>
   <div class="cSub" id="cineSub"><span class="who" id="subWho"></span><span id="subTxt"></span></div><div class="skip lbl">Space · Click — 건너뛰기</div><div class="cFade"></div></div>

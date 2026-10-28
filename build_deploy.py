@@ -38,12 +38,12 @@ shutil.copy('admin.html',D+'/admin.html')  # /admin: ranking management (passwor
 os.makedirs(D+'/sfx',exist_ok=True)
 SFX=sorted(f[:-4] for f in os.listdir('sfx') if f.endswith('.mp3')) if os.path.isdir('sfx') else []
 [shutil.copy('sfx/%s.mp3'%k,D+'/sfx/') for k in SFX];os.path.isdir('vo') and shutil.copytree('vo',D+'/vo',dirs_exist_ok=True);json.dump(SFX,open(D+'/sfx/list.json','w'));os.path.exists('sfx/preview.html') and shutil.copy('sfx/preview.html',D+'/sfx/');print('sfx',SFX)
-im=Image.open('ui/logo.webp');im.thumbnail((1300,1300));im.save(D+'/ui/logo.webp',quality=86,method=6)  # ARCLIGHT wordmark: shown up to ~720px wide at 1.5x
+im=Image.open('ui/logo_arclight.webp');im.thumbnail((1300,1300));im.save(D+'/ui/logo_arclight.webp',quality=86,method=6)  # ARCLIGHT wordmark: shown up to ~720px wide at 1.5x
 Image.open('ui/panel.webp').save(D+'/ui/panel.webp',quality=70,method=6)
 # icons: logo on a dark square
 # icons: the wordmark's "A" with its amber light beam (the full wordmark is unreadable at icon size)
 from PIL import ImageDraw,ImageFilter
-lg=Image.open('ui/logo.webp').convert('RGBA');A=lg.crop((0,0,int(lg.size[0]*.165),lg.size[1]))
+lg=Image.open('ui/logo_arclight.webp').convert('RGBA');A=lg.crop((0,0,int(lg.size[0]*.165),lg.size[1]))
 for s in (192,512):
     bg=Image.new('RGBA',(s,s),(7,8,10,255));l=A.copy();l.thumbnail((int(s*.62),int(s*.62)));ox,oy=(s-l.size[0])//2,(s-l.size[1])//2;bg.alpha_composite(l,(ox,oy))
     by=oy+int(l.size[1]*.526);x0,x1=ox-int(s*.04),ox+int(l.size[0]*1.05);glow=Image.new('RGBA',(s,s),(0,0,0,0));d=ImageDraw.Draw(glow)
