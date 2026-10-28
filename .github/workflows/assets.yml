@@ -1,0 +1,40 @@
+# asset pipeline (never deploys): push source GLBs in tools/assets/src to an assets/* branch ->
+# gltf-transform (meshopt, quantize, webp, resize, simplify) + preview renders -> published to the asset-out branch
+name: assets
+on:
+  push:
+    branches: ['assets/**']
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: npm ci && npm i --no-save @gltf-transform/cli@4
+      - run: pip install pillow playwright && python -m playwright install --with-deps chromium
+      - name: optimize
+        run: |
+          mkdir -p out /tmp/aout
+          GT="npx gltf-transform"
+          $GT inspect tools/assets/src/boss.glb > /tmp/aout/boss_src.txt || true
+          $GT optimize tools/assets/src/boss.glb out/boss.glb --compress meshopt --simplify false --texture-compress webp --texture-size 2048
+          $GT optimize tools/assets/src/boss_pod.glb out/boss_pod.glb --compress meshopt --simplify-ratio 0.006 --simplify-error 0.02 --texture-compress webp --texture-size 1024
+          $GT inspect out/boss.glb > /tmp/aout/boss.txt; $GT inspect out/boss_pod.glb > /tmp/aout/boss_pod.txt
+          ls -la out >> /tmp/aout/sizes.txt
+          cp out/*.glb /tmp/aout/
+      - name: previews
+        run: |
+          (python -m http.server 8765 >/dev/null 2>&1 &) ; sleep 2
+          python tools/assets/shots.py /tmp/aout
+      - name: publish
+        if: always()
+        run: |
+          cd /tmp/aout && git init -q && git checkout -q -b asset-out && git add -A
+          git -c user.name=asset-bot -c user.email=a@users.noreply.github.com commit -q -m "assets ${GITHUB_SHA::7}"
+          git push -q -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} asset-out
