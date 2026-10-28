@@ -202,7 +202,7 @@ function hudUpdate(){
   setT("score",S.score.toLocaleString());setT("kills",S.kills||0);setT("best",S.best);
   const top=BOARD.length?BOARD[0].best:0;setT("topScore",top?top.toLocaleString():"—");
   if(top){const g=S.score-top;setT("gap",g>=0?"1위 페이스":g.toLocaleString());setC("gap","ahead",g>=0)}else setT("gap","");
-  setW("boostF",S.boost);setT("boostV",Math.round(S.boost));
+  {const b=Math.max(.5,S.boost).toFixed(1);if(HC.bst!==b){HC.bst=b;$("boostF").style.setProperty("--b",b)}const low=S.boost<(VS?25:15);if(HC.bstL!==low){HC.bstL=low;$("boostG").classList.toggle("low",low)}}setT("boostV",Math.round(S.boost));
   setW("heatF",S.heat);setT("mult",Math.round(S.heat)+"%");setC("heatG","hot",S.heat>=80||S.over>0);setH("heatG",!VS);
   setC("comboBox","live",G.kc>0);setT("kcNum",G.kc);setT("kcMult","×"+mult().toFixed(1));setW("kcBar",G.kc>0?G.kcT/KC_WINDOW*100:0);
   setT("phaseTag","단계 "+(G.phase+1)+" / 4"+(G.phase>=3?" · ×2":""));setH("critTag",!(G.crit>0));

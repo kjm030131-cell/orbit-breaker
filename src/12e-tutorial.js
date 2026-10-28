@@ -80,3 +80,12 @@ $("tutBtn").addEventListener("click",startTutorial);
 function tutDone(){try{return localStorage.getItem("ob.tutDone")==="1"}catch(e){return true}}
 function tutHintRefresh(){const d=tutDone();$("tutHint").hidden=d;$("tutBtn").classList.toggle("hot",!d);if(!d&&SCREEN==="title"){const i=menuItems.indexOf($("tutBtn"));if(i>=0&&menuSel!==i){menuSel=i;markMenu()}}}
 tutHintRefresh();
+
+// first sortie of a browser that has never played the tutorial: offer it once per session
+let tutAskSeen=false;try{tutAskSeen=sessionStorage.getItem("ob.tutAsk")==="1"}catch(e){}
+function tutAskOpen(){$("tutAsk").hidden=false;sfx("ui");setTimeout(()=>$("taTut").focus(),40)}
+function tutAskClose(){$("tutAsk").hidden=true;tutAskSeen=true;try{sessionStorage.setItem("ob.tutAsk","1")}catch(e){}}
+document.addEventListener("click",e=>{const b=e.target.closest('#scrTitle [data-go="form"]');if(!b||tutDone()||tutAskSeen)return;e.stopImmediatePropagation();e.preventDefault();tutAskOpen()},true);
+$("taTut").addEventListener("click",()=>{tutAskClose();startTutorial()});
+$("taGo").addEventListener("click",()=>{tutAskClose();sfx("uiok");show("form")});
+addEventListener("keydown",e=>{if($("tutAsk").hidden)return;if(e.code==="Escape"){e.preventDefault();e.stopImmediatePropagation();$("taGo").click()}else if(e.code==="Enter"&&document.activeElement!==$("taGo")){e.preventDefault();e.stopImmediatePropagation();$("taTut").click()}},true);
