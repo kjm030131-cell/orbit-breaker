@@ -7,6 +7,7 @@ const wpGeo=new THREE.IcosahedronGeometry(1.3,0),wpArmor=new THREE.OctahedronGeo
 function spawnBoss(){
   if(!EN_MESH||BOSS.e||BOSS.dead||SCREEN!=="play")return;
   const g=new THREE.Group(),sc=3.6*6;
+  if(BOSS_GLTF){bossBuildModel(g)}else{
   const mat=EN_MESH.material.clone();mat.color.setRGB(.55,.42,.42);mat.emissive=new THREE.Color(0);
   const body=new THREE.Mesh(EN_MESH.geometry,mat);body.scale.setScalar(sc);body.position.y=-.5*sc;g.add(body);g.userData.mat=mat;
   // carrier ring + spines so the silhouette reads as a different, bigger class
@@ -15,27 +16,29 @@ function spawnBoss(){
   for(let i=0;i<6;i++){const sp=new THREE.Mesh(new THREE.BoxGeometry(sc*.06,sc*.06,sc*.42),ringMat);const a=i/6*Math.PI*2;
     sp.position.set(Math.sin(a)*sc*.62,-.05*sc,Math.cos(a)*sc*.62);sp.rotation.y=a;ring.add(sp);sp.position.set(Math.sin(a)*sc*.62,Math.cos(a)*sc*.62,0);sp.rotation.set(0,0,a)}
   const eye=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff2040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
-  eye.position.set(0,(.655-.5)*sc,.2*sc);eye.scale.set(3,3,1);g.add(eye);g.userData.eye=eye;
+  eye.position.set(0,(.655-.5)*sc,.2*sc);eye.scale.set(3,3,1);g.add(eye);g.userData.eye=eye;}
   const from=S.pos.clone().addScaledVector(fwd(),95).add(new V3(0,14,0));g.position.copy(from);scene.add(g);
-  const e={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:0,flash:0,elite:false,rad:9,isBoss:true,down:0,yaw:Math.atan2(S.pos.x-from.x,S.pos.z-from.z),tele:0,teleDir:new V3(),fireT:99};
+  const e={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:0,flash:0,elite:false,rad:BOSS_GLTF?10.5:9,isBoss:true,down:0,yaw:Math.atan2(S.pos.x-from.x,S.pos.z-from.z),tele:0,teleDir:new V3(),fireT:99};
   enemies.push(e);BOSS.e=e;BOSS.atkT=4;BOSS.mode=0;BOSS.down=0;BOSS.introT=3.2;
   buildWPs();
   sfx("radio");setTimeout(()=>{if(!S.ended){sfx("phase");cutin("케르고그모스 출현","아르고스 지휘기")}},400);
   radio("CIC","지휘기 케르고그모스 출현! 붉게 빛나는 약점 포드 3개를 먼저 부숴요!") /* vo_op04 says the old boss name: re-record, then add "vo_op04" back */;
 }
 function buildWPs(){
-  BOSS.wps=WP_OFF.map((off,i)=>{const g=new THREE.Group();
+  const pod=!!(POD_GLTF&&BOSS.e&&BOSS.e.m.userData.anim);
+  BOSS.wps=(pod?WP_OFF2:WP_OFF).map((off,i)=>{const g=new THREE.Group();
+    if(pod)podBuild(g);else{
     const mat=new THREE.MeshStandardMaterial({color:0x3a2226,metalness:.6,roughness:.4,envMap:ENV,emissive:0x000000,flatShading:true});
     const arm=new THREE.Mesh(wpArmor,mat);g.add(arm);g.userData.mat=mat;g.userData.arm=arm;
     const core=new THREE.Mesh(wpGeo,new THREE.MeshBasicMaterial({color:0xff3a30}));core.scale.setScalar(.75);g.add(core);g.userData.core=core;
-    const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff4030,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));glow.scale.set(3.2,3.2,1);g.add(glow);g.userData.glow=glow;
+    const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff4030,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));glow.scale.set(3.2,3.2,1);g.add(glow);g.userData.glow=glow;}
     scene.add(g);
-    const w={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:i,flash:0,elite:false,rad:2.6,isWP:true,hp:WP_HP,off,tele:0,teleDir:new V3(),fireT:99,yaw:0};
+    const w={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:i,flash:0,elite:false,rad:pod?POD_R:2.6,isWP:true,hp:WP_HP,off,pod,tele:0,teleDir:new V3(),fireT:99,yaw:0};
     enemies.push(w);return w});
   placeWPs(0);
 }
 function placeWPs(T){const b=BOSS.e;if(!b)return;b.m.updateMatrixWorld(true);const sc=3.6*6;
-  for(const w of BOSS.wps){if(!w.alive)continue;const o=w.off.clone().multiplyScalar(sc*.55);o.y+=Math.sin(T*2+w.phase)*.4;
+  for(const w of BOSS.wps){if(!w.alive)continue;if(w.pod){podPlace(w,b,T);continue}const o=w.off.clone().multiplyScalar(sc*.55);o.y+=Math.sin(T*2+w.phase)*.4;
     w.m.position.copy(o.applyMatrix4(b.m.matrixWorld));w.m.userData.arm.rotation.y+=.02;w.m.userData.arm.rotation.x+=.013;
     const k=w.hp/WP_HP;w.m.userData.glow.material.opacity=.55+.45*Math.sin(T*(8+(1-k)*14));}
 }
@@ -62,7 +65,8 @@ function bossDie(b,chainN){
   cutin("지휘기 격파","+12,000");radio("CIC","케르고그모스 격파 확인! 우리엘 1, 최고예요!");
   BOSS.e=null;
 }
-function bossAI(b,dt,T){
+function bossAI(b,dt,T){bossAI0(b,dt,T);bossAnim(b,dt,T)}
+function bossAI0(b,dt,T){
   const m=b.m,to=S.pos.clone().sub(m.position),d=to.length();to.normalize();b.phase+=dt;
   const ring=m.userData.ring;
   if(b.down>0){b.down-=dt;m.rotation.z=Math.sin(b.phase*3)*.12;m.position.y-=dt*1.2;if(ring)ring.rotation.z+=dt*.2;
@@ -83,14 +87,14 @@ function bossAI(b,dt,T){
   else{BOSS.atkT-=dt;if(BOSS.atkT<=0&&d<70){BOSS.tele=1;sfx("tele",m.position,1);sfx("tele",m.position,0)}}
 }
 function bossFire(b){
-  const from=b.m.position.clone().add(new V3(0,1.5,0)),base=S.pos.clone().sub(from).normalize();
+  const from=b.m.userData.anim?b.m.userData.eye.getWorldPosition(new V3()):b.m.position.clone().add(new V3(0,1.5,0)),base=S.pos.clone().sub(from).normalize();
   const up=new V3(0,1,0),side=new V3().crossVectors(base,up).normalize();
   if(BOSS.mode%2===0){ // 5-way fan, aimed: dodge sideways or vertically
     for(let i=-2;i<=2;i++){const dir=base.clone().applyAxisAngle(up,i*.11);fireEnemyBolt(from,dir,false,b,36)}}
   else{ // three tight, staggered volleys aimed at where you'll be
     for(let k=0;k<3;k++)setTimeout(()=>{if(!b.alive||b.down>0||S.ended)return;const lead=S.pos.clone().addScaledVector(S.vel,.35).sub(from).normalize();
-      for(let j=-1;j<=1;j+=2)fireEnemyBolt(from.clone().addScaledVector(side,j*2.5),lead,true,b,34)},k*(BOSS.phase2?200:260))}
-  BOSS.mode++;BOSS.atkT=(BOSS.phase2?2.1:2.6)+Math.random()*.6;b.m.userData.eye.scale.setScalar(3);S.shake=Math.max(S.shake,.25);
+      for(let j=-1;j<=1;j+=2)fireEnemyBolt(from.clone().addScaledVector(side,j*2.5),lead,true,b,34);bossKick(b,.55)},k*(BOSS.phase2?200:260))}
+  bossKick(b,1);BOSS.mode++;BOSS.atkT=(BOSS.phase2?2.1:2.6)+Math.random()*.6;b.m.userData.eye.scale.setScalar(3);S.shake=Math.max(S.shake,.25);
 }
 function bossTick(dt,rdt,T){placeWPs(T)}
 function resetBoss(){
