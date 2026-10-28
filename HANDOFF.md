@@ -7,7 +7,9 @@
 - ✅ 시작할 때: 저장소를 GitHub 에서 새로 clone(또는 `git pull`)하고, 이 문서를 끝까지 읽고 시작.
 - ✅ 수정 흐름: `src/*.js`·`head2.html` 수정 → `python3 build.py` → `node --check game.js` → `node --test tests/*.test.mjs` → commit → `git push` → `gh run watch` 로 배포 성공 확인.
 - ✅ 큰 작업은 브랜치에서 하고 테스트 후 main 에 merge (main 이외 브랜치는 배포 안 됨).
-- 롤백: Actions 에서 이전 성공 run 을 `gh run rerun <id>` 하거나, `origin/stable-pre-tutorial`(튜토리얼 이전) 같은 백업 브랜치를 main 으로 되돌려 push.
+- 롤백: Actions 에서 이전 성공 run 을 `gh run rerun <id>` 하거나, 백업 브랜치를 main 으로 되돌려 push.
+  백업 브랜치: `backup-20261028-1422`(10/28 14:22 전체 작업본 · 대전 v8·튜토리얼 확장·하이퍼 메가 런처 포함), `stable-pre-tutorial`(튜토리얼 이전).
+  되돌리기 예: `git checkout main && git reset --hard origin/backup-20261028-1422 && git push --force-with-lease origin main` (사용자 확인 후에만).
 - 대전 서버 프로토콜 VERSION(pvp/src/arena.js) 을 바꾸면 클라이언트 `src/12c-versus.js` 의 `&v=` 도 같이 바꿀 것.
 - 사용자 규칙: 항상 한국어로 답, 쉬지 말고 이어서 작업, AI 에셋 프롬프트는 에셋 하나당 공통 문구까지 합친 완성형 1개, 프롬프트 요청 시 한국어로.
 - 테스트 팁: 클라우드 환경엔 GPU 가 없어 브라우저 테스트가 매우 느림(프레임당 2~3초). 오래 걸리는 시각 검증은 사용자 PC 에서 확인 요청.
