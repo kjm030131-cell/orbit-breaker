@@ -40,7 +40,7 @@ const TUT_STEPS=[
    say:[[OP,"기체 동조 확인. 우선 움직여 봐요. 앞에 표시한 지점까지."]],
    enter(){tutWaypoint(tutAhead(70,0,4))},done(){return TUT.wp&&S.pos.distanceTo(TUT.wp.position)<12},exit(){tutWaypoint(null)}},
   {obj:"Shift 짧게 = 회피, 길게 = 부스트  ·  회피 2회",prog:()=>`${Math.min(2,TUT.c.dodge||0)} / 2`,
-   say:[[OP,"좋아요. Shift를 짧게 누르면 회피, 누르고 있으면 부스트예요. 두 번 피해 봐요."]],
+   say:[[OP,"좋아요. Shift를 짧게 누르면 회피, 누르고 있으면 부스트예요. 두 번 피해 봐요."],[OP,"맞아서 비틀거릴 때도 Shift. 부스트를 써서 바로 자세를 잡아요."]],
    done(){return (TUT.c.dodge||0)>=2}},
   {obj:"빔 라이플(우클릭)로 정찰기 3기 격추  ·  조준선이 빨개지면 발사",prog:()=>`${Math.min(3,TUT.c.kill||0)} / 3`,
    say:[[OP,"전방에 적 정찰기 3기. 조준선이 빨갛게 변하는 순간 쏴요."]],

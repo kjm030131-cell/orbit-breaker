@@ -35,7 +35,7 @@ export class Arena {
   s.pending=s.pending.filter(x=>x.side!==side||x.kind==='pulse');this.emit({t:'damage',side,d,dir,kind,hp:p.hp,heavy});this.status();if(p.hp<=0)this.end(other(side),'ko',now);return true;
  }
  advance(now){const s=this.s;s.at=now;if(s.phase==='roundEnd'){if(now>=s.nextAt)this.start(now,s.replay);return;}if(s.phase==='count'&&now>=s.startAt)s.phase='fight';if(s.phase!=='fight')return;
-  for(const p of Object.values(s.players)){const dt=Math.max(0,Math.min(1,(now-p.at)/1000));p.at=now;const regen=30*(s.rules.passives&&p.frame==='swift'?1.1:1);p.boost=Math.max(0,Math.min(100,p.boost+(p.boosting&&now-p.poseAt<250?-28:regen)*dt));p.heat=Math.max(0,p.heat-(now<p.overUntil?30:14)*dt);if(p.overUntil&&now>=p.overUntil){p.overUntil=0;p.heat=40;}if(s.rules.skills)p.spec=Math.min(100,p.spec+5*dt);if(!p.guard&&now-p.gpHit>800)p.gp=Math.min(100,p.gp+30*dt);}
+  for(const p of Object.values(s.players)){const dt=Math.max(0,Math.min(1,(now-p.at)/1000));p.at=now;const regen=34*(s.rules.passives&&p.frame==='swift'?1.1:1);p.boost=Math.max(0,Math.min(100,p.boost+(p.boosting&&now-p.poseAt<250?-22:regen)*dt));p.heat=Math.max(0,p.heat-(now<p.overUntil?30:14)*dt);if(p.overUntil&&now>=p.overUntil){p.overUntil=0;p.heat=40;}if(s.rules.skills)p.spec=Math.min(100,p.spec+5*dt);if(!p.guard&&now-p.gpHit>800)p.gp=Math.min(100,p.gp+30*dt);}
   for(const x of [...s.pending]){if(now<x.at||s.phase!=='fight'||!s.pending.includes(x))continue;s.pending=s.pending.filter(y=>y!==x);const p=s.players[x.side],q=s.players[other(x.side)];if(!p||!q)continue;
    if(x.kind==='volley'){this.projectile(x.side,x.from,x.dir,x.dmg,x.speed,now,x.color);continue;}
    const d=sub(q.p,p.p),dist=len(d),f=[Math.sin(p.f),0,Math.cos(p.f)];
@@ -105,7 +105,7 @@ export class Arena {
 
   if(['dodge','swing','shot','skill'].includes(m.t))p.guard=false;
   if(m.t==='dodge'){
-   if(now<p.dodgeAt||now<p.lock||p.boost<25)return;p.boost-=25;p.dodgeAt=now+650;p.iframe=Math.max(p.iframe,now+180);
+   if(now<p.dodgeAt||now<p.lock||p.boost<20)return;p.boost-=20;p.dodgeAt=now+650;p.iframe=Math.max(p.iframe,now+180);
    const c=add(p.p,[0,.4,0]);const just=s.shots.some(b=>{if(b.side===side)return false;const rel=sub(c,add(b.from,b.dir,(now-b.at)/1000*b.speed)),along=dot(rel,b.dir);return along>=0&&along/b.speed<=.15&&len(sub(rel,b.dir.map(v=>v*along)))<2.4;})||s.pending.some(x=>x.side!==side&&x.kind==='melee'&&x.at-now>=0&&x.at-now<=150&&len(sub(q.p,p.p))<9);
    const readMelee=s.pending.some(x=>x.side!==side&&x.kind==='melee'&&x.at-now>=0&&x.at-now<=150&&len(sub(q.p,p.p))<9);
    if(readMelee){q.lock=Math.max(q.lock,now+READ_MS);q.stun=Math.max(q.stun,now+READ_MS);this.emit({t:'read',side});}

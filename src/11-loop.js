@@ -32,7 +32,7 @@ function update(rdt){
   let chase=1;if(VS&&boosting&&moving&&VS.remote){const to=VS.remote.root.position.clone().sub(S.pos);to.y=0;const ah=acc.clone().setY(0);if(to.lengthSq()>1&&ah.lengthSq()>.01&&ah.normalize().dot(to.normalize())>.7)chase=1.25}
   S.chase=chase>1;
   if(moving)acc.normalize().multiplyScalar((boosting&&!S.guard?94*chase:39.5)*(VS?vsSpeed()*(S.guard?.45:1):1)*((G.mega&&G.mega.slow)||G.vsBeam?.6:1));
-  S.boost=clamp(S.boost+(boosting?-28:30*(VS?vsRegen():1))*dt,0,100);
+  S.boost=clamp(S.boost+(boosting?-20:36*(VS?vsRegen():1))*dt,0,100);
   S.vel.addScaledVector(acc,dt);S.vel.multiplyScalar(Math.exp(-drag*dt));
   // buffered inputs: a click that lands up to ~0.2 s before the current swing / shot recovers fires as soon as it can
   if(S.bufT>0){S.bufT-=dt;if(S.buf==="a"&&S.attackCd<=0&&!S.dash){S.bufT=0;attack()}else if(S.buf==="s"&&S.shotCd<=0){S.bufT=0;shoot()}}

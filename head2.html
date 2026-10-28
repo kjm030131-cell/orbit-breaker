@@ -554,6 +554,13 @@ body{font-weight:500;letter-spacing:-.01em;font-feature-settings:"tnum" 1}
 #tutAsk p{margin:0 0 20px;color:#bdb8ad;font-size:15px;line-height:1.6}
 
 body.tut #radio{top:calc(96px + env(safe-area-inset-top,0px))}
+
+.hpRow{display:flex;align-items:center;gap:8px;margin-top:10px}.hpRow .lbl{min-width:30px}
+.hpBar{flex:1;height:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);position:relative;overflow:hidden}
+.hpBar i{position:absolute;inset:0 auto 0 0;width:100%;background:linear-gradient(90deg,#7fe0ff,#bff4ff);transition:width .15s}
+.hpRow.low .hpBar i{background:linear-gradient(90deg,#ff3a30,#ff7a50);animation:blow .5s steps(2) infinite}
+#hpV{min-width:34px;text-align:right;font-weight:700}
+body.versus #hpRow,body.tut #hpRow{display:none}
 </style>
 
 <div id="stage"></div>
@@ -588,6 +595,7 @@ body.tut #radio{top:calc(96px + env(safe-area-inset-top,0px))}
   <div class="hud tc"><div class="killBox"><span>격파<b id="kills">0</b></span><span>최대 연쇄<b id="best">0</b></span></div></div>
   <div class="hud tr radarBox"><canvas class="radar" id="radar" width="272" height="272"></canvas><div class="lbl">레이더</div></div>
   <div class="hud bl"><div class="plate"><div class="lbl">파일럿</div><div class="nm" id="pName">—</div><div class="dp" id="pDept"></div><div class="so">출격 <b id="pSortie">1/3</b></div><div class="armorTag" id="armorTag" hidden>장갑 보호 1회</div>
+    <div class="hpRow" id="hpRow"><span class="lbl">장갑</span><div class="hpBar"><i id="hpF"></i></div><b class="num" id="hpV">100</b></div>
     <div class="lives" id="lives"><i></i><i></i><i></i><span class="lbl" id="livesTxt">기체 3 / 3</span></div></div></div>
   <div class="hud bc">
     <div id="warn"></div>
