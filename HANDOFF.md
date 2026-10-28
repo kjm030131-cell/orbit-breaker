@@ -206,3 +206,9 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
   이펙트: fx_beam/fx_charge 를 흑백화한 ui/fx_mbeam·fx_mcharge(틴트용) + 튜브 셰이더 + 리본 3겹 + expl/ring/flare/electric. 사운드: sfx/megaCharge·megaFire·megaLoop·megaEnd.mp3 (기존 CC0 샘플 cataCharge·ignite·specBurst·boom·heavy·humtex·dash 를 ffmpeg 로 피치·레이어 믹스) + LOOP.mega 합성 드론 보강.
   아이콘 ui/u_mega·r_mega·f_mega 는 기존 아이콘 프레임 + 이펙트로 합성한 임시본(교체 가능).
 - PvP 프로토콜 v5: 서버 유닛 'mega'(R 0.7초 후 직선 빔 20, F 0.9초 후 굵은 빔 30, 정면 가드 시 게이지 -40/-70 + 칩), 라이플 명중 시 필살 +6. 클라 &v=5. 테스트 추가.
+
+## 20. 장갑 손상 · 피격 방향 표시 · HUD 글씨 시간 (10/28)
+- 첫 피격 = 장갑 손상(G.dmg): 기체 유지, 무피격 배율 초기화, 짧은 경직·넉백, 화면 가장자리 붉은 점멸 + "장갑 손상 · 복구까지 N초"(#dmgEdge).
+  6초(ARMOR_REPAIR) 안 맞으면 복구, 손상 중 한 대 더 = 기체 대파(기존 destroyMech). 반응 장갑 아이템은 그 앞의 1회 방어로 그대로.
+- 피격 방향 표시(#threats, threatMarks()): 조준 중인 적·돌격 드론·날아오는 적탄 중 화면 밖/뒤에 있는 것을 레티클 주변 원에 화살표로. 조준 고정·돌진·탄은 빨간 점멸.
+- 글씨 노출 시간: 가운데 알림(popText)을 큐로 바꿔 각 0.9초 이상·마지막 1.6초, 컷인 1.9초, 단계 배너 3.4초, 점수 숫자 1.4초, 무전 4.6초.

@@ -154,7 +154,7 @@ button{font:inherit;color:inherit}
 #hurt.on{animation:hurt .6s ease-out}
 @keyframes hurt{0%{opacity:1}100%{opacity:0}}
 #phase{position:fixed;left:50%;top:22%;transform:translateX(-50%);text-align:center;pointer-events:none;opacity:0;z-index:6}
-#phase.on{animation:phase 2.6s ease-out}
+#phase.on{animation:phase 3.4s ease-out}
 @keyframes phase{0%{opacity:0;transform:translate(-50%,10px)}12%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0}}
 #phaseSub{color:var(--amber)}
 #phaseName{font:800 40px var(--f-kdisp);margin-top:4px;text-shadow:0 2px 18px rgba(0,0,0,.6)}
@@ -297,6 +297,13 @@ body.tut #clockBox{visibility:hidden}
 #vsBar .gp{height:4px;margin-top:3px;background:rgba(255,255,255,.12)}#vsBar .gp i{display:block;height:100%;background:#7fe8ff;transition:width .15s}#vsBar .gp i.low{background:#ff8a40}
 #tutHint{margin:12px 0 0;padding:10px 14px;border-left:3px solid #ffb21a;background:rgba(255,178,26,.09);color:#e9e5dc;font-size:14px;line-height:1.5;max-width:440px}#tutHint[hidden]{display:none}#tutHint b{color:#ffb21a;margin-right:6px}
 #tutBtn.hot{border-left-color:#ffb21a;animation:tbp 1.6s ease-in-out infinite}#tutBtn.hot .t::after{content:"추천";margin-left:10px;font-size:11px;padding:2px 7px;background:#ffb21a;color:#1a1408;border-radius:3px;vertical-align:2px}@keyframes tbp{50%{background:rgba(255,178,26,.12)}}
+/* incoming-fire direction markers (off-screen threats) + damaged-armour edge */
+#threats{position:fixed;inset:0;pointer-events:none;z-index:4}
+#threats i{position:absolute;left:0;top:0;width:34px;height:26px;margin:-13px 0 0 -17px;display:none;background:#ffab2e;clip-path:polygon(100% 50%,0 0,26% 50%,0 100%);filter:drop-shadow(0 0 6px rgba(255,150,40,.9))}
+#threats i.lock{background:#ff3a30;filter:drop-shadow(0 0 8px rgba(255,40,30,1));animation:thr .2s steps(2) infinite}@keyframes thr{50%{opacity:.45}}
+#dmgEdge{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;transition:opacity .3s;background:radial-gradient(ellipse at center,transparent 55%,rgba(255,40,30,.32) 100%)}
+body.dmg #dmgEdge{opacity:1;animation:dme 1.1s ease-in-out infinite}@keyframes dme{50%{opacity:.55}}
+#dmgEdge b{position:absolute;left:50%;bottom:24%;transform:translateX(-50%);font:800 16px var(--f-kdisp);color:#ff5a48;letter-spacing:.04em;text-shadow:0 1px 8px rgba(0,0,0,.8)}
 #lockWarn{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;visibility:hidden;background:radial-gradient(ellipse at center,transparent 58%,rgba(255,30,30,.42) 100%)}
 #lockWarn.on{visibility:visible}
 #lockWarn b{position:absolute;left:50%;top:calc(44% + 46px);transform:translateX(-50%);font:700 13px var(--f-mono,monospace);letter-spacing:.12em;color:#ff4038;text-shadow:0 0 8px rgba(255,40,40,.8)}
@@ -313,11 +320,11 @@ body.tut #clockBox{visibility:hidden}
 #lock i:nth-child(3){left:0;bottom:0;border-width:0 0 2px 2px}
 #lock i:nth-child(4){right:0;bottom:0;border-width:0 2px 2px 0}
 #lock span{position:absolute;left:62px;top:-2px;font:500 11px var(--f-mono);letter-spacing:.03em;color:#7fe8ff;white-space:nowrap}
-#pop{position:fixed;left:50%;top:30%;transform:translate(-50%,-50%);font-family:var(--f-stencil);font-size:54px;color:var(--amber);pointer-events:none;z-index:6;opacity:0;transition:opacity .2s,transform .2s;white-space:nowrap}
+#pop{position:fixed;left:50%;top:27%;transform:translate(-50%,-50%);font-family:var(--f-stencil);font-size:46px;color:var(--amber);pointer-events:none;z-index:6;opacity:0;transition:opacity .2s,transform .2s;white-space:nowrap}
 #pop.on{opacity:1;transform:translate(-50%,-62%)}
 #cutin{position:fixed;left:0;right:0;top:58%;height:104px;z-index:7;pointer-events:none;transform:translateX(-110%);background:var(--amber);display:flex;align-items:center;gap:28px;padding-left:12vw;overflow:hidden;clip-path:polygon(0 12%,100% 0,100% 88%,0 100%)}
-#cutin.go{animation:cut 1.05s cubic-bezier(.2,.9,.2,1) forwards}
-@keyframes cut{0%{transform:translateX(-110%)}22%{transform:translateX(0)}78%{transform:translateX(0)}100%{transform:translateX(110%)}}
+#cutin.go{animation:cut 1.9s cubic-bezier(.2,.9,.2,1) forwards}
+@keyframes cut{0%{transform:translateX(-110%)}12%{transform:translateX(0)}86%{transform:translateX(0)}100%{transform:translateX(110%)}}
 .visor{width:150px;height:56px;background:#14100a;clip-path:polygon(10% 0,90% 0,100% 50%,90% 100%,10% 100%,0 50%);display:grid;place-items:center}
 .visor i{display:block;width:104px;height:8px;background:#ffe9c4;box-shadow:0 0 18px 5px #ff6a2a}
 #cutin b{font-family:var(--f-stencil);font-weight:400;font-size:48px;color:var(--amber-ink)}
@@ -489,7 +496,7 @@ body{font-variant-numeric:tabular-nums;word-break:keep-all}
 
 <div id="stage"></div>
 <div id="flash"></div>
-<div id="hurt"></div>
+<div id="hurt"></div><div id="dmgEdge"><b id="dmgTxt"></b></div><div id="threats"><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
 <!-- in-game HUD -->
 <div id="hud" hidden>

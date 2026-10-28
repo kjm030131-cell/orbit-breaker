@@ -102,4 +102,4 @@ function resetBoss(){
 const FACES={CIC:"face_op",적:"face_ace",함장:"face_cap"};
 function radio(who,txt){const r=$("radio");if(!r)return;$("radioWho").textContent=who;const k=Object.keys(FACES).find(n=>who.includes(n)),f=$("radioFace");
   f.style.backgroundImage=k?`url(ui/${FACES[k]}.webp)`:"";f.textContent="";if(k){const im=new Image();im.onerror=()=>{f.style.backgroundImage=""};im.src=`ui/${FACES[k]}.webp`}$("radioTxt").textContent=txt;r.classList.remove("on");void r.offsetWidth;r.classList.add("on");
-  sfx("radio");clearTimeout(radio.h);radio.h=setTimeout(()=>r.classList.remove("on"),3600)}
+  sfx("radio");clearTimeout(radio.h);radio.h=setTimeout(()=>r.classList.remove("on"),4600)}

@@ -23,8 +23,8 @@ const POPS=[];const popWrap=document.createElement("div");popWrap.id="pops";$("h
 for(let i=0;i<16;i++){const d=document.createElement("div");d.className="spop";popWrap.appendChild(d);POPS.push({d,t:9,pos:new V3()})}
 let popI=0;
 function scorePop(pos,text,cls){const p=POPS[popI];popI=(popI+1)%POPS.length;p.t=0;p.pos.copy(pos);p.d.textContent=text;p.d.className="spop "+(cls||"")}
-function stepPops(dt){for(const p of POPS){if(p.t>1){if(p.d.style.opacity!=="0")p.d.style.opacity="0";continue}p.t+=dt;const v=p.pos.clone().project(camera);
-  if(v.z>1){p.d.style.opacity="0";continue}p.d.style.left=((v.x+1)/2*innerWidth)+"px";p.d.style.top=((1-v.y)/2*innerHeight-p.t*46)+"px";p.d.style.opacity=String(Math.min(1,(1-p.t)*2.2))}}
+function stepPops(dt){for(const p of POPS){if(p.t>1.4){if(p.d.style.opacity!=="0")p.d.style.opacity="0";continue}p.t+=dt;const v=p.pos.clone().project(camera);
+  if(v.z>1){p.d.style.opacity="0";continue}p.d.style.left=((v.x+1)/2*innerWidth)+"px";p.d.style.top=((1-v.y)/2*innerHeight-p.t*34)+"px";p.d.style.opacity=String(Math.min(1,(1.4-p.t)*2.2))}}
 
 /* ---- spawning: clusters + elites ---- */
 const SHIELD_GEO=new THREE.SphereGeometry(1,28,14,Math.PI*.08,Math.PI*.84,Math.PI*.16,Math.PI*.68);
@@ -141,6 +141,10 @@ function hurt(b){
   if(G.armor>0){G.armor=0;G.iframe=1;sfx("armor");popText("반응 장갑 작동");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:3,s1:14,life:.4});fxImpact(S.pos.clone().add(new V3(0,.8,0)),0x7fe0ff);S.vel.addScaledVector(b.dir,10);S.shake=.5;return}
   if(G.dead>0)return;
   fxImpact(S.pos.clone().add(new V3(0,.8,0)),0xff4030);sparks(S.pos,b.dir,0xffb080,20,.4,24);sfx("hurt");
+  // first hit only cracks the armour (score streak lost, short stagger); a second hit before it repairs destroys the frame
+  if(!(G.dmg>0)){G.dmg=1;G.dmgT=ARMOR_REPAIR;G.clean=0;G.iframe=Math.max(G.iframe,1.2);G.stagger=Math.max(G.stagger,.35);S.hitstop=Math.max(S.hitstop,.06);S.shake=Math.max(S.shake,.6);
+    if(b.dir){S.vel.addScaledVector(b.dir,16);S.freeT=.3}S.act=null;S.dash=0;S.dashT=null;S.pending=null;sfx("armor");flash(.18);
+    const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");document.body.classList.add("dmg");popText("장갑 손상");return}
   destroyMech(b.dir);
 }
 
@@ -197,15 +201,18 @@ function gameplayTick(dt,rdt,T){
   if(G.kcT>0){G.kcT-=dt;if(G.kcT<=0){if(G.kc>=5)popText("콤보 종료");G.kc=0}}
   if(G.dead>0){G.dead-=rdt;if(G.dead<=0)respawnMech()}
   else if(SCREEN==="play"&&S.started&&!S.ended){const was=cleanMult();G.clean+=dt;const now=cleanMult();if(now>was){popText(`무피격 ×${now.toFixed(1)}`);sfx("chain",null,2)}}
+  if(G.dmg>0&&G.dead<=0&&!VS){G.dmgT-=dt;const t=$("dmgTxt"),txt=`장갑 손상 · 복구까지 ${Math.max(0,G.dmgT).toFixed(1)}초`;if(t.textContent!==txt)t.textContent=txt;
+    if(G.dmgT<=0){G.dmg=0;document.body.classList.remove("dmg");popText("장갑 복구");sfx("pickup");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:12,life:.4})}}
+  threatMarks();
   G.guardCd=Math.max(0,G.guardCd-dt);
   G.iframe=Math.max(0,G.iframe-dt);G.stagger=Math.max(0,G.stagger-dt);G.dodgeCd=Math.max(0,G.dodgeCd-dt);G.crit=Math.max(0,G.crit-dt);
   stepEBolts(dt);stepPops(rdt);updateAim(T);itemsTick(dt,rdt,T);unitsTick(dt,rdt,T);bossTick(dt,rdt,T);vsTick(rdt);
 }
 function phaseBanner(p){const b=$("phase");$("phaseName").textContent=p.name;$("phaseSub").textContent=p.sub;b.classList.remove("on");void b.offsetWidth;b.classList.add("on")}
-function resetGameplay(){
+function resetGameplay(){document.body.classList.remove("dmg");
   for(const b of G.ebolts){scene.remove(b.g);b.g.children.forEach(c=>c.material.dispose())}
   for(const e of enemies)clearTele(e);
-  Object.assign(G,{spawnT:1.5,bigT:4,phase:0,kc:0,kcT:0,maxKC:0,crit:0,iframe:0,stagger:0,dodgeCd:0,ebolts:[],aimN:0,focus:null,lives:MAX_LIVES,dead:0,clean:0,guardCd:0});
+  Object.assign(G,{dmg:0,dmgT:0,spawnT:1.5,bigT:4,phase:0,kc:0,kcT:0,maxKC:0,crit:0,iframe:0,stagger:0,dodgeCd:0,ebolts:[],aimN:0,focus:null,lives:MAX_LIVES,dead:0,clean:0,guardCd:0});
   AIM_DOTS.forEach(s=>s.visible=false);resetItems();resetUnits();resetBoss();if(P)P.root.visible=true;
 }
 
@@ -219,13 +226,14 @@ function destroyMech(dir){
 }
 function respawnMech(){
   if(G.lives<=0){finishRun("lost");return}
-  G.iframe=3;G.respawnBlink=true;setTimeout(()=>{G.respawnBlink=false},2900);G.stagger=0;S.boost=100;S.heat=0;S.over=0;if(P)P.root.visible=true;
+  G.dmg=0;document.body.classList.remove("dmg");G.iframe=3;G.respawnBlink=true;setTimeout(()=>{G.respawnBlink=false},2900);G.stagger=0;S.boost=100;S.heat=0;S.over=0;if(P)P.root.visible=true;
   S.vel.copy(fwd().multiplyScalar(30));sfx("respawn");flash(.3);popText("예비기 출격");
   emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0xffb21a,s0:2,s1:22,life:.5});emit(ADD,{pos:S.pos.clone(),tex:TX.flare,color:0xffffff,s0:8,s1:14,life:.18});
 }
 
 /* ---- rammer drones: hunt, arm (flashing orange line), then charge in a straight line ---- */
 const RAM_SPEED=72;
+const ARMOR_REPAIR=6; // seconds without a hit to repair cracked armour
 function ramAI(e,dt,T){
   const em=e.m,eye=em.userData.eye,live=SCREEN==="play"&&!S.ended&&S.started;e.phase+=dt;
   if(e.rs==="hunt"){const to=S.pos.clone().sub(em.position),d=to.length();to.normalize();
@@ -246,3 +254,17 @@ function ramAI(e,dt,T){
     if(e.rt<=0){e.rs="hunt";e.rt=2.2+Math.random()*1.5}}
 }
 function ramBlow(e){e.alive=false;const p=e.m.position.clone();disposeEnemy(e);fxExplosion(p,1.2);sfx("boom",p,0)}
+
+/* ---- incoming-fire markers: arrows on a ring round the reticle point at threats that are off-screen or behind ---- */
+const THR={els:null,_v:new V3()};
+function threatMarks(){if(!THR.els)THR.els=[...document.querySelectorAll("#threats i")];const els=THR.els,list=[];
+  if(SCREEN==="play"&&!VS&&!S.ended&&G.dead<=0&&camera){
+    for(const e of enemies){if(!e.alive||e.launched>0)continue;const lock=e.tele>0&&e.teleLock||e.ram&&e.rs==="charge";if(!(e.tele>0||e.ram&&(e.rs==="arm"||e.rs==="charge")))continue;list.push({p:e.m.position,lock,d:e.m.position.distanceTo(S.pos)})}
+    for(const b of G.ebolts){if(b.dead||b.refl)continue;const rel=S.pos.clone().sub(b.g.position),d=rel.length();if(d>45||b.dir.dot(rel)/d<.85)continue;list.push({p:b.g.position,lock:true,d})}}
+  list.sort((a,b)=>(b.lock-a.lock)||(a.d-b.d));
+  const cx=innerWidth/2,cy=innerHeight*.44,R=Math.min(innerWidth,innerHeight)*.3;let n=0;
+  for(const t of list){if(n>=els.length)break;const v=THR._v.copy(t.p).applyMatrix4(camera.matrixWorldInverse);
+    const behind=v.z>0,pr=THR._v.copy(t.p).project(camera);if(!behind&&Math.abs(pr.x)<.82&&Math.abs(pr.y)<.78)continue; // on screen: the beam line already shows it
+    let a=Math.atan2(-v.y,v.x);if(behind&&Math.abs(v.x)<1e-3)a=Math.PI/2;const el=els[n++];
+    el.style.display="block";el.style.transform=`translate(${cx+Math.cos(a)*R}px,${cy+Math.sin(a)*R}px) rotate(${a}rad)`;el.classList.toggle("lock",t.lock)}
+  for(;n<els.length;n++)if(els[n].style.display!=="none")els[n].style.display="none"}

@@ -1,7 +1,11 @@
 /* ================= combat ================= */
 const fwd=()=>new V3(Math.sin(S.yaw),0,Math.cos(S.yaw));
 const camFwd=()=>new V3(Math.sin(S.yaw)*Math.cos(S.pitch),Math.sin(S.pitch),Math.cos(S.yaw)*Math.cos(S.pitch));
-function popText(t){const p=$("pop");p.textContent=t;p.classList.remove("on");void p.offsetWidth;p.classList.add("on");clearTimeout(popText.h);popText.h=setTimeout(()=>p.classList.remove("on"),650)}
+// centre callouts are queued so a burst of them is still readable: each shows at least 0.9 s, the last one 1.6 s
+const POPQ=[];let popBusy=0;
+function popText(t){if(POPQ[POPQ.length-1]===t||POPQ.length>=3&&POPQ.shift()===undefined)return;POPQ.push(t);if(!popBusy)popNext()}
+function popNext(){const p=$("pop");clearTimeout(popText.h);const t=POPQ.shift();if(t===undefined){popBusy=0;p.classList.remove("on");return}popBusy=1;
+  p.textContent=t;p.classList.remove("on");void p.offsetWidth;p.classList.add("on");popText.h=setTimeout(()=>{if(POPQ.length)popNext();else popText.h=setTimeout(()=>{popBusy=0;p.classList.remove("on")},700)},900)}
 function flash(a){const f=$("flash");f.style.transition="none";f.style.opacity=a;requestAnimationFrame(()=>{f.style.transition="opacity .18s";f.style.opacity=0})}
 function cutin(txt,sub){sfx("cutin");$("cutinTxt").textContent=txt||"연쇄 폭발";$("cutinSub").textContent=sub||"";const c=$("cutin");c.classList.remove("go");void c.offsetWidth;c.classList.add("go")}
 // targeting: only what sits near the crosshair; E locks a focus that the camera then keeps centred
