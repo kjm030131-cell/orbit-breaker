@@ -1,0 +1,38 @@
+# One-off: create the new Cloudflare Pages project for the game's new address.
+# Tries the names in order and keeps the first one whose address is exactly <name>.pages.dev
+# (pages.dev names are global: a taken name gets a random suffix, which is deleted and skipped).
+name: pages-setup
+on:
+  workflow_dispatch:
+    inputs:
+      names:
+        description: "candidate project names, space separated"
+        default: "arclight arclight-game arclight-schu"
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: create project
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCT: 336dcf3cc4d108f284f3b5c358959508
+          NAMES: ${{ inputs.names }}
+        run: |
+          api="https://api.cloudflare.com/client/v4/accounts/$ACCT/pages/projects"
+          for n in $NAMES; do
+            got=$(curl -s -H "Authorization: Bearer $CF_TOKEN" "$api/$n")
+            if echo "$got" | jq -e '.success' >/dev/null; then
+              sub=$(echo "$got" | jq -r '.result.subdomain')
+              echo "::notice title=exists::$n -> $sub"
+              if [ "$sub" = "$n.pages.dev" ]; then echo "::notice title=CHOSEN::$n"; exit 0; fi
+              continue
+            fi
+            res=$(curl -s -X POST -H "Authorization: Bearer $CF_TOKEN" -H "content-type: application/json" "$api" -d "{\"name\":\"$n\",\"production_branch\":\"main\"}")
+            if ! echo "$res" | jq -e '.success' >/dev/null; then echo "::warning title=create failed::$n $(echo "$res" | jq -c '.errors')"; continue; fi
+            sub=$(echo "$res" | jq -r '.result.subdomain')
+            echo "::notice title=created::$n -> $sub"
+            if [ "$sub" = "$n.pages.dev" ]; then echo "::notice title=CHOSEN::$n"; exit 0; fi
+            curl -s -X DELETE -H "Authorization: Bearer $CF_TOKEN" "$api/$n" >/dev/null
+            echo "::notice title=deleted::$n (address taken, got $sub)"
+          done
+          echo "::error title=none::no clean name available"; exit 1
