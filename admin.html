@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>관리자 · ORBIT BREAKER</title>
+<link rel="stylesheet" href="lib/pretendardvariable-dynamic-subset.css">
+<style>
+:root{--bg:#07080a;--panel:#101317;--panel-2:#161a1f;--line:#2a2f35;--line-2:#3a4148;--amber:#ffb21a;--amber-ink:#1d1300;--bone:#ebe6da;--muted:#8d8a82;--red:#ff5a4a;--ok:#a6d96a;--cyan:#7fe0ff;
+  --f:"Pretendard Variable",Pretendard,system-ui,-apple-system,"Malgun Gothic",sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--bone);font:15px/1.5 var(--f)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 60px}
+header{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.brand{display:flex;flex-direction:column;margin-right:auto}
+.brand b{font-size:12px;letter-spacing:.3em;color:var(--amber)}
+.brand span{font-size:24px;font-weight:800}
+.btn{border:1px solid var(--line-2);background:var(--panel-2);padding:9px 14px;border-radius:6px;font-weight:600;white-space:nowrap;transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--amber)}
+.btn.pri{background:var(--amber);color:var(--amber-ink);border-color:var(--amber)}
+.btn.pri:hover{filter:brightness(1.1)}
+.btn.danger{border-color:rgba(255,90,74,.5);color:#ffb3a8}
+.btn.danger:hover{background:rgba(255,90,74,.14);border-color:var(--red)}
+.btn.sm{padding:5px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:default}
+.state{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:6px;border:1px solid var(--line-2);font-weight:700}
+.state i{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.state.closed i{background:var(--red);box-shadow:0 0 8px var(--red)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.card small{color:var(--muted);font-weight:600}
+.card div{font-size:28px;font-weight:800;margin-top:2px}
+.card.warn div{color:#ffb3a8}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bar input{flex:1;min-width:220px;background:var(--panel);border:1px solid var(--line-2);border-radius:6px;padding:10px 12px}
+.bar input:focus{outline:none;border-color:var(--amber)}
+.tablebox{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:920px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+th{position:sticky;top:0;background:var(--panel-2);color:var(--muted);font-size:13px;font-weight:700;z-index:1}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.p1 td.rk{color:var(--amber);font-weight:800}tr.p2 td.rk,tr.p3 td.rk{color:#ffd48a;font-weight:800}
+tbody tr:hover{background:rgba(255,255,255,.03)}
+.tag{display:inline-block;padding:1px 7px;border-radius:4px;font-size:12px;font-weight:700;margin-left:6px}
+.tag.flag{background:rgba(255,90,74,.18);color:#ffb3a8}
+.tag.unf{background:rgba(255,255,255,.08);color:var(--muted)}
+.tag.ok{background:rgba(166,217,106,.15);color:var(--ok)}
+.acts{display:flex;gap:6px}
+.muted{color:var(--muted)}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+section.danger{margin-top:28px;border:1px solid rgba(255,90,74,.35);border-radius:8px;padding:16px 18px;background:rgba(255,90,74,.04)}
+section.danger h2,section.bk h2{margin:0 0 6px;font-size:17px}
+section.danger p{margin:0 0 12px;color:var(--muted)}
+section.bk{margin-top:28px}
+.login{max-width:380px;margin:14vh auto;background:var(--panel);border:1px solid var(--line);border-top:2px solid var(--amber);border-radius:8px;padding:28px}
+.login h1{margin:0 0 4px;font-size:22px}
+.login p{margin:0 0 18px;color:var(--muted)}
+.login input{width:100%;background:var(--bg);border:1px solid var(--line-2);border-radius:6px;padding:11px 12px;margin-bottom:12px}
+.login input:focus{outline:none;border-color:var(--amber)}
+.login .btn{width:100%;padding:11px}
+.err{color:#ffb3a8;min-height:22px;margin-top:8px;font-size:14px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:grid;place-items:center;padding:16px;z-index:10}
+.modal[hidden]{display:none}
+.dlg{width:min(860px,100%);max-height:88vh;overflow:auto;background:var(--panel);border:1px solid var(--line-2);border-radius:10px;padding:20px 22px}
+.dlg.small{width:min(440px,100%)}
+.dlg h3{margin:0 0 4px;font-size:19px}
+.dlg .sub{color:var(--muted);margin-bottom:14px}
+.dlg .row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.dlg label{display:flex;gap:8px;align-items:center;margin-top:10px;cursor:pointer}
+.dlg input[type=text]{width:100%;background:var(--bg);border:1px solid var(--line-2);border-radius:6px;padding:10px 12px;margin-top:10px}
+.dlg table{min-width:620px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--amber);padding:10px 16px;border-radius:6px;font-weight:600;z-index:20;transition:opacity .2s}
+#toast[hidden]{display:none}
+@media (max-width:640px){.brand span{font-size:20px}.card div{font-size:22px}}
+</style>
+</head>
+<body>
+<div id="login" class="login" hidden>
+  <h1>관리자 로그인</h1>
+  <p>ORBIT BREAKER 순위 관리</p>
+  <form id="loginForm"><input id="pw" type="password" placeholder="관리자 비밀번호" autocomplete="current-password" autofocus><button class="btn pri" type="submit">들어가기</button></form>
+  <div class="err" id="loginErr"></div>
+</div>
+
+<div id="app" class="wrap" hidden>
+  <header>
+    <div class="brand"><b>ADMIN</b><span>ORBIT BREAKER 순위 관리</span></div>
+    <span class="state" id="state"><i></i><span>기록 받는 중</span></span>
+    <button class="btn" id="closeBtn" type="button">대회 마감</button>
+    <button class="btn" id="csvBtn" type="button">순위 CSV</button>
+    <button class="btn" id="csvRunsBtn" type="button">전체 전적 CSV</button>
+    <button class="btn" id="refreshBtn" type="button">새로고침</button>
+    <button class="btn" id="logoutBtn" type="button">로그아웃</button>
+  </header>
+  <div class="cards">
+    <div class="card"><small>참가자</small><div id="sPlayers">-</div></div>
+    <div class="card"><small>순위 등록</small><div id="sRanked">-</div></div>
+    <div class="card"><small>총 출격</small><div id="sRuns">-</div></div>
+    <div class="card"><small>미완료 출격</small><div id="sUnf">-</div></div>
+    <div class="card warn"><small>의심 기록</small><div id="sFlag">-</div></div>
+  </div>
+  <div class="bar"><input id="q" type="search" placeholder="이름·학번·학과로 검색"><span class="muted" id="updated"></span></div>
+  <div class="tablebox"><table>
+    <thead><tr><th class="num">순위</th><th>학번</th><th>이름</th><th>학과</th><th class="num">최고점</th><th class="num">출격</th><th>최고점 시각</th><th>마지막 플레이</th><th>관리</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table></div>
+
+  <section class="bk">
+    <h2>백업 · 복원</h2>
+    <p class="muted" style="margin:0 0 10px">삭제·초기화를 하면 지워진 기록이 여기에 자동으로 남습니다. 복원해도 지금 있는 기록은 덮어쓰지 않습니다.</p>
+    <div class="tablebox"><table><thead><tr><th>시각</th><th>내용</th><th class="num">크기</th><th></th></tr></thead><tbody id="bkRows"></tbody></table></div>
+  </section>
+
+  <section class="danger">
+    <h2>순위 전체 초기화</h2>
+    <p>모든 플레이어와 출격 기록을 지웁니다. 실행 직전 자동 백업이 만들어집니다.</p>
+    <button class="btn danger" id="resetBtn" type="button">전체 초기화…</button>
+  </section>
+</div>
+
+<div class="modal" id="runsModal" hidden><div class="dlg">
+  <h3 id="rmTitle"></h3><div class="sub" id="rmSub"></div>
+  <div class="tablebox"><table><thead><tr><th>#</th><th>출격 시각</th><th>종료</th><th class="num">점수</th><th>기체 · 옵션</th><th>상태</th><th></th></tr></thead><tbody id="rmRows"></tbody></table></div>
+  <div class="row"><button class="btn danger" id="rmDelPlayer" type="button">이 플레이어 전체 삭제</button><button class="btn" id="rmRefund" type="button">기회 1회 돌려주기</button><button class="btn pri" id="rmClose" type="button">닫기</button></div>
+</div></div>
+
+<div class="modal" id="askModal" hidden><div class="dlg small">
+  <h3 id="askTitle"></h3><div class="sub" id="askText"></div>
+  <label id="askCheckRow"><input type="checkbox" id="askCheck"><span id="askCheckText"></span></label>
+  <input type="text" id="askType" autocomplete="off">
+  <div class="row"><button class="btn" id="askNo" type="button">취소</button><button class="btn danger" id="askYes" type="button">확인</button></div>
+</div></div>
+
+<div id="toast" hidden></div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const UNIT={mega:"메가",boost:"부스트",pods:"포드",missile:"미사일",shield:"실드"},FRAME={mk2:"Mk-II",swift:"스위프트"};
+const fmtT=v=>{if(!v)return "";const d=new Date(typeof v==="number"?v:Date.parse(v));if(isNaN(d))return "";return d.toLocaleString("ko-KR",{timeZone:"Asia/Seoul",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false})};
+const fmtFull=v=>{if(!v)return "";const d=new Date(typeof v==="number"?v:Date.parse(v));return isNaN(d)?"":d.toLocaleString("sv-SE",{timeZone:"Asia/Seoul"})};
+const num=v=>(v||0).toLocaleString("ko-KR");
+let KEY="",DATA=null,CUR=null,busy=false;
+try{KEY=sessionStorage.getItem("ob.admin")||""}catch(e){}
+
+async function api(path,body){
+  const r=await fetch("api/"+path,{method:body?"POST":"GET",headers:{"content-type":"application/json","x-admin-key":KEY},body:body?JSON.stringify(body):undefined,cache:"no-store"});
+  let j={};try{j=await r.json()}catch(e){}
+  if(r.status===401){logout(j.error||"비밀번호가 맞지 않습니다.");throw new Error("auth")}
+  if(!r.ok)throw new Error(j.error||("오류 "+r.status));
+  return j;
+}
+function toast(t){const n=$("toast");n.textContent=t;n.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>n.hidden=true,2600)}
+function fail(e){if(e&&e.message!=="auth")toast(e.message||"오류가 발생했습니다.")}
+
+function logout(msg){KEY="";try{sessionStorage.removeItem("ob.admin")}catch(e){}$("app").hidden=true;$("login").hidden=false;$("loginErr").textContent=msg||"";$("pw").value="";$("pw").focus()}
+$("loginForm").addEventListener("submit",async e=>{e.preventDefault();KEY=$("pw").value;if(!KEY)return;$("loginErr").textContent="확인 중…";
+  try{await load();try{sessionStorage.setItem("ob.admin",KEY)}catch(e){}$("login").hidden=true;$("app").hidden=false;$("loginErr").textContent=""}
+  catch(err){if(err.message!=="auth"){$("loginErr").textContent=err.message}}});
+$("logoutBtn").addEventListener("click",()=>logout(""));
+
+async function load(){
+  DATA=await api("admin/overview");render();loadBackups().catch(()=>{});
+  $("updated").textContent="갱신 "+fmtT(Date.now());
+}
+function render(){
+  const s=DATA.stats;$("sPlayers").textContent=num(s.players);$("sRanked").textContent=num(s.ranked);$("sRuns").textContent=num(s.runs);$("sUnf").textContent=num(s.unfinished);$("sFlag").textContent=num(s.flagged);
+  $("state").classList.toggle("closed",DATA.closed);$("state").lastElementChild.textContent=DATA.closed?"대회 마감됨 · 출격 차단":"기록 받는 중";
+  $("closeBtn").textContent=DATA.closed?"마감 해제":"대회 마감";
+  const q=$("q").value.trim().toLowerCase();
+  const list=DATA.players.filter(p=>!q||[p.sid,p.name,p.dept].some(v=>String(v||"").toLowerCase().includes(q)));
+  $("rows").innerHTML=list.length?list.map(p=>`<tr class="${p.rank&&p.rank<=3?"p"+p.rank:""}">
+    <td class="num rk">${p.rank||"<span class=muted>—</span>"}</td><td>${esc(p.sid)}</td><td>${esc(p.name)}${p.flagged?`<span class="tag flag">의심 ${p.flagged}</span>`:""}</td><td>${esc(p.dept)}</td>
+    <td class="num">${num(p.best)}</td><td class="num">${p.attempts} / ${DATA.maxSortie}</td><td>${fmtT(p.best_at)}</td><td>${fmtT(p.last_play)}</td>
+    <td><div class="acts"><button class="btn sm" data-runs="${esc(p.sid)}">전적 보기</button></div></td></tr>`).join("")
+    :`<tr><td colspan="9" class="empty">${DATA.players.length?"검색 결과가 없습니다.":"아직 기록이 없습니다."}</td></tr>`;
+}
+$("q").addEventListener("input",()=>DATA&&render());
+$("rows").addEventListener("click",e=>{const b=e.target.closest("[data-runs]");if(b)openRuns(b.dataset.runs)});
+$("refreshBtn").addEventListener("click",()=>load().then(()=>toast("새로고침했습니다.")).catch(fail));
+setInterval(()=>{if(KEY&&!$("app").hidden&&$("runsModal").hidden&&$("askModal").hidden&&!busy)load().catch(()=>{})},15000);
+
+/* player history */
+async function openRuns(sid){
+  const p=DATA.players.find(x=>x.sid===sid);if(!p)return;CUR=p;
+  $("rmTitle").textContent=`${p.name} (${p.sid})`;$("rmSub").textContent=`${p.dept} · 최고점 ${num(p.best)} · 출격 ${p.attempts}/${DATA.maxSortie}${p.rank?` · 현재 ${p.rank}위`:""}`;
+  $("rmRows").innerHTML=`<tr><td colspan="7" class="empty">불러오는 중…</td></tr>`;$("runsModal").hidden=false;
+  try{const {runs}=await api("admin/runs?sid="+encodeURIComponent(sid));
+    $("rmRows").innerHTML=runs.length?runs.map((r,i)=>{const st=!r.finished?`<span class="tag unf">미완료</span>`:r.score<0?`<span class="tag flag">의심 · 순위 제외</span>`:r.score===p.best&&p.best>0?`<span class="tag ok">최고점</span>`:"";
+      return `<tr><td>${i+1}</td><td>${fmtT(r.started)}</td><td>${fmtT(r.finished)}</td><td class="num">${r.finished?num(Math.abs(r.score)):"—"}</td><td>${esc(FRAME[r.frame]||r.frame||"")}${r.unit?" · "+esc(UNIT[r.unit]||r.unit):""}</td><td>${st}</td>
+      <td><button class="btn sm danger" data-del="${esc(r.id)}" data-sc="${r.finished?Math.abs(r.score):""}">삭제</button></td></tr>`}).join("")
+      :`<tr><td colspan="7" class="empty">출격 기록이 없습니다.</td></tr>`;
+  }catch(e){fail(e);$("rmRows").innerHTML=`<tr><td colspan="7" class="empty">불러오지 못했습니다.</td></tr>`}
+}
+$("rmClose").addEventListener("click",()=>{$("runsModal").hidden=true;CUR=null});
+$("runsModal").addEventListener("click",e=>{if(e.target.id==="runsModal"){$("runsModal").hidden=true;CUR=null}});
+$("rmRows").addEventListener("click",async e=>{const b=e.target.closest("[data-del]");if(!b||!CUR)return;
+  const r=await ask({title:"이 기록을 삭제할까요?",text:`${CUR.name} · ${b.dataset.sc?num(+b.dataset.sc)+"점":"미완료"} 기록을 지웁니다. 최고점은 남은 기록으로 다시 계산됩니다.`,check:"출격 기회도 1회 돌려주기 (버그·튕김 등)",yes:"삭제"});
+  if(!r)return;await act(()=>api("admin/run/delete",{id:b.dataset.del,refund:r.checked}),"기록을 삭제했습니다.");openRuns(CUR.sid)});
+$("rmRefund").addEventListener("click",async()=>{if(!CUR)return;if(CUR.attempts<=0){toast("돌려줄 기회가 없습니다.");return}
+  if(!await ask({title:"기회를 1회 돌려줄까요?",text:`${CUR.name}의 출격 횟수를 ${CUR.attempts} → ${CUR.attempts-1}로 줄입니다. 기록은 그대로 남습니다.`,yes:"돌려주기",safe:true}))return;
+  await act(()=>api("admin/player/refund",{sid:CUR.sid}),"기회를 1회 돌려줬습니다.");openRuns(CUR.sid)});
+$("rmDelPlayer").addEventListener("click",async()=>{if(!CUR)return;
+  if(!await ask({title:"플레이어를 삭제할까요?",text:`${CUR.name}(${CUR.sid})의 등록 정보와 모든 출격 기록을 지웁니다. 백업에서 되돌릴 수 있습니다.`,yes:"삭제"}))return;
+  await act(()=>api("admin/player/delete",{sid:CUR.sid}),"플레이어를 삭제했습니다.");$("runsModal").hidden=true;CUR=null});
+
+/* event switch, reset, backups */
+$("closeBtn").addEventListener("click",async()=>{const closing=!DATA.closed;
+  if(!await ask(closing?{title:"대회를 마감할까요?",text:"새 출격이 막히고 순위가 고정됩니다. 언제든 다시 열 수 있습니다.",yes:"마감"}:{title:"마감을 해제할까요?",text:"다시 출격 기록을 받습니다.",yes:"해제",safe:true}))return;
+  await act(()=>api("admin/close",{closed:closing}),closing?"대회를 마감했습니다.":"마감을 해제했습니다.")});
+$("resetBtn").addEventListener("click",async()=>{
+  if(!await ask({title:"순위를 전체 초기화할까요?",text:`플레이어 ${num(DATA.stats.players)}명과 출격 기록 ${num(DATA.stats.runs)}개가 모두 지워집니다. 계속하려면 아래에 초기화 라고 입력하세요.`,type:"초기화",yes:"전체 초기화"}))return;
+  await act(()=>api("admin/reset",{confirm:"초기화"}),"전체 초기화했습니다. 백업이 남아 있습니다.")});
+async function loadBackups(){const {backups}=await api("admin/backups");
+  $("bkRows").innerHTML=backups.length?backups.map(b=>`<tr><td>${fmtT(b.at)}</td><td>${esc(b.label||b.kind)}${b.restored?`<span class="tag ok">복원함</span>`:""}</td><td class="num">${(b.size/1024).toFixed(1)} KB</td><td><button class="btn sm" data-restore="${b.id}">복원</button></td></tr>`).join("")
+    :`<tr><td colspan="4" class="empty">아직 백업이 없습니다.</td></tr>`}
+$("bkRows").addEventListener("click",async e=>{const b=e.target.closest("[data-restore]");if(!b)return;
+  if(!await ask({title:"이 백업을 복원할까요?",text:"지워졌던 플레이어와 기록을 되살립니다. 지금 있는 기록은 그대로 두고, 최고점과 출격 횟수는 다시 계산됩니다.",yes:"복원",safe:true}))return;
+  await act(()=>api("admin/restore",{id:+b.dataset.restore}),"복원했습니다.")});
+
+async function act(fn,msg){if(busy)return;busy=true;try{await fn();toast(msg)}catch(e){fail(e)}finally{busy=false}try{await load()}catch(e){}}
+
+/* confirm dialog: optional checkbox, optional typed phrase */
+function ask(o){return new Promise(res=>{
+  $("askTitle").textContent=o.title;$("askText").textContent=o.text||"";
+  $("askCheckRow").hidden=!o.check;$("askCheck").checked=false;$("askCheckText").textContent=o.check||"";
+  const t=$("askType");t.hidden=!o.type;t.value="";t.placeholder=o.type||"";
+  const yes=$("askYes");yes.textContent=o.yes||"확인";yes.className="btn "+(o.safe?"pri":"danger");yes.disabled=!!o.type;
+  t.oninput=()=>{yes.disabled=t.value.trim()!==o.type};
+  const done=v=>{$("askModal").hidden=true;yes.onclick=null;$("askNo").onclick=null;document.removeEventListener("keydown",key);res(v)};
+  const key=e=>{if(e.key==="Escape")done(null);if(e.key==="Enter"&&!yes.disabled&&document.activeElement!==$("askNo"))done({checked:$("askCheck").checked})};
+  yes.onclick=()=>done({checked:$("askCheck").checked});$("askNo").onclick=()=>done(null);document.addEventListener("keydown",key);
+  $("askModal").hidden=false;(o.type?t:$("askNo")).focus()})}
+
+/* CSV (Excel opens UTF-8 with BOM) */
+function csv(name,head,rows){const q=v=>{v=v==null?"":String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  const s="﻿"+[head,...rows].map(r=>r.map(q).join(",")).join("\r\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([s],{type:"text/csv;charset=utf-8"}));
+  a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+const stamp=()=>new Date().toLocaleString("sv-SE",{timeZone:"Asia/Seoul"}).replace(/[: ]/g,"").replace(/-/g,"").slice(0,13);
+$("csvBtn").addEventListener("click",()=>{if(!DATA)return;csv(`orbit-breaker-순위-${stamp()}.csv`,["순위","학번","이름","학과","최고점","출격 횟수","최고점 시각","첫 등록","마지막 플레이","의심 기록 수"],
+  DATA.players.map(p=>[p.rank||"",p.sid,p.name,p.dept,p.best,p.attempts,fmtFull(p.best_at),fmtFull(p.created_at),fmtFull(p.last_play),p.flagged||0]))});
+$("csvRunsBtn").addEventListener("click",async()=>{try{const {runs}=await api("admin/runs");
+  csv(`orbit-breaker-전적-${stamp()}.csv`,["학번","이름","학과","출격 시각","종료 시각","점수","상태","기체","옵션"],
+    runs.map(r=>[r.sid,r.name||"",r.dept||"",fmtFull(r.started),fmtFull(r.finished),r.finished?Math.abs(r.score):"",!r.finished?"미완료":r.score<0?"의심(순위 제외)":"정상",FRAME[r.frame]||r.frame||"",UNIT[r.unit]||r.unit||""]))}catch(e){fail(e)}});
+
+if(KEY)load().then(()=>{$("app").hidden=false}).catch(e=>{if(e.message!=="auth")logout(e.message)});else logout("");
+</script>
+</body>
+</html>

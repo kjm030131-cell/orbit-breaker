@@ -34,6 +34,7 @@ shutil.copy('rig.js',D+'/rig.js')
 os.makedirs(D+'/models',exist_ok=True);[shutil.copy(f,D+'/models/') for f in glob.glob('models/*.glb')+glob.glob('models/*.json')]
 Image.open('sky.jpg').convert('RGB').save(D+'/sky.jpg',quality=72,optimize=True,progressive=True)
 shutil.copytree('ui',D+'/ui',dirs_exist_ok=True)
+shutil.copy('admin.html',D+'/admin.html')  # /admin: ranking management (password checked by the API)
 os.makedirs(D+'/sfx',exist_ok=True)
 SFX=sorted(f[:-4] for f in os.listdir('sfx') if f.endswith('.mp3')) if os.path.isdir('sfx') else []
 [shutil.copy('sfx/%s.mp3'%k,D+'/sfx/') for k in SFX];json.dump(SFX,open(D+'/sfx/list.json','w'));os.path.exists('sfx/preview.html') and shutil.copy('sfx/preview.html',D+'/sfx/');print('sfx',SFX)
@@ -52,10 +53,11 @@ const V="ob-%s";const CORE=["./","index.html","rig.js","models/mech.glb","models
 self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(V).then(c=>c.addAll(CORE)).catch(()=>{}))});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==V).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener("fetch",e=>{const u=new URL(e.request.url);if(e.request.method!=="GET"||u.origin!==location.origin||u.pathname.includes("/api/"))return;
-  if(e.request.mode==="navigate"){e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(V).then(k=>k.put("index.html",c));return r}).catch(()=>caches.match("index.html")));return}
+  if(e.request.mode==="navigate"){if(!(u.pathname.endsWith("/")||u.pathname.endsWith("/index.html")))return; // other pages (admin) go straight to the network
+    e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(V).then(k=>k.put("index.html",c));return r}).catch(()=>caches.match("index.html")));return}
   e.respondWith(caches.match(e.request).then(hit=>hit||fetch(e.request).then(r=>{if(r.ok){const c=r.clone();caches.open(V).then(k=>k.put(e.request,c))}return r})))});
 '''%ver)
-open(D+'/_headers','w').write("/models/*\n  Cache-Control: no-cache\n/*.js\n  Cache-Control: public, max-age=3600\n/ui/*\n  Cache-Control: public, max-age=86400\n/sfx/*\n  Cache-Control: public, max-age=3600\n/sw.js\n  Cache-Control: no-cache\n/index.html\n  Cache-Control: no-cache\n")
+open(D+'/_headers','w').write("/models/*\n  Cache-Control: no-cache\n/*.js\n  Cache-Control: public, max-age=3600\n/ui/*\n  Cache-Control: public, max-age=86400\n/sfx/*\n  Cache-Control: public, max-age=3600\n/sw.js\n  Cache-Control: no-cache\n/index.html\n  Cache-Control: no-cache\n/admin*\n  Cache-Control: no-store\n  X-Robots-Tag: noindex\n")
 print('libs',len(libs));os.system('du -sh '+D)
 
 shutil.copytree('pvp/src',OUT+'/pvp/src',dirs_exist_ok=True)

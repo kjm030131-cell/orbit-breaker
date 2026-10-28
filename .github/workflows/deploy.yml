@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+        with: { node-version: 22 }
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install pillow
@@ -26,6 +26,15 @@ jobs:
         working-directory: deploy/pvp
         run: npx --yes wrangler@3 deploy
         env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: 336dcf3cc4d108f284f3b5c358959508
+      - name: admin password (GitHub secret ADMIN_KEY -> Pages secret; skipped when not set)
+        working-directory: deploy
+        run: |
+          if [ -z "$ADMIN_KEY" ]; then echo "ADMIN_KEY not set: /admin stays locked"; exit 0; fi
+          printf '%s' "$ADMIN_KEY" | npx --yes wrangler@3 pages secret put ADMIN_KEY --project-name orbitbreaker || echo "::warning::ADMIN_KEY could not be stored; /admin stays locked"
+        env:
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: 336dcf3cc4d108f284f3b5c358959508
       - name: deploy pages
