@@ -1,0 +1,44 @@
+# One-off: attach a custom domain (bought in the same Cloudflare account) to the game's Pages project.
+# Adds the domain (and www.) to the project and creates the proxied CNAME records, then reports the status.
+name: pages-domain
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: "domain to attach"
+        default: "arcligh.site"
+      project:
+        description: "Pages project"
+        default: "arclight-game"
+jobs:
+  attach:
+    runs-on: ubuntu-latest
+    steps:
+      - name: attach domain
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCT: 336dcf3cc4d108f284f3b5c358959508
+          D: ${{ inputs.domain }}
+          P: ${{ inputs.project }}
+        run: |
+          H="Authorization: Bearer $CF_TOKEN"; api=https://api.cloudflare.com/client/v4
+          note(){ echo "::notice title=$1::$2"; }
+          zone=$(curl -s -H "$H" "$api/zones?name=$D")
+          zid=$(echo "$zone" | jq -r '.result[0].id // empty')
+          if [ -z "$zid" ]; then note "zone" "not visible to token: $(echo "$zone" | jq -c '.errors')"; else note "zone" "$D id=$zid status=$(echo "$zone" | jq -r '.result[0].status')"; fi
+          for host in "$D" "www.$D"; do
+            r=$(curl -s -X POST -H "$H" -H "content-type: application/json" "$api/accounts/$ACCT/pages/projects/$P/domains" -d "{\"name\":\"$host\"}")
+            note "pages-domain $host" "$(echo "$r" | jq -c '{success,errors,status:.result.status}')"
+            if [ -n "$zid" ]; then
+              ex=$(curl -s -H "$H" "$api/zones/$zid/dns_records?name=$host" | jq -r '.result | length')
+              if [ "$ex" = "0" ]; then
+                d=$(curl -s -X POST -H "$H" -H "content-type: application/json" "$api/zones/$zid/dns_records" -d "{\"type\":\"CNAME\",\"name\":\"$host\",\"content\":\"$P.pages.dev\",\"proxied\":true}")
+                note "dns $host" "$(echo "$d" | jq -c '{success,errors}')"
+              else note "dns $host" "record already exists ($ex)"; fi
+            fi
+          done
+          sleep 20
+          for host in "$D" "www.$D"; do
+            s=$(curl -s -H "$H" "$api/accounts/$ACCT/pages/projects/$P/domains/$host")
+            note "status $host" "$(echo "$s" | jq -c '{status:.result.status,verification:.result.verification_data.status,validation:.result.validation_data.status,error:.result.verification_data.error_message}')"
+          done
