@@ -297,7 +297,7 @@ body.tut #clockBox{visibility:hidden}
 .reticle::before{left:8px;top:0;width:2px;height:6px;box-shadow:0 12px var(--bone)}
 .reticle::after{top:8px;left:0;height:2px;width:6px;box-shadow:12px 0 var(--bone)}
 #vsBar .gp{height:4px;margin-top:3px;background:rgba(255,255,255,.12)}#vsBar .gp i{display:block;height:100%;background:#7fe8ff;transition:width .15s}#vsBar .gp i.low{background:#ff8a40}
-#tutHint{margin:12px 0 0;padding:10px 14px;border-left:3px solid #ffb21a;background:rgba(255,178,26,.09);color:#e9e5dc;font-size:14px;line-height:1.5;max-width:440px}#tutHint[hidden]{display:none}#tutHint b{color:#ffb21a;margin-right:6px}
+
 #tutBtn.hot{border-left-color:#ffb21a;animation:tbp 1.6s ease-in-out infinite}#tutBtn.hot .t::after{content:"추천";margin-left:10px;font-size:11px;padding:2px 7px;background:#ffb21a;color:#1a1408;border-radius:3px;vertical-align:2px}@keyframes tbp{50%{background:rgba(255,178,26,.12)}}
 /* incoming-fire direction markers (off-screen threats) + damaged-armour edge */
 #threats{position:fixed;inset:0;pointer-events:none;z-index:4}
@@ -527,6 +527,31 @@ body{font-weight:500;letter-spacing:-.01em;font-feature-settings:"tnum" 1}
 .hud.tl{width:230px}.hud.tl .comboBox,.hud.tl .cleanBox,.hud.tl .tbar{width:100%}
 .unit .ue{font:700 12px var(--f-num)!important;letter-spacing:.04em}
 @media (max-height:820px) and (min-width:1100px){#scrLoad .console{grid-template-columns:minmax(0,500px) minmax(0,440px);width:min(980px,100%)}#scrLoad .console>.pane:nth-child(2){grid-column:2;grid-row:1}#scrLoad .previewTag{display:none}}
+
+/* boost gauge: painted frame (ui/g_boost) with the energy strip (ui/g_boostfill) clipped to the boost level;
+   the strip is right-anchored so its bright tip always rides the leading edge */
+.g.boostG{grid-template-columns:52px 1fr;gap:6px}
+.bframe{position:relative;aspect-ratio:1035/158;background:url(ui/g_boost.webp) center/100% 100% no-repeat}
+.bslot{position:absolute;left:18.4%;right:9.6%;top:31%;bottom:31%;overflow:hidden}
+#boostF{--b:100;position:absolute;left:0;top:0;bottom:0;width:calc(var(--b) * 1%);background:url(ui/g_boostfill.webp) right center/calc(10000% / var(--b)) 300% no-repeat;transition:width .08s linear;filter:drop-shadow(0 0 4px rgba(90,180,255,.7))}
+.boostG.low #boostF{filter:hue-rotate(185deg) saturate(1.6) drop-shadow(0 0 5px rgba(255,90,40,.8))}
+.boostG.low .bframe{animation:blow .5s steps(2) infinite}@keyframes blow{50%{filter:brightness(1.35)}}
+.gauges{width:min(420px,36vw)}
+
+#heatG[hidden]{display:none!important}
+.gauges{width:min(400px,30vw)}
+/* tutorial nudge: callout beside the menu item + a one-time prompt before the first sortie */
+#tutBtn{position:relative;overflow:visible}
+#tutHint{position:absolute;left:calc(100% + 18px);top:50%;transform:translateY(-50%);white-space:nowrap;padding:8px 14px 8px 16px;background:rgba(255,178,26,.14);border:1px solid rgba(255,178,26,.55);color:#efe9dc;font:600 14px "Pretendard Variable",Pretendard,sans-serif;pointer-events:none;animation:thint 1.6s ease-in-out infinite}
+#tutHint::before{content:"";position:absolute;right:100%;top:50%;margin-top:-7px;border:7px solid transparent;border-right-color:rgba(255,178,26,.75)}
+#tutHint b{color:#ffb21a;margin-right:8px;font-weight:800}#tutHint[hidden]{display:none}
+@keyframes thint{50%{transform:translate(6px,-50%)}}
+@media (max-width:900px){#tutHint{display:none!important}}
+#tutAsk{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:rgba(3,5,8,.62)}#tutAsk[hidden]{display:none}
+#tutAsk .taBox{width:min(520px,90vw);padding:26px 30px 24px;background:rgba(10,12,15,.94);border:1px solid rgba(255,178,26,.5);border-left:4px solid #ffb21a;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+#tutAsk .taLbl{font:700 12px var(--f-num);letter-spacing:.14em;color:#ffb21a}
+#tutAsk h3{margin:6px 0 10px;font:900 26px "Pretendard Variable",Pretendard,sans-serif;letter-spacing:-.03em;color:#f2ede2}
+#tutAsk p{margin:0 0 20px;color:#bdb8ad;font-size:15px;line-height:1.6}
 </style>
 
 <div id="stage"></div>
@@ -565,7 +590,7 @@ body{font-weight:500;letter-spacing:-.01em;font-feature-settings:"tnum" 1}
   <div class="hud bc">
     <div id="warn"></div>
     <div class="gauges">
-      <div class="g"><span class="lbl">부스트</span><div class="bar"><i id="boostF"></i></div><span class="v" id="boostV">100</span></div>
+      <div class="g boostG" id="boostG"><span class="lbl">부스트</span><div class="bframe"><div class="bslot"><i id="boostF"></i></div></div><span class="v" id="boostV">100</span></div>
       <div class="g heat" id="heatG"><span class="lbl">과열</span><div class="bar"><i id="heatF"></i></div><span class="v" id="mult">×1</span></div>
     </div>
   </div>
@@ -578,6 +603,10 @@ body{font-weight:500;letter-spacing:-.01em;font-feature-settings:"tnum" 1}
   </div></div>
 </div>
 
+<!-- first sortie: suggest the tutorial -->
+<div id="tutAsk" hidden><div class="taBox"><div class="taLbl">첫 출격 전</div><h3>튜토리얼부터 해 볼까요?</h3>
+  <p>이동·회피·사격·3연속 베기·저스트 회피까지 3분이면 익혀요.<br>튜토리얼은 출격 횟수(학번당 3회)에 포함되지 않아요.</p>
+  <div class="btns"><button class="btn primary" type="button" id="taTut">튜토리얼 시작 <kbd>Enter</kbd></button><button class="btn" type="button" id="taGo">바로 출격 <kbd>Esc</kbd></button></div></div></div>
 <!-- title -->
 <section class="screen shade" id="scrTitle">
   <div class="tTop"><div class="event">제3회 SW융합대학 학술제 · <b>E-SPORTS</b> 공식 종목</div><div class="tRight"><button class="sndBtn" type="button" id="installBtn" hidden>앱으로 설치</button><button class="sndBtn icoBtn" type="button" data-settings><img class="ico" src="ui/ic_gear.webp" alt="">설정</button><div class="status" id="netStatus"><span class="dot"></span>기록 서버 연결 중</div></div></div>
@@ -586,13 +615,12 @@ body{font-weight:500;letter-spacing:-.01em;font-feature-settings:"tnum" 1}
     <div class="tagline"><i></i>120초 우주 메카 스코어 어택</div>
     <nav class="menu" id="menu">
       <button class="mi" data-go="form" type="button"><span class="k"><img class="ico" src="ui/ic_play.webp" alt=""></span><span class="t">출격</span></button>
-      <button class="mi" id="tutBtn" type="button"><span class="k"><img class="ico" src="ui/ic_quality.webp" alt=""></span><span class="t">튜토리얼</span></button>
+      <button class="mi" id="tutBtn" type="button"><span class="k"><img class="ico" src="ui/ic_quality.webp" alt=""></span><span class="t">튜토리얼</span><span id="tutHint" hidden><b>처음이신가요?</b>조작과 이야기를 3분 만에 익혀요</span></button>
       <button class="mi" data-go="duel" type="button"><span class="k"><img class="ico" src="ui/ic_versus.webp" alt=""></span><span class="t">1:1 쇼다운</span></button>
       <button class="mi" data-go="rank" type="button"><span class="k"><img class="ico" src="ui/ic_trophy.webp" alt=""></span><span class="t">작전 기록</span></button>
       <button class="mi" data-go="brief" type="button"><span class="k"><img class="ico" src="ui/ic_quality.webp" alt=""></span><span class="t">조작 교본</span></button>
       <button class="mi" data-settings type="button"><span class="k"><img class="ico" src="ui/ic_gear.webp" alt=""></span><span class="t">설정</span></button>
     </nav>
-    <div id="tutHint" hidden><b>처음이신가요?</b> 튜토리얼부터 해보세요. 조작과 이야기를 3분 만에 익힐 수 있어요.</div>
   </div>
   <div class="tFoot">
     <div class="frame miniBoard"><h3 class="lbl"><span>상위 파일럿</span><span id="miniCount"></span></h3><div id="miniBoard"></div></div>
