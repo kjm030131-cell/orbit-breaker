@@ -9,6 +9,15 @@ PF='node_modules/pretendard/dist/web/variable/'
 if os.path.isdir(PF):
     shutil.copytree(PF+'woff2-dynamic-subset',D+'/lib/woff2-dynamic-subset',dirs_exist_ok=True);shutil.copy(PF+'pretendardvariable-dynamic-subset.css',D+'/lib/')
     html=html.replace('https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css','lib/pretendardvariable-dynamic-subset.css')
+# self-host Saira Semi Condensed (digits / Latin HUD font, OFL) from @fontsource; replaces the Google Fonts link
+SF='node_modules/@fontsource/saira-semi-condensed/files/'
+if os.path.isdir(SF):
+    os.makedirs(D+'/lib/fonts',exist_ok=True);css=''
+    for w in (500,600,700,800):
+        fn='saira-semi-condensed-latin-%d-normal.woff2'%w;shutil.copy(SF+fn,D+'/lib/fonts/'+fn)
+        css+="@font-face{font-family:'Saira Semi Condensed';font-style:normal;font-display:swap;font-weight:%d;src:url(fonts/%s) format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}\n"%(w,fn)
+    open(D+'/lib/saira.css','w').write(css)
+    html=re.sub(r'<link rel="preconnect" href="https://fonts\.googleapis\.com"><link rel="preconnect" href="https://fonts\.gstatic\.com" crossorigin><link rel="stylesheet" href="https://fonts\.googleapis\.com/css2\?family=Saira[^"]*">','<link rel="stylesheet" href="lib/saira.css">',html)
 for p in libs:
     dst=D+'/lib/'+os.path.basename(p);shutil.copy('node_modules/three/'+p,dst)
     html=html.replace('https://cdn.jsdelivr.net/npm/three@0.147.0/'+p,'lib/'+os.path.basename(p))

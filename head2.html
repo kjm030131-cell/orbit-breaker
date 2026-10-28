@@ -5,6 +5,8 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Semi+Condensed:wght@500;600;700;800&display=swap">
+
 <style>
 /* Layout: sortie terminal — 3D hangar view fills the screen; screens are left-anchored console panels with hairline frames and corner ticks */
 :root{
@@ -492,6 +494,39 @@ body{font-variant-numeric:tabular-nums;word-break:keep-all}
 @keyframes gradeIn{from{transform:scale(1.8);opacity:0}to{transform:scale(1);opacity:1}}
 .medal{width:30px;height:auto;vertical-align:middle}
 #miniBoard .medal{width:24px}
+
+/* ================= type & alignment pass (10/28) =================
+   One system: Pretendard for Korean (heavier weights for headings), Saira Semi Condensed for digits / Latin codes
+   (timer, score, %, key caps, HM-1, XR-07). Korean glyphs in a Saira stack fall back to Pretendard automatically. */
+:root{--f-num:"Saira Semi Condensed","Pretendard Variable",Pretendard,system-ui,sans-serif;--f-mono:var(--f-num);--f-stencil:"Pretendard Variable",Pretendard,system-ui,sans-serif}
+body{font-weight:500;letter-spacing:-.01em;font-feature-settings:"tnum" 1}
+.num,#time,#timeMs,#score,#kcNum,#kcMult,#cleanV,#topScore,#gap,#kills,#best,#specTxt,#gravN,#boostV,#pSortie,kbd,.stats b,.rules b,.ue,#uEn,#tutObjN,#tutObjProg,#vsScore,#duMe,#duOp{font-family:var(--f-num)!important;font-variant-numeric:tabular-nums;letter-spacing:0}
+.lbl{font-family:"Pretendard Variable",Pretendard,sans-serif!important;font-weight:600!important;letter-spacing:.02em!important}
+.pHead h2,.pHead b,.pane h2,h2{font-weight:800!important;letter-spacing:-.025em}
+/* centre callouts: one size, bold Korean, never under the radio box */
+#pop{top:31%;font-family:"Pretendard Variable",Pretendard,sans-serif;font-weight:900;font-size:40px;letter-spacing:-.02em;color:var(--amber);text-shadow:0 2px 14px rgba(0,0,0,.75),0 0 2px rgba(0,0,0,.9)}
+#phaseName{font-weight:900;letter-spacing:-.03em}#phaseSub{font:700 13px var(--f-num);letter-spacing:.14em}
+#cutin b{font-family:"Pretendard Variable",Pretendard,sans-serif;font-weight:900;letter-spacing:-.02em}#cutin small{font:700 13px var(--f-num);letter-spacing:.24em}
+/* radio sits at the very top centre, clear of the reticle and callouts */
+#radio{top:calc(14px + env(safe-area-inset-top,0px))}
+#radioWho{font:700 12px "Pretendard Variable",Pretendard,sans-serif;letter-spacing:.02em}
+#radioTxt{font-size:16px;font-weight:600;line-height:1.4}
+/* left HUD: labels and values on one baseline grid */
+.hud.tl .sRow,.hud.tl .rRow{display:flex;align-items:baseline;gap:10px}
+.hud.tl .sRow .lbl,.hud.tl .rRow .lbl,.cleanBox .lbl,.kcRow .lbl{min-width:44px}
+#score{font-weight:700}#time{font-weight:600}#timeMs{font-weight:500;opacity:.6}
+.kcRow{display:flex;align-items:baseline;gap:10px}#kcNum{font-weight:700;min-width:44px}
+.cleanBox{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.cleanBox .kcTrack{flex-basis:100%}
+/* weapon bar: names on one line, centred under the icon */
+.wpns .wn{font-weight:800;white-space:nowrap;text-align:center;letter-spacing:-.02em}
+.wpns .wn .num{font-weight:600;font-size:.82em;opacity:.85;margin-left:2px}
+/* briefing rules: number hugs its text */
+.rules li{grid-template-columns:28px 1fr;gap:10px}
+
+#radio{min-width:0!important;width:min(620px,58vw);max-width:min(620px,58vw)}
+.hud.tl{width:230px}.hud.tl .comboBox,.hud.tl .cleanBox,.hud.tl .tbar{width:100%}
+.unit .ue{font:700 12px var(--f-num)!important;letter-spacing:.04em}
+@media (max-height:820px) and (min-width:1100px){#scrLoad .console{grid-template-columns:minmax(0,500px) minmax(0,440px);width:min(980px,100%)}#scrLoad .console>.pane:nth-child(2){grid-column:2;grid-row:1}#scrLoad .previewTag{display:none}}
 </style>
 
 <div id="stage"></div>
