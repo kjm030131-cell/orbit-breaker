@@ -617,14 +617,14 @@ body.versus #hpRow,body.tut #hpRow{display:none}
 .lbr::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:rgba(255,178,26,.35)}
 .lbCols>span,.lbr>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
 .lbr .r{font:700 15px var(--f-mono);color:#a9a397;text-align:center;display:flex;align-items:center;justify-content:center;height:100%}
-.lbr .medal{display:block;width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
+#miniBoard .lbr .medal{display:block;width:32px;height:25px;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))}
 .lbr .nm{font-weight:700;color:var(--bone)}
 .lbr .dp{font-size:14px;color:#9d978b}
 .lbr .sc{font:700 17px var(--f-mono);color:var(--bone);text-align:right}
 /* top 3: framed plates (radio frame: rank sits in the square slot) */
 .lbr.p1,.lbr.p2,.lbr.p3{clip-path:none;background:none;border-style:solid;border-width:0;border-image:url(ui/radio.webp) 40 40 40 190 fill / 7px 8px 7px 46px stretch}
 .lbr.p1::before,.lbr.p2::before,.lbr.p3::before{display:none}
-.lbr.p1{filter:drop-shadow(0 0 10px rgba(255,170,40,.35))}
+.lbr.p1{filter:drop-shadow(0 0 10px rgba(255,170,40,.35))}.lbr.p2{filter:drop-shadow(0 0 8px rgba(200,220,240,.22))}.lbr.p3{filter:drop-shadow(0 0 8px rgba(230,140,80,.25))}
 .lbr.p1 .sc{color:var(--amber);text-shadow:0 0 10px rgba(255,178,26,.5)}.lbr.p1 .nm{color:#fff}
 .lbr.p2 .sc,.lbr.p3 .sc{color:#ffd48a}
 .lbr.me{box-shadow:inset 0 0 0 1px rgba(127,224,255,.55)}.lbr.me::before{background:#7fe0ff}
