@@ -1,0 +1,29 @@
+# QA only (never deploys): push to a qa/* branch or run by hand -> build, open the real game in headless Chromium
+# (software WebGL), drive solo / boss / duelist / tutorials / 1:1 tutorial + parts, upload screenshots + report as an artifact.
+name: qa
+on:
+  push:
+    branches: ['qa/**']
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pillow playwright && python -m playwright install --with-deps chromium
+      - run: npm ci && npm i --no-save ws
+      - name: build
+        run: |
+          python build.py && node --check game.js && node --test tests/*.test.mjs
+          OUT=/tmp/obd python build_deploy.py
+          python tools/test/qa_hook.py /tmp/obd/public
+      - name: smoke
+        run: python tools/test/qa_smoke.py /tmp/obd/public /tmp/qa
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: qa, path: /tmp/qa }

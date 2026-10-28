@@ -1,8 +1,8 @@
 /* ================= final phase: mobile armour "Kerberos" ================= */
 // Three weak-point pods guard it. Destroy all three (slash, rifle, reflected fire, launched drones)
 // and it goes dark for a few seconds: slash it then, and the whole hulk becomes a chain projectile.
-const BOSS={e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0};
-const WP_HP=4,WP_OFF=[new V3(-1.15,.28,.25),new V3(1.15,.28,.25),new V3(0,.95,-.6)];
+const BOSS={e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0,phase2:false};
+const WP_HP=6,WP_OFF=[new V3(-1.15,.28,.25),new V3(1.15,.28,.25),new V3(0,.95,-.6)];
 const wpGeo=new THREE.IcosahedronGeometry(1.3,0),wpArmor=new THREE.OctahedronGeometry(2,0);
 function spawnBoss(){
   if(!EN_MESH||BOSS.e||BOSS.dead||SCREEN!=="play")return;
@@ -86,16 +86,16 @@ function bossFire(b){
   const from=b.m.position.clone().add(new V3(0,1.5,0)),base=S.pos.clone().sub(from).normalize();
   const up=new V3(0,1,0),side=new V3().crossVectors(base,up).normalize();
   if(BOSS.mode%2===0){ // 5-way fan, aimed: dodge sideways or vertically
-    for(let i=-2;i<=2;i++){const dir=base.clone().applyAxisAngle(up,i*.11);fireEnemyBolt(from,dir,false,b,30)}}
+    for(let i=-2;i<=2;i++){const dir=base.clone().applyAxisAngle(up,i*.11);fireEnemyBolt(from,dir,false,b,36)}}
   else{ // three tight, staggered volleys aimed at where you'll be
     for(let k=0;k<3;k++)setTimeout(()=>{if(!b.alive||b.down>0||S.ended)return;const lead=S.pos.clone().addScaledVector(S.vel,.35).sub(from).normalize();
-      for(let j=-1;j<=1;j+=2)fireEnemyBolt(from.clone().addScaledVector(side,j*2.5),lead,true,b,28)},k*260)}
-  BOSS.mode++;BOSS.atkT=3.2+Math.random()*.8;b.m.userData.eye.scale.setScalar(3);S.shake=Math.max(S.shake,.25);
+      for(let j=-1;j<=1;j+=2)fireEnemyBolt(from.clone().addScaledVector(side,j*2.5),lead,true,b,34)},k*(BOSS.phase2?200:260))}
+  BOSS.mode++;BOSS.atkT=(BOSS.phase2?2.1:2.6)+Math.random()*.6;b.m.userData.eye.scale.setScalar(3);S.shake=Math.max(S.shake,.25);
 }
 function bossTick(dt,rdt,T){placeWPs(T)}
 function resetBoss(){
   if(BOSS.e){disposeEnemy(BOSS.e)}for(const w of BOSS.wps)if(w.alive)disposeEnemy(w);
-  Object.assign(BOSS,{e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0});
+  Object.assign(BOSS,{e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0,phase2:false,guide:BOSS.guide});
 }
 // radio chatter overlay (reuses the cutscene subtitle style, but small, top-centre)
 // portraits: ui/face_op.webp (CIC), face_ace.webp (enemy), face_cap.webp (captain) when present
@@ -107,9 +107,9 @@ function radio(who,txt){const r=$("radio");if(!r)return;$("radioWho").textConten
    right now and an arrow points at the next weak point (or at the stalled hulk while it is down). ---- */
 function bossGuideTick(){const b=BOSS.e,on=!!(b&&b.alive&&!TUT.on&&!VS&&SCREEN==="play"&&!S.ended);document.body.classList.toggle("bossguide",on);
   if(!on){if(BOSS.guide){BOSS.guide=false;$("tutObj").hidden=true;$("tutMark").hidden=true}return}
-  if(!BOSS.guide){BOSS.guide=true;$("tutObj").hidden=false;$("tutSkip").hidden=true;$("tutObjN").textContent="보스"}
+  if(!BOSS.guide){BOSS.guide=true;$("tutObj").hidden=false;$("tutSkip").hidden=true}{const n=`보스 ${BOSS.phase2?2:1} / 2`;if($("tutObjN").textContent!==n)$("tutObjN").textContent=n}
   let tgt=null,obj,how,prog;
-  if(b.down>0){obj="② 지금! 케르베로스를 베어 날리세요";how="약점이 모두 부서져 멈췄어요. 가까이 붙어 좌클릭으로 베면 주변 적까지 한꺼번에 쓸려 나가요.";prog=`멈춤 남은 시간 ${Math.ceil(b.down)}초`;tgt=b.m.position}
+  if(b.down>0){obj=BOSS.phase2?"② 지금! 베어서 끝내세요":"② 지금! 케르베로스를 베세요 (1차)";how=BOSS.phase2?"마지막이에요. 가까이 붙어 좌클릭으로 베면 주변 적까지 한꺼번에 쓸려 나가요.":"약점이 모두 부서져 멈췄어요. 가까이 붙어 좌클릭으로 베면 1차 격파. 그 뒤 한 번 더 반복해요.";prog=`멈춤 남은 시간 ${Math.ceil(b.down)}초`;tgt=b.m.position}
   else{const al=BOSS.wps.filter(w=>w.alive);obj="① 붉은 약점 포드 부수기";how="본체는 단단해요. 몸에 붙은 붉은 포드를 베거나 쏴서 부수세요. 3개를 다 부수면 잠깐 멈춥니다.";prog=`${3-al.length} / 3`;
     let bd=1e9;for(const w of al){const p=w.m.getWorldPosition?w.m.getWorldPosition(new V3()):w.m.position,d=p.distanceTo(S.pos);if(d<bd){bd=d;tgt=p}}}
   if($("tutObjTxt").textContent!==obj){$("tutObjTxt").textContent=obj;const o=$("tutObj");o.classList.remove("new");void o.offsetWidth;o.classList.add("new")}
@@ -117,3 +117,10 @@ function bossGuideTick(){const b=BOSS.e,on=!!(b&&b.alive&&!TUT.on&&!VS&&SCREEN==
   const mk=$("tutMark");if(!tgt){mk.hidden=true;return}const v=tgt.clone().add(new V3(0,3,0)).project(camera);let x=(v.x+1)/2*innerWidth,y=(1-v.y)/2*innerHeight;const behind=v.z>1;if(behind){x=innerWidth-x;y=innerHeight-y}
   const m=60,off=behind||x<m||x>innerWidth-m||y<m||y>innerHeight-m;if(off){const cx=innerWidth/2,cy=innerHeight/2,dx=x-cx,dy=y-cy,k=Math.min((cx-m)/Math.abs(dx||1e-6),(cy-m)/Math.abs(dy||1e-6));x=cx+dx*k;y=cy+dy*k;mk.style.setProperty("--rot",Math.atan2(dy,dx)+Math.PI/2+"rad")}else mk.style.setProperty("--rot","0rad");
   mk.hidden=false;mk.style.left=x+"px";mk.style.top=y+"px";mk.classList.toggle("edge",off);mk.lastChild.textContent=b.down>0?"베기!":"약점"}
+/* ---- two phases (10/28 night): the first slash while it is stalled only breaks it (1차 격파): it powers back up angrier (faster attacks,
+   heavier fire) with fresh weak points. The second stall + slash destroys it. ---- */
+function bossPhase2(b){if(BOSS.phase2||!(b.down>0))return false;BOSS.phase2=true;b.down=0;b.flash=1;
+  const p=b.m.position.clone();for(let i=0;i<4;i++)setTimeout(()=>{if(BOSS.e===b&&b.alive){fxExplosion(p.clone().add(new V3().randomDirection().multiplyScalar(6)),1.4);sfx("boom",p,3)}},i*140);
+  S.hitstop=Math.max(S.hitstop||0,.14);S.slow=Math.max(S.slow,.5);flash(.35);impactPunch(1.4);addScore(3000,p,"big");
+  cutin("1차 격파","케르베로스 분노 · 공격이 거세집니다");radio("CIC","1차 격파! 아직 살아 있어요. 약점이 다시 열려요, 한 번 더!");
+  buildWPs();b.m.userData.mat.emissive.setRGB(.35,.04,.02);setTimeout(()=>{if(BOSS.e===b)b.m.userData.mat.emissive.setRGB(0,0,0)},900);BOSS.atkT=1.6;return true}

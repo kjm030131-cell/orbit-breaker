@@ -78,3 +78,6 @@ function vsAimLabel(){const el=$("aimPart"),R=VS&&VS.remote;let t="";
   if(R&&R.root.visible&&VS.phase==="fight"&&SCREEN==="play"){const ad=aimDir(),o=camera.position,c=R.root.position.clone().add(new V3(0,.4,0)),k=Math.max(0,c.clone().sub(o).dot(ad)),near=o.clone().addScaledVector(ad,k);
     if(k<200&&near.distanceTo(c)<3.7){const part=LOCAL_ARENA.partAt({p:R.root.position.toArray(),f:R.root.rotation.y},near.toArray());if(part&&!(VS.opt&&VS.opt[part]<=0))t=VS_PART[part].name}}
   if(el.textContent!==t){el.textContent=t;el.hidden=!t}}
+// the opponent starts a swing: a bright glint on its blade + a sharp ring, so deflect / parry timing can be read through the network delay
+function vsSwingTell(R,heavy){if(!R||!R.tipObj)return;R.root.updateMatrixWorld(true);const p=R.tipObj.getWorldPosition(new V3()),b=(R.baseObj||R.tipObj).getWorldPosition(new V3()),m=p.clone().lerp(b,.4);
+  emit(ADD,{pos:m,tex:TX.glow,color:heavy?0xff5040:0xffffff,s0:heavy?9:6,s1:1,life:.2,a:1});emit(ADD,{pos:m.clone(),tex:TX.ring,color:heavy?0xff4030:0xfff0c0,s0:1,s1:heavy?10:7,life:.22,a:.9});sfx("ignite",m)}

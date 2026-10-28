@@ -30,7 +30,7 @@ function attack(){
     if(!vsCanAct()||!P||VS.skillInput||S.over>0||S.attackCd>0||S.shotCd>0)return;
     S.combo=(clockT-S.lastSlash<1.3)?(S.combo+1)%3:0;S.lastSlash=clockT;
     const name="slash"+(S.combo+1);S.attackCd=(S.combo===2?.95:.52)*vsArmK(false)+.02;/* = the room server's recovery lock: guard / dodge open exactly when the server allows them */S.shotCd=S.attackCd;S.pending=null;S.dash=0;S.dashT=null;S.bladeOn=1.3;S.heat=Math.min(100,S.heat+(S.combo===2?12:8));
-    const t=pickTarget();if(t&&t.m.position.distanceTo(S.pos)<=18){S.dashT=t;const d=t.m.position.clone().sub(S.pos);if(d.length()>7){S.vsLunge=Math.min(.16,(d.length()-6.2)/75);S.vsDir=d.normalize().multiplyScalar(75)}}
+    const t=pickTarget();if(t&&t.m.position.distanceTo(S.pos)<=24){S.dashT=t;const d=t.m.position.clone().sub(S.pos);if(d.length()>7){S.vsLunge=Math.min(.24,(d.length()-6.2)/75);S.vsDir=d.normalize().multiplyScalar(75)}}
     startAct(name);vsSend({t:"swing"});sfx("ignite");return;
   }
   if(S.attackCd>0&&S.attackCd<.22&&!(S.bufT>0)){S.buf="a";S.bufT=.22}
@@ -46,7 +46,7 @@ function attack(){
 function shoot(){
   if(VS){
     if(!vsCanAct()||!P||VS.skillInput||S.over>0||S.attackCd>0||S.shotCd>0)return;
-    S.shotCd=(vsSkills()&&G.unit==="missile"?.3:.4)*vsArmK(true);S.attackCd=S.shotCd;
+    S.shotCd=(vsSkills()&&G.unit==="missile"?.34:.45)*vsArmK(true);S.attackCd=S.shotCd;
     const v=VS,round=v.round,token=v.shotToken=(v.shotToken||0)+1;
     // skill aim: only an opponent sitting within ~6 deg of the reticle gets a (half-strength) lead; otherwise the shot goes exactly where you aim
     // v9: the shot goes to the part of the body under the reticle (head / arms can be aimed at); no assist at all with the head lost
@@ -54,7 +54,7 @@ function shoot(){
     const to=onAim?vsAimPart(target.m.position,ad):camera.position.clone().addScaledVector(ad,180);
     if(onAim&&VS.rvel){const d=to.distanceTo(S.pos);to.addScaledVector(VS.rvel,Math.min(.45,d/VS_BOLT)*.7+VS_INTERP/1000)}
     S.aimPt=to.clone();S.aimT=.75;S.bladeOn=0;P.bladeLen=0;S.dashT=null;S.pending=null;startAct("shoot");
-    setTimeout(()=>{if(VS!==v||v.round!==round||token!==v.shotToken||!vsCanAct())return;P.root.updateMatrixWorld(true);const from=new V3();P.muzzle.getWorldPosition(from);const dir=to.clone().sub(from).normalize();vsSend({t:"shot",from:from.toArray(),dir:dir.toArray()});fxMuzzle(from,dir,0x40e8ff);sfx("shot");S.heat=Math.min(100,S.heat+4);S.camKick=1},70);return;
+    setTimeout(()=>{if(VS!==v||v.round!==round||token!==v.shotToken||!vsCanAct())return;P.root.updateMatrixWorld(true);const from=new V3();P.muzzle.getWorldPosition(from);const dir=to.clone().sub(from).normalize();vsSend({t:"shot",from:from.toArray(),dir:dir.toArray()});fxMuzzle(from,dir,0x40e8ff);sfx("shot");S.heat=Math.min(100,S.heat+7);S.camKick=1},70);return;
   }
   if(S.shotCd>0&&S.shotCd<.18&&!(S.bufT>0)){S.buf="s";S.bufT=.18}
   if(!P||S.over>0||S.shotCd>0||G.stagger>0||G.specT>=0||G.mega)return;S.shotCd=G.unit==="missile"?.24:.32;

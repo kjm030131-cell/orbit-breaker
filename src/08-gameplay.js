@@ -1,9 +1,9 @@
 /* ================= gameplay systems ================= */
 const PHASES=[
-  {at:0,name:"1단계 · 선발 정찰대",sub:"",count:8,gap:[2.2,3],elites:0,rams:0,ms:0,maxTele:2,fire:[4.5,7.5],tele:.9,bolt:85},
-  {at:20,name:"2단계 · 돌격 드론 출현",sub:"",count:10,gap:[2,2.8],elites:0,rams:1,ms:1,blade:1,maxTele:2,fire:[3.4,5.4],tele:.85,bolt:92},
-  {at:45,name:"3단계 · 정예 호위기",sub:"",count:10,gap:[1.9,2.6],elites:1,rams:2,ms:1,blade:1,maxTele:3,fire:[3,4.8],tele:.8,bolt:100},
-  {at:70,name:"최종 단계 · 지휘기 케르베로스",sub:"",count:7,gap:[2.6,3.4],elites:1,rams:1,ms:0,blade:1,maxTele:3,fire:[2.8,4.4],tele:.75,bolt:108}];
+  {at:0,name:"1단계 · 선발 정찰대",sub:"",count:8,gap:[2.2,3],elites:0,rams:0,ms:0,maxTele:3,fire:[3.6,6],tele:.9,bolt:94},
+  {at:20,name:"2단계 · 돌격 드론 출현",sub:"",count:10,gap:[2,2.8],elites:0,rams:1,ms:1,blade:1,maxTele:3,fire:[2.7,4.3],tele:.85,bolt:101},
+  {at:45,name:"3단계 · 정예 호위기",sub:"",count:10,gap:[1.9,2.6],elites:1,rams:2,ms:1,blade:1,maxTele:4,fire:[2.4,3.8],tele:.8,bolt:110},
+  {at:70,name:"최종 단계 · 지휘기 케르베로스",sub:"",count:7,gap:[2.6,3.4],elites:1,rams:1,ms:0,blade:1,maxTele:4,fire:[2.2,3.5],tele:.75,bolt:119}];
 // clean streak: every 15s without a hit adds +0.2 to the score multiplier (max ×2.0); a hit resets it
 const CLEAN_STEP=15;
 function cleanMult(){return Math.min(2,1+Math.floor(G.clean/CLEAN_STEP)*.2)}
@@ -243,7 +243,7 @@ function respawnMech(){
 
 /* ---- rammer drones: hunt, arm (flashing orange line), then charge in a straight line ---- */
 const RAM_SPEED=72;
-const HP_MAX=100,STAGGER=.85,BREAK_COST=30,HP_REGEN_AFTER=8,HP_REGEN=2.5; // per-frame HP, hit stagger, Shift break-out cost, slow regen when untouched
+const HP_MAX=100,STAGGER=.85,BREAK_COST=40,HP_REGEN_AFTER=8,HP_REGEN=2.5; // per-frame HP, hit stagger, Shift break-out cost, slow regen when untouched
 function ramAI(e,dt,T){
   const em=e.m,eye=em.userData.eye,live=SCREEN==="play"&&!S.ended&&S.started;e.phase+=dt;
   if(e.rs==="hunt"){const to=S.pos.clone().sub(em.position),d=to.length();to.normalize();

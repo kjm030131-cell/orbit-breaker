@@ -31,7 +31,7 @@ function vsOpen(code,name,create=false){
   if(VS)vsClose();VS={code,name,side:null,phase:"wait",hp:100,maxHp:100,oppHp:100,oppMaxHp:100,rules:{passives:false,skills:false},players:{},wins:[0,0],round:0,oppName:"",remote:null,tgt:null,sendT:0,pingT:0,off:0,ready:false};const v=VS;
   const base=window.PVP_URL||((location.protocol==="https:"?"wss://":"ws://")+location.host+"/pvp");
   if(code==="local"){v.ws=vstLocalSocket(v,name);v.local=true;$("dCodeBig").textContent="연 습";vsLobby();return}
-  try{v.ws=new WebSocket(base+"?room="+code+"&name="+encodeURIComponent(name)+"&v=11&create="+(create?1:0))}catch(e){VS=null;duelErr("대전 서버에 연결할 수 없습니다.");return}
+  try{v.ws=new WebSocket(base+"?room="+code+"&name="+encodeURIComponent(name)+"&v=12&create="+(create?1:0))}catch(e){VS=null;duelErr("대전 서버에 연결할 수 없습니다.");return}
   v.ws.onmessage=e=>{if(VS!==v)return;let m;try{m=JSON.parse(e.data)}catch{return}vsMsg(m)};
   v.ws.onclose=()=>{if(VS!==v)return;if(["wait","lobby"].includes(v.phase)){vsClose();duelErr("대전 서버 연결이 종료됐습니다. 방을 다시 만들어 주세요.")}else if(v.phase!=="end"&&!v.matchDone)vsEnd("disconnect")};
   v.ws.onerror=()=>{if(VS===v)duelErr("대전 서버에 연결할 수 없습니다.")};
@@ -50,7 +50,7 @@ function vsMsg(m){if(!VS)return;const v=VS;
   if(m.t==="pose"){v.rs=m;m.rx=vsNow();v.rvel=new V3(...(m.v||[0,0,0]));(v.hist||(v.hist=[])).push({t:m.st||m.rx,p:new V3(...m.p),v:v.rvel.clone()});if(v.hist.length>24)v.hist.shift();return}
   if(m.t==="position"){const p=new V3(...m.p);if(p.distanceTo(S.pos)>30)S.pos.copy(p);else v.correctTo=p.sub(S.pos);return}
   if(m.t==="projectile"){if(v.phase!=="fight")return;const from=new V3(...m.from),dir=new V3(...m.dir);fireEnemyBolt(from,dir,false,v.tgt,m.dmg);const b=G.ebolts[G.ebolts.length-1];b.vsVisual=true;b.speed=m.speed;b.life=2.4;b.color=m.color;b.g.children[1].material.color.set(m.color);return}
-  if(m.t==="swing"){if(m.side!==v.side){if(v.remote){v.remote.act="slash"+((m.combo??(m.heavy?2:0))+1);v.remote.actT=0;v.remote.guard=false}if(m.heavy)popText("상대 강공격 · 가드 또는 회피")}return}
+  if(m.t==="swing"){if(m.side!==v.side){if(v.remote){v.remote.act="slash"+((m.combo??(m.heavy?2:0))+1);v.remote.actT=0;v.remote.guard=false;vsSwingTell(v.remote,m.heavy)}if(m.heavy)popText("상대 강공격 · 가드 또는 회피")}return}
   if(m.t==="guard"){if(m.side===v.side){S.guard=m.on}else if(v.remote)v.remote.guard=m.on;return}
   if(m.t==="deflect"){const mine=m.side===v.side,at=vsMid(),d=vsAway();sfx("clash",at);sfx("sizzle",at);sparks(at,d,0xffe0a0,40,.5,34);sparks(at,d.clone().negate(),0x9fe8ff,40,.5,26);fxImpact(at,0xffd080);
     emit(ADD,{pos:at,tex:TX.ring,color:0xffe0a0,s0:2,s1:16,life:.3,a:.9});S.hitstop=Math.max(S.hitstop||0,.07);impactPunch(.8);hitMark("block");
@@ -165,4 +165,4 @@ function vsTick(rdt){if(!VS)return;const v=VS;vsFlushSkill();if(v.correctTo){con
 
   setW("vsHpMe",v.hp/v.maxHp*100);setW("vsGpMe",v.gp??100);setC("vsGpMe","low",(v.gp??100)<35);setW("vsHpOp",v.oppHp/v.oppMaxHp*100);setT("vsMeN",`${v.name} · ${v.hp}/${v.maxHp}`);setT("vsOpN",`${v.oppName} · ${v.oppHp}/${v.oppMaxHp}`);const mi=v.side==="a"?0:1;setT("vsScore",`${v.wins[mi]} : ${v.wins[1-mi]}`);setT("vsRound",`${v.round}라운드 · ${Math.round(v.rtt||0)}ms`);
 }
-function vsHud(){if(!VS)return;const on=vsSkills();setT("phaseTag",`기체 패시브 ${VS.rules.passives?"ON":"OFF"} · 옵션 ${on?"ON":"OFF"}`);setT("unitName",on?VS_UNIT_TEXT[G.unit].r+(G.unitCd>0?` ${G.unitCd.toFixed(1)}`:""):"옵션 꺼짐");setT("specName",on?VS_UNIT_TEXT[G.unit].f:"필살기 꺼짐");setC("wUnit","off",!on);setC("wSpec","off",!on);setC("wUnit","ready",on&&G.unitCd<=0);setC("wSpec","ready",on&&G.spec>=100);setT("chainNow",S.guard?"가드 중 · Q 떼면 해제":S.attackCd>0?"공격 후 빈틈":"18m 이내 돌진 · Q 가드");if(S.boost<20)setT("warn","부스트 부족 — 회피 불가");}
+function vsHud(){if(!VS)return;const on=vsSkills();setT("phaseTag",`기체 패시브 ${VS.rules.passives?"ON":"OFF"} · 옵션 ${on?"ON":"OFF"}`);setT("unitName",on?VS_UNIT_TEXT[G.unit].r+(G.unitCd>0?` ${G.unitCd.toFixed(1)}`:""):"옵션 꺼짐");setT("specName",on?VS_UNIT_TEXT[G.unit].f:"필살기 꺼짐");setC("wUnit","off",!on);setC("wSpec","off",!on);setC("wUnit","ready",on&&G.unitCd<=0);setC("wSpec","ready",on&&G.spec>=100);setT("chainNow",S.guard?"가드 중 · Q 떼면 해제":S.attackCd>0?"공격 후 빈틈":"24m 이내 돌진 · Q 가드");if(S.boost<20)setT("warn","부스트 부족 — 회피 불가");}

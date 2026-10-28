@@ -125,13 +125,13 @@ const tutVal=(s,k)=>typeof s[k]==="function"?s[k]():s[k];
 function tutKeysSet(list){const box=$("tutKeys");const sig=(list||[]).join(",");if(box.dataset.sig===sig)return;box.dataset.sig=sig;box.innerHTML="";
   for(const k of list||[]){const el=document.createElement("kbd");el.dataset.k=k;el.textContent=KEYLBL[k]||k;if(k==="Mouse"||k==="LMB"||k==="RMB")el.classList.add("wide");box.appendChild(el)}
   box.hidden=!(list&&list.length)}
-function tutKeyLight(code,on){if(!TUT.on)return;for(const el of $("tutKeys").children){const c=KEYCAP[el.dataset.k];if(c&&c.includes(code))el.classList.toggle("on",on)}}
+function tutKeyLight(code,on){if(!TUT.on&&!VST.on)return;for(const el of $("tutKeys").children){const c=KEYCAP[el.dataset.k];if(c&&c.includes(code))el.classList.toggle("on",on)}}
 addEventListener("keydown",e=>{tutKeyLight(e.code,true);if(!TUT.on||SCREEN!=="play"||PAUSED)return;
   if(e.code==="Tab"&&!e.repeat&&TUT.step>=0&&TUT.step<TUT_STEPS.length-1&&!TUT.busy){e.preventDefault();tutPass("건너뜀")}
   if(e.code==="Enter"&&!e.repeat)TUT.c.next=(TUT.c.next||0)+1});
 addEventListener("keyup",e=>tutKeyLight(e.code,false));
 addEventListener("mousedown",e=>tutKeyLight("mouse"+e.button,true));addEventListener("mouseup",e=>tutKeyLight("mouse"+e.button,false));
-addEventListener("mousemove",e=>{if(!TUT.on||!(e.movementX||e.movementY))return;tutKeyLight("mousemove",true);clearTimeout(TUT.mmT);TUT.mmT=setTimeout(()=>tutKeyLight("mousemove",false),160)});
+addEventListener("mousemove",e=>{if(!TUT.on&&!VST.on||!(e.movementX||e.movementY))return;tutKeyLight("mousemove",true);clearTimeout(TUT.mmT);TUT.mmT=setTimeout(()=>tutKeyLight("mousemove",false),160)});
 // highlight the HUD widget the step is about (boost gauge, rifle, blade, unit R / F, grenade)
 function tutHl(id){if(TUT.hl===id)return;if(TUT.hl){const o=$(TUT.hl);if(o)o.classList.remove("tutHl")}TUT.hl=id||null;if(id){const o=$(id);if(o)o.classList.add("tutHl")}}
 // the 4 option units side by side (shown while the unit section is introduced)
@@ -156,7 +156,7 @@ function tutText(s){const a=tutVal(s,"obj")||"",b=tutVal(s,"how")||"";if($("tutO
 function tutPass(why){if(TUT.busy)return;TUT.busy=true;const s=TUT_STEPS[TUT.step];const o=$("tutObj");$("tutCue").hidden=true;
   if(why){popText(why);sfx("ui")}else{sfx("specReady");popText("목표 달성");o.classList.add("ok")}
   setTimeout(()=>{TUT.busy=false;o.classList.remove("ok");if(TUT.on&&TUT_STEPS[TUT.step]===s)tutStep(TUT.step+1)},why?900:1500)}
-function tutFrame(dt){if(!TUT.on||SCREEN!=="play"||TUT.step<0){if(!$("tutKeys").hidden&&!TUT.on){tutKeysSet(null);tutHl(null);$("tutMark").hidden=$("tutCue").hidden=true}return}
+function tutFrame(dt){if(!TUT.on||SCREEN!=="play"||TUT.step<0){if(!$("tutKeys").hidden&&!TUT.on&&!VST.on){tutKeysSet(null);tutHl(null);$("tutMark").hidden=$("tutCue").hidden=true}return}
   const s=TUT_STEPS[TUT.step];if(!s)return;TUT.t+=dt;TUT.dt=dt;
   if(s.tick)s.tick();tutKeep(s,dt);tutText(s);tutMarkTick(s);if(!TUT.busy)tutCueTick(s);
   if(s.prog){const v=s.prog();if(v!==TUT.lastProg){TUT.lastProg=v;$("tutObjProg").textContent=v}}
