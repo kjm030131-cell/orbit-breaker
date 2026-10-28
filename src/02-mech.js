@@ -48,7 +48,7 @@ function buildPlayer(gltf,frame,remote){
   // springs for every joint axis
   const SP={};const cfg={hips:[150,.75],torso:[190,.62],head:[230,.6],armR:[260,.5],foreR:[300,.55],armL:[260,.48],foreL:[300,.52],thighR:[140,.58],shinR:[150,.55],thighL:[140,.58],shinL:[150,.55]};
   for(const k in cfg){SP[k]={k:cfg[k][0],z:cfg[k][1],x:[0,0,0],v:[0,0,0]}}
-  return {root,J,mat,flames,eye,beam,inner,outer,saber:saber.material,mixP0:mix?mix.P0:null,tipObj,baseObj,hiltGlow,muzzle,SP,bladeLen:0,rifleS:1,frame,sync:mix?mix.sync:null};
+  return {root,J,mat,flames,eye,beam,inner,outer,saber:saber.material,mixP0:mix?mix.P0:null,tipObj,baseObj,hiltGlow,muzzle,SP,bladeLen:0,rifleS:1,frame,sync:mix?()=>{mix.sync();blade.visible=J.rifle.scale.x<.5}:null};
 }
 function setFrame(k){const F=FRAMES[k];if(!F||!F.obj||(P&&P.frame===k))return false;
   let pos=null,rot=0;if(P){pos=P.root.position.clone();rot=P.root.rotation.y;scene.remove(P.root)}

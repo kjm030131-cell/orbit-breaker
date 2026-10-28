@@ -21,10 +21,13 @@ function buildMixRig(gltf,remote){
   const map=[];for(const [k,,n] of MIX_ORDER){const m=mixBone(scene,n);if(m)map.push({k,m,rest:m.getWorldQuaternion(new THREE.Quaternion())})}
   // the rifle is part of the hand in Tripo's skin: move its vertices onto an extra bone so it can be hidden while the saber is out
   let gun=null;const hand=mixBone(scene,"RightHand");
-  if(skin&&hand&&!skin.userData.gunSplit){const sk=skin.skeleton,hb=new Set();sk.bones.forEach((b,i)=>{if(/(RightHand|RightForeArm)$/.test(b.name))hb.add(i)});
+  if(skin&&hand&&!skin.userData.gunSplit){const sk=skin.skeleton,hb=new Set();sk.bones.forEach((b,i)=>{if(/(RightHand\w*|RightForeArm)$/.test(b.name))hb.add(i)});
     sk.update();const geo=skin.geometry,pa=geo.attributes.position,si=geo.attributes.skinIndex,sw=geo.attributes.skinWeight,hy=P0.rifle.y,hx=P0.rifle.x,v=new V3();
-    const idx=[];for(let i=0;i<pa.count;i++){let best=0,bw=-1;const ws=[sw.getX(i),sw.getY(i),sw.getZ(i),sw.getW(i)],js=[si.getX(i),si.getY(i),si.getZ(i),si.getW(i)];for(let c=0;c<4;c++)if(ws[c]>bw){bw=ws[c];best=js[c]}
-      if(!hb.has(best))continue;v.fromBufferAttribute(pa,i);skin.boneTransform(i,v);v.applyMatrix4(skin.matrixWorld);if(v.y<hy-.08||v.x<hx-.08)idx.push(i)}
+    const el=P0.foreR.clone(),ax=P0.rifle.clone().sub(el),aL=ax.length()||1;ax.normalize();const idx=[];for(let i=0;i<pa.count;i++){let best=0,bw=-1;const ws=[sw.getX(i),sw.getY(i),sw.getZ(i),sw.getW(i)],js=[si.getX(i),si.getY(i),si.getZ(i),si.getW(i)];for(let c=0;c<4;c++)if(ws[c]>bw){bw=ws[c];best=js[c]}
+      if(!hb.has(best))continue;v.fromBufferAttribute(pa,i);skin.boneTransform(i,v);v.applyMatrix4(skin.matrixWorld);
+      /* gun = away from the forearm tube (elbow -> hand) or past the fist; the old rule (below / outside the hand) missed rifles held level or backward */
+      const t=clamp(v.clone().sub(el).dot(ax)/aL,0,1.15),dist=v.distanceTo(el.clone().addScaledVector(ax,t*aL));
+      if(dist>.075||t>=1.15||v.y<hy-.08||v.x<hx-.08)idx.push(i)}
     if(idx.length>30){gun=new THREE.Bone();gun.name="gun";hand.add(gun);scene.updateMatrixWorld(true);
       const hi=sk.bones.indexOf(hand),bones=sk.bones.concat([gun]),inv=sk.boneInverses.concat([sk.boneInverses[hi].clone()]),gi=bones.length-1;
       for(const i of idx){si.setXYZW(i,gi,0,0,0);sw.setXYZW(i,1,0,0,0)}si.needsUpdate=sw.needsUpdate=true;
