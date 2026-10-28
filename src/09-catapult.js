@@ -3,7 +3,8 @@ POSE.cata={hips:[0,0,0],torso:[.42,0,0],head:[-.38,0,0],armR:[.5,0,-.3],foreR:[-
 POSE.stand={hips:[0,0,0],torso:[.05,0,0],head:[0,0,0],armR:[-.2,0,-.08],foreR:[-.3,0,0],armL:[-.1,0,.1],foreL:[-.35,0,0],thighR:[0,0,-.03],shinR:[.05,0,0],thighL:[0,0,.03],shinL:[.05,0,0]};
 const CINE={on:false,t:0,z:-130,v:0,thr:.6,crouch:0,pose:null,skip:false,done:null,line:-1,typed:0,camPos:new V3(),camLook:new V3(),flags:{}};
 let SHIP=null;
-const DECK_Y=-2.6,HATCH_Z=-30,START_Z=-130,T_LAUNCH=3.75,T_END=6.1;
+// PILOT_HOLD: extra seconds on the pilot close-up ("앰버 1, 출격한다!") before the launch; everything after it shifts by this much
+const PILOT_HOLD=1.6,DECK_Y=-2.6,HATCH_Z=-30,START_Z=-130,T_LAUNCH=3.75+PILOT_HOLD,T_END=6.1+PILOT_HOLD;
 
 function panelTex(w,h,draw){const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");draw(x,w,h);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return t}
 function hazard(x,x0,y0,w,h,step){x.save();x.beginPath();x.rect(x0,y0,w,h);x.clip();x.fillStyle="#d89a12";x.fillRect(x0,y0,w,h);x.fillStyle="#17181a";for(let i=-h;i<w+h;i+=step*2){x.beginPath();x.moveTo(x0+i,y0);x.lineTo(x0+i+step,y0);x.lineTo(x0+i+step-h,y0+h);x.lineTo(x0+i-h,y0+h);x.fill()}x.restore()}
@@ -106,7 +107,7 @@ function cineUpdate(rdt){
   if(CINE.skip){CINE.z=Math.max(CINE.z,30);CINE.v=45;S.pos.set(0,0,CINE.z);sfx("cataLaunch");endCine();return}
   const lines=cineLines();lines.forEach((L,i)=>{if(cross(L.at))setSub(i)});
   if(CINE.line>=0){const txt=lines[CINE.line].txt;CINE.typed=Math.min(txt.length,CINE.typed+rdt*34);$("subTxt").textContent=txt.slice(0,CINE.typed|0)}
-  if(cross(4.1))$("cineSub").classList.remove("on");
+  if(cross(4.1+PILOT_HOLD))$("cineSub").classList.remove("on");
   // doors
   const op=clamp((t-.6)/1.7,0,1),e=op*op*(3-2*op);SHIP.doors[0].position.x=-4.05-e*8.4;SHIP.doors[1].position.x=4.05+e*8.4;
   if(cross(.6))sfx("doors");
@@ -118,8 +119,8 @@ function cineUpdate(rdt){
   if(cross(1.9)){CINE.pose=POSE.cata;sfx("servo")}
   CINE.crouch=lerp(CINE.crouch,t>1.9&&t<T_LAUNCH?-.9:0,1-Math.pow(.002,rdt));
   if(t>2.35&&t<T_LAUNCH)CINE.thr=lerp(CINE.thr,1.6+Math.sin(t*30)*.2,.1);
-  if(cross(2.35))sfx("cataCharge");
-  if(P){const k=clamp((t-2.0)/.5,0,1)*(t<3.4?1:clamp(1-(t-3.4)/.4,0,1));P.eye.scale.set(.05+k*.35,.03+k*.12,1)}
+  if(cross(2.35+PILOT_HOLD))sfx("cataCharge"); // the charge-up still leads straight into the launch
+  if(P){const k=clamp((t-2.0)/.5,0,1)*(t<3.4+PILOT_HOLD?1:clamp(1-(t-3.4-PILOT_HOLD)/.4,0,1));P.eye.scale.set(.05+k*.35,.03+k*.12,1)}
   // launch
   if(cross(T_LAUNCH)){sfx("cataLaunch");S.shake=1.2;flash(.25);CINE.pose=POSE.fwd?Object.assign({},POSE.idle,POSE.fwd):null;
     for(let i=0;i<8;i++){const sx=i%2?1:-1;emit(NORM,{pos:new V3(sx*(4+Math.random()*2),DECK_Y+.4,START_Z+2+Math.random()*6),tex:TX.smoke,color:0x8a8f96,vel:new V3(sx*(8+Math.random()*8),3+Math.random()*3,4+Math.random()*10),s0:2,s1:7,life:1.3,a:.28,drag:1.6})}}
@@ -140,15 +141,15 @@ function cineCamera(rdt){
   if(t<0){const k=(t+2.6)/2.6,e=k*k*(3-2*k); // establishing shot: slow dolly past the carrier's bow, Earth behind
     pos.set(lerp(120,70,e),lerp(34,16,e),lerp(170,95,e));lk.set(0,lerp(6,-2,e),lerp(-20,-70,e));fov=48}
   else if(t<1.9){const k=t/1.9;pos.set(lerp(-6.2,-4.8,k),lerp(4.4,3.2,k),lerp(-147,-142,k));lk.set(0,1.6,-112);fov=58}
-  else if(t<3.35){const k=(t-1.9)/1.45;pos.set(lerp(1.6,1.0,k),lerp(.7,1.0,k),lerp(-123.6,-125.2,k));lk.set(0,.9,-130);fov=40}
-  else if(t<4.25){pos.set(2.4,-.6,-139);lk.set(0,1.5,-96);fov=t>T_LAUNCH?78:60}
+  else if(t<3.35+PILOT_HOLD){const k=(t-1.9)/(1.45+PILOT_HOLD);pos.set(lerp(1.6,1.0,k),lerp(.7,1.0,k),lerp(-123.6,-125.2,k));lk.set(0,.9,-130);fov=40}
+  else if(t<4.25+PILOT_HOLD){pos.set(2.4,-.6,-139);lk.set(0,1.5,-96);fov=t>T_LAUNCH?78:60}
   else{if(SHIP&&SHIP.model){pos.set(95,58,100);fov=40}else{pos.set(12,3.4,30);fov=52}lk.copy(p.z<HATCH_Z?new V3(0,1.5,HATCH_Z):p).add(new V3(0,1,0));
-    if(t>5.2){const k=clamp((t-5.2)/(T_END-5.2),0,1),s=k*k*(3-2*k);const cf=camFwd();
+    if(t>5.2+PILOT_HOLD){const k=clamp((t-5.2-PILOT_HOLD)/(T_END-5.2-PILOT_HOLD),0,1),s=k*k*(3-2*k);const cf=camFwd();
       const gp=p.clone().addScaledVector(cf,-10).add(new V3(0,2.8,0)),gl=p.clone().addScaledVector(cf,8).add(new V3(0,1.4,0));
       pos.lerp(gp,s);lk.lerp(gl,s);fov=lerp(66,62,s)}}
-  const shot=t<0?-1:t<1.9?0:t<3.35?1:t<4.25?2:3,cut=CINE.flags.shot!==shot;CINE.flags.shot=shot;
+  const shot=t<0?-1:t<1.9?0:t<3.35+PILOT_HOLD?1:t<4.25+PILOT_HOLD?2:3,cut=CINE.flags.shot!==shot;CINE.flags.shot=shot;
   if(cut){CINE.camPos.copy(pos);CINE.camLook.copy(lk)}
-  CINE.camPos.lerp(pos,1-Math.pow(.02,rdt));CINE.camLook.lerp(lk,CINE.flags.shot===3&&t<5.2?1-Math.pow(1e-5,rdt):1-Math.pow(.02,rdt));
+  CINE.camPos.lerp(pos,1-Math.pow(.02,rdt));CINE.camLook.lerp(lk,CINE.flags.shot===3&&t<5.2+PILOT_HOLD?1-Math.pow(1e-5,rdt):1-Math.pow(.02,rdt));
   camera.position.copy(CINE.camPos);
   S.shake=Math.max(0,S.shake-rdt*2.2);const sh=S.shake*S.shake*.7;camera.position.add(new V3((Math.random()-.5)*sh,(Math.random()-.5)*sh,(Math.random()-.5)*sh));
   camera.lookAt(CINE.camLook);camera.fov+=(fov-camera.fov)*(cut?1:.15);camera.updateProjectionMatrix();
