@@ -1,5 +1,5 @@
 // Pure room simulation. Server owns rules, readiness, resources, attacks, HP and rounds.
-export const VERSION=12;
+export const VERSION=13;
 // 1:1 cover: the single-player battlefield objects (station, wrecks, engines, satellite, asteroids) scaled into the
 // arena. Collision spheres were baked from the real meshes (same surface method as the single-player field), so the
 // room server blocks shots and beams exactly where the client draws the objects.
@@ -45,10 +45,10 @@ const nearPt=(p,a,b)=>{const d=sub(b,a),t=Math.max(0,Math.min(1,dot(sub(p,a),d)/
 // drains the deflected side's guard gauge (posture); empty = guard break.
 // Heavy (3rd) swings cannot be deflected (guard, parry or dodge them); swings started within DEFLECT_SIM of each other clash instead.
 export const DEFLECT_SIM=90,DEFLECT_WIN=230,DEFLECTED_MS=300,DEFLECT_LOCK=220,DEFLECT_GP=30;
-export const ROUND_MS=75000,MELEE_CONE=.8,WHIFF_MS=300,READ_MS=550,COUNTER_K=1.3,CRIT_K=1.35,FAR_M=60,FAR_DMG=4;
+export const ROUND_MS=75000,MELEE_CONE=.8,WHIFF_MS=300,READ_MS=550,COUNTER_K=1.3,CRIT_K=1.35,FAR_M=60,FAR_DMG=5;
 // v12 melee pays off: rifle 6 (3 inside CLOSE_M, 4 beyond FAR_M), slower and hotter; melee 18 / 30; boosting straight at the shooter
 // (CHARGE_K) takes 40% less rifle damage so closing in is not a one-sided beating
-export const RIFLE_DMG=6,CLOSE_M=14,CLOSE_DMG=3,CHARGE_K=.6,MELEE_DMG=18,MELEE_HEAVY=30;
+export const RIFLE_DMG=8,CLOSE_M=14,CLOSE_DMG=4,CHARGE_K=.6,MELEE_DMG=24,MELEE_HEAVY=38; // v13: +30% (HP 180 felt spongy)
 const other=s=>s==='a'?'b':'a';
 // v11 latency grace: a melee hit is judged up to half the defender's ping (max 100 ms) after it lands, so a guard / dodge / deflect
 // pressed on time on their screen still counts (the attacker's hit confirm comes that much later instead)
@@ -183,7 +183,7 @@ export class Arena {
   if(m.t==='skill'&&s.rules.skills&&vec(m.dir)&&len(m.dir)>.9&&len(m.dir)<1.1){const special=m.special===true;if(special?p.spec<100:now<p.skillAt){reject(special?'charge':'cooldown',p.skillAt);return;}const cds={mega:9000,pods:8000,missile:9000,shield:10000};if(special)p.spec=0;else p.skillAt=now+cds[p.unit];p.lock=now+400;const dir=norm(m.dir),from=add(p.p,[0,1,0]);
    this.emit({t:'skill',side,unit:p.unit,special,dir,seq:m.seq});
    if(p.unit==='shield'){p.barrier=now+(special?2000:1000);p.reflect=now+250;if(special)s.pending.push({side,kind:'pulse',at:now+2000,range:12,dmg:18});}
-   else if(p.unit==='mega'){s.pending.push({side,kind:'beam',at:now+(special?900:700),range:special?190:150,width:special?5:3.2,dmg:special?3:5,heavy:special,dir});}
+   else if(p.unit==='mega'){s.pending.push({side,kind:'beam',at:now+(special?900:700),range:special?190:150,width:special?5:3.2,dmg:special?4:7,heavy:special,dir});}
    else{const n=p.unit==='pods'?(special?7:3):(special?6:3),spread=p.unit==='pods'?.065:.025;for(let i=0;i<n;i++){const a=(i-(n-1)/2)*spread,d=[dir[0]*Math.cos(a)+dir[2]*Math.sin(a),dir[1],dir[2]*Math.cos(a)-dir[0]*Math.sin(a)];s.pending.push({side,kind:'volley',at:now+i*(p.unit==='pods'?80:160),from,dir:d,dmg:p.unit==='pods'?5:7,speed:p.unit==='pods'?110:85,color:p.unit==='pods'?0x48d8ff:0xff8a40});}}
    this.status();
   }

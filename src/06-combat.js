@@ -3,7 +3,16 @@ const fwd=()=>new V3(Math.sin(S.yaw),0,Math.cos(S.yaw));
 const camFwd=()=>new V3(Math.sin(S.yaw)*Math.cos(S.pitch),Math.sin(S.pitch),Math.cos(S.yaw)*Math.cos(S.pitch));
 // centre callouts are queued so a burst of them is still readable: each shows at least 0.9 s, the last one 1.6 s
 const POPQ=[];let popBusy=0;
-function popText(t){if(POPQ[POPQ.length-1]===t||POPQ.length>=3&&POPQ.shift()===undefined)return;POPQ.push(t);if(!popBusy)popNext()}
+/* on-screen notices (10/28 night): a small feed at the lower right (above the weapon icons), 2.6 s per line, at most 3 lines,
+   a repeat merges into "×2". Routine combat chatter (dodges, break-outs, clashes, parries, combo multipliers…) is not shown at all:
+   the sound and effects already say it. Hints like "피격 · Shift로 경직 풀기" show only the first 3 times per sortie. */
+const POP_MUTE=/^(경직 풀기|상대 경직 풀기|저스트 회피|간파|패리|튕겨냄|튕겨남|받아쳤다|막힘 ·|칼날 격돌|빈틈|헛스윙|COUNTER|카운터|크리티컬|콤보|연쇄 ×|무피격|가드 ·|빔 막힘|빔 튕겨냄|방어됨|연타|FIGHT|상대 강공격|충돌 격파|포드 요격|반사 장벽|반응 장갑|실드 비트|스킬 입력 예약|상대 경직)/;
+const POP_HINT=/^피격 −/;let POPN=0;
+function popText(t){if(!t||POP_MUTE.test(t))return;if(POP_HINT.test(t)){if(POPN>=3)return;POPN++}
+  const f=$("feed");if(!f)return;const last=f.lastElementChild;
+  if(last&&last.dataset.t===t){const n=(+last.dataset.n||1)+1;last.dataset.n=n;last.lastChild.textContent=` ×${n}`;feedLife(last);return}
+  const el=document.createElement("div");el.dataset.t=t;el.textContent=t;el.appendChild(document.createElement("i"));f.appendChild(el);while(f.children.length>3)f.firstElementChild.remove();feedLife(el)}
+function feedLife(el){clearTimeout(el.h);el.classList.remove("out");el.h=setTimeout(()=>{el.classList.add("out");el.h=setTimeout(()=>el.remove(),400)},2600)}
 function popNext(){const p=$("pop");clearTimeout(popText.h);const t=POPQ.shift();if(t===undefined){popBusy=0;p.classList.remove("on");return}popBusy=1;
   p.textContent=t;p.classList.remove("on");void p.offsetWidth;p.classList.add("on");popText.h=setTimeout(()=>{if(POPQ.length)popNext();else popText.h=setTimeout(()=>{popBusy=0;p.classList.remove("on")},700)},900)}
 function flash(a){const f=$("flash");f.style.transition="none";f.style.opacity=a;requestAnimationFrame(()=>{f.style.transition="opacity .18s";f.style.opacity=0})}
@@ -97,7 +106,7 @@ function slashStrike(){ // called on the strike frame of a slash action
 function disposeEnemy(e){clearTele(e);if(e.arc){scene.remove(e.arc.mesh);e.arc.mat.dispose();e.arc.geo.dispose();e.arc=null}scene.remove(e.m);e.m.traverse(o=>{if(o.material)o.material.dispose()})}
 function chainPts(n){const k=Math.min(n,6);return 200*k*k+Math.max(0,n-6)*1500}
 function explode(e,chainN){if(e.isWP){wpDamage(e,3,e.m.position.clone());return}if(e.isBoss){bossDie(e,chainN);return}e.alive=false;if(SCREEN==="play")S.kills=(S.kills||0)+1;disposeEnemy(e);fxExplosion(e.m.position,(e.elite?1.7:1)+Math.min(chainN,6)*.12);onKill(e);sfx("boom",e.m.position,chainN);S.shake=Math.max(S.shake,.5)}
-function restart(){for(const e of enemies)disposeEnemy(e);enemies.length=0;fieldReset();
+function restart(){POPN=0;{const f=$("feed");if(f)f.textContent=""}for(const e of enemies)disposeEnemy(e);enemies.length=0;fieldReset();
   Object.assign(S,{score:0,best:0,kills:0,time:120,started:false,ended:false,heat:0,over:0,boost:100,act:null,combo:0,dash:0,dashT:null,pending:null,bladeOn:0,hitstop:0,slow:0});
   S.pos.set(0,0,0);S.vel.set(0,0,0);resetGameplay();fillEnemies()}
 

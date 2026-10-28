@@ -842,6 +842,52 @@ body.versus.tut #tutObj{top:calc(150px + env(safe-area-inset-top,0px));left:20px
 body.versus.tut #radio{top:auto;bottom:calc(150px + env(safe-area-inset-bottom,0px));left:20px;transform:none;width:min(400px,40vw);max-width:min(400px,40vw)}
 body.versus.tut .hud.tl{display:none}
 </style>
+<style>
+/* result screen fit (10/28 night): one-line board rows, smaller blocks on short screens, nothing outside the frames */
+#rBoard .board td{white-space:nowrap;padding:7px 9px}
+#rBoard .board td:nth-child(2){max-width:150px;overflow:hidden;text-overflow:ellipsis}
+#rBoard .board td.d{max-width:130px;overflow:hidden;text-overflow:ellipsis}
+#rBoard .board .ut{display:none}
+#scrResult .console{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px)}
+#scrResult .pane{min-width:0;overflow:hidden}
+#scrResult .debrief{overflow-wrap:anywhere}
+@media (max-height:820px){
+  #scrResult .pane{padding:18px 26px!important}
+  #scrResult .pHead{margin-bottom:8px!important;padding-bottom:6px!important}
+  #scrResult .bigScore{font-size:clamp(40px,8vh,64px)!important}
+  #scrResult .stats{margin:12px 0 10px!important}
+  #scrResult .stats div{padding:8px 12px}
+  #scrResult .stats b{font-size:20px}
+  #scrResult .debrief{margin-top:8px;padding:6px 12px;font-size:13px;line-height:1.5}
+  #scrResult .btns{margin-top:12px!important}
+  #rBoard .board td{padding:5px 8px;font-size:14px}
+  #rBoard .board th{padding-bottom:6px}
+}
+/* 1:1 machine battle result: no score / ranking blocks, just the outcome */
+#scrResult.vsres .console{grid-template-columns:1fr;width:min(620px,100%)}
+#scrResult.vsres .pane+.pane,#scrResult.vsres .stats,#scrResult.vsres .debrief,#scrResult.vsres #rGrade{display:none!important}
+#scrResult.vsres .bigScore{text-align:center;font-size:clamp(64px,12vh,120px)!important}
+#scrResult.vsres #rPb{text-align:center;margin-top:10px;font:800 22px var(--f-kdisp)}
+#scrResult.vsres .rankLine,#scrResult.vsres .lbl{text-align:center}
+#scrResult.vsres .btns{justify-content:center}
+</style>
+<style>
+#scrResult.vsres .scoreRow{justify-content:center}
+#scrResult .pane{padding-bottom:36px!important}
+</style>
+<style>
+/* notice feed (replaces the big centre pop text) */
+#pop{display:none!important}
+#feed{position:fixed;right:24px;bottom:calc(150px + env(safe-area-inset-bottom,0px));z-index:6;display:flex;flex-direction:column;align-items:flex-end;gap:5px;pointer-events:none;max-width:min(420px,44vw)}
+#feed div{padding:5px 12px 6px;font:700 16px var(--f-body);color:#f2efe8;background:linear-gradient(270deg,rgba(0,0,0,.72),rgba(0,0,0,.35));border-right:3px solid var(--amber);text-shadow:0 1px 3px #000;animation:feedIn .18s ease-out;transition:opacity .4s,transform .4s}
+#feed div i{font-style:normal;color:var(--amber);font-family:var(--f-num)}
+#feed div.out{opacity:0;transform:translateX(12px)}
+@keyframes feedIn{from{opacity:0;transform:translateX(16px)}}
+body:not(.versus):not(.tut) #hud[hidden]~#feed{display:none}
+</style>
+
+
+
 
 
 
@@ -858,7 +904,7 @@ body.versus.tut .hud.tl{display:none}
 
 <!-- in-game HUD -->
 <div id="hud" hidden>
-  <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="aimPart" hidden></div><div id="postBar" hidden><i></i><span>자세</span></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="lockWarn"><b>피격 경고</b></div>
+  <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="feed"></div><div id="aimPart" hidden></div><div id="postBar" hidden><i></i><span>자세</span></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="lockWarn"><b>피격 경고</b></div>
   <div id="lock"><i></i><i></i><i></i><i></i><span id="lockTxt">록온</span></div>
   <div id="pop"></div>
   <div id="phase"><div id="phaseSub" class="lbl">단계</div><div id="phaseName">—</div></div>

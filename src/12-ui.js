@@ -171,13 +171,16 @@ function debriefLine(lost,score){const n=S.kills||0;
   return `120초 종료, 귀환하세요. 오늘 밤 유성은 ${n}개. 연쇄 폭발을 노려봐요.`;
 }
 
+// result screen layout: solo / score duel (score, stats, board) or the 1:1 machine battle outcome (vsres)
+function resultMode(vs){const r=$("scrResult");r.classList.toggle("vsres",vs);const h=r.querySelector(".pHead h2"),l=r.querySelector(".pane>.lbl");
+  if(h)h.textContent=vs?"기체 대전 종료":"작전 종료";if(l)l.textContent=vs?"라운드 스코어 (나 : 상대)":"이번 출격 점수"}
 function finishRun(reason){
   if(VS){vsTimeUp();return}
   if(TUT.on){tutExit("title");return}
   if(S.ended)return;S.ended=true;if(document.pointerLockElement)document.exitPointerLock();
   const lost=reason==="lost";let bonus=0;
   const rate=lost?0:G.lives*.1+(G.lives===MAX_LIVES?.1:0);if(!lost){bonus=Math.round(S.score*rate);S.score+=bonus}
-  G.focus=null;
+  G.focus=null;resultMode(false);
   if(DUEL){duelFinish(lost,bonus,rate);return}
   const rec=PILOT.rec||{},score=S.score,pb=score>(rec.best||0);
   if(pb){rec.best=score;rec.chain=S.best;rec.kills=S.kills||0;rec.combo=G.maxKC;rec.unit=G.unit;rec.frame=P?P.frame:"mk2"}

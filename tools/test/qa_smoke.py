@@ -56,6 +56,8 @@ async def main():
         await ev('tutorial','''()=>{const T=window.__T;T.setPaused(true);document.body.classList.add("tut");T.TUT.on=true;T.TUT.c={};const out=[];for(let i=0;i<T.TUT_STEPS.length-1;i++){T.TUT.busy=false;T.tutStep(i);for(let k=0;k<6;k++)T.update(.05);out.push(document.getElementById("tutObjTxt").textContent.slice(0,14))}
           T.TUT.busy=false;T.tutStep(8);for(let k=0;k<4;k++)T.update(.05);return out}''')
         await pg.evaluate('()=>window.__T.setPaused(false)');await pg.wait_for_timeout(600);await shot('05_tutorial')
+        await pg.evaluate('()=>{const T=window.__T;["경직 풀기","팔 절단 · 사격 불능","자세 붕괴! 지금 베어라","자세 붕괴! 지금 베어라","피격 −24 · Shift로 경직 풀기","콤보 ×2"].forEach(t=>T.popText(t))}');await pg.wait_for_timeout(500);await shot('05b_feed')
+        await ev('feed','()=>[...document.querySelectorAll("#feed div")].map(d=>d.textContent)')
         await pg.evaluate('()=>{const T=window.__T;T.TUT.on=false;T.TUT.step=-1;document.body.classList.remove("tut");T.restart();T.show("duel")}')
         await pg.wait_for_timeout(800);await shot('06_lobby')
         # 5) 1:1 tutorial (offline room) + parts / cockpit
