@@ -179,7 +179,7 @@ function finishRun(reason){
   const rate=lost?0:G.lives*.1+(G.lives===MAX_LIVES?.1:0);if(!lost){bonus=Math.round(S.score*rate);S.score+=bonus}
   G.focus=null;
   if(DUEL){duelFinish(lost,bonus,rate);return}
-  const rec=PILOT.rec,score=S.score,pb=score>(rec.best||0);
+  const rec=PILOT.rec||{},score=S.score,pb=score>(rec.best||0);
   if(pb){rec.best=score;rec.chain=S.best;rec.kills=S.kills||0;rec.combo=G.maxKC;rec.unit=G.unit;rec.frame=P?P.frame:"mk2"}
   rec.at=new Date().toISOString();putRec({...rec});
   if(SERVER&&RUN){const runId=RUN;RUN=null;api("finish",{runId,score,kills:S.kills||0,chain:S.best,combo:G.maxKC}).then(j=>{rec.best=j.best;rec.attempts=j.attempts;$("rBest").textContent=(j.best||0).toLocaleString();applyBoard(j);updateRankLine()}).catch(e=>{$("rRank").innerHTML='<span class="note" style="color:var(--red)">기록 서버 전송 실패 — 운영진에게 화면을 보여주세요.</span>'})}

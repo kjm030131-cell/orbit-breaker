@@ -10,6 +10,7 @@ async def main():
         pg=await b.new_page(viewport={'width':1280,'height':720})
         pg.on('console',lambda m: errs.append(m.type+': '+m.text) if m.type in('error','warning') else None)
         pg.on('pageerror',lambda e: errs.append('PAGEERR '+str(e)))
+        pg.on('response',lambda r: errs.append(f'HTTP {r.status} {r.url}') if r.status>=400 else None)
         async def shot(n):
             try: await pg.screenshot(path=f'{OUT}/{n}.png',timeout=60000)
             except Exception as e: errs.append(f'shot {n}: {e}')
@@ -27,11 +28,22 @@ async def main():
             const l0=T.G.lives;T.update(.05);if(T.G.lives<l0)lost++;minHp=Math.min(minHp,T.G.hp);if(T.G.dead>0)dead++}
           ms=(performance.now()-t0)/1200;return {msPerUpdate:+ms.toFixed(2),kills,minHp,deadFrames:dead,livesLost:lost,lives:T.G.lives,phase:T.G.phase,time:+T.S.time.toFixed(1),enemies:T.enemies.filter(e=>e.alive).length}}''')
         await pg.evaluate('()=>window.__T.setPaused(false)');await pg.wait_for_timeout(1500);await shot('02_solo')
+        # 1b) a decent player for the full 120 s: dodges ~60% of shots / rams in time, breaks staggers, kills a drone every 1.5 s, chips the pods and slashes the stalled boss
+        await ev('solo_skilled','''()=>{const T=window.__T;T.setPaused(true);T.G.unit="mega";T.restart();T.show("play");T.S.started=true;T.S.ended=false;T.S.demo=false;
+          let lost=0,hits=0,minHp=100,dodges=0,bossT=null,last=100;
+          for(let i=0;i<20*120&&!T.S.ended;i++){if(i%30===0){const e=T.enemies.find(e=>e.alive&&e.launched<=0&&!e.isBoss&&!e.isWP&&!e.ms);if(e){e.alive=false}}
+            const tb=T.cueBolt(),tr=T.cueRam();if(((tb!==null&&tb<.15)||(tr!==null&&tr<.2))&&Math.random()<.35){T.dodge();dodges++}
+            if(T.G.stagger>0&&!T.G.broke&&Math.random()<.2)T.dodge();
+            const B=T.BOSS;if(B.e&&bossT===null)bossT=+(120-T.S.time).toFixed(1);
+            if(B.e&&B.e.alive&&!(B.e.down>0)&&i%40===0){for(const w of B.wps)if(w.alive){T.wpDamage(w,1,w.m.getWorldPosition(new w.m.position.constructor()));break}}
+            if(B.e&&B.e.alive&&B.e.down>0&&B.e.down<4.5)T.knock(B.e,new B.e.m.position.constructor(0,0,1),40,1);
+            const l0=T.G.lives;T.update(.05);if(T.G.lives<l0)lost++;if(T.G.hp<last)hits++;last=T.G.hp;minHp=Math.min(minHp,T.G.hp)}
+          return {livesLost:lost,hitsTaken:hits,dodges,minHp,bossAt:bossT,bossDead:T.BOSS.dead,phase2:T.BOSS.phase2,ended:T.S.ended,timeLeft:+T.S.time.toFixed(1),score:T.S.score}}''')
         # 2) boss: spawn, break the pods, slash twice (phase 2, then death)
         await ev('boss','''()=>{const T=window.__T,B=T.BOSS;T.setPaused(true);T.S.time=120-71;T.G.lives=3;T.G.hp=100;for(let i=0;i<4;i++)T.update(.05);if(!B.e)T.spawnBoss();
           const r={spawned:!!B.e};const kill=()=>{for(const w of [...B.wps])if(w.alive)T.wpDamage(w,99,w.m.getWorldPosition(new w.m.position.constructor()))};
           kill();r.down1=B.e&&B.e.down;T.update(.05);r.guide1=document.getElementById("tutObjTxt").textContent;
-          T.knock(B.e,T.camera().getWorldDirection(new B.e.m.position.constructor()),40,1);r.phase2=B.phase2;r.aliveAfter1=B.e&&B.e.alive;r.down1after=B.e.down;
+          T.update(.05);T.knock(B.e,T.camera().getWorldDirection(new B.e.m.position.constructor()),40,1);r.phase2=B.phase2;r.aliveAfter1=B.e&&B.e.alive;r.down1after=B.e.down;
           for(let i=0;i<10;i++)T.update(.05);r.wps2=B.wps.filter(w=>w.alive).length;r.guideN=document.getElementById("tutObjN").textContent;
           kill();r.down2=B.e.down;T.knock(B.e,T.camera().getWorldDirection(new B.e.m.position.constructor()),40,1);r.launched=B.e.launched;
           for(let i=0;i<120;i++)T.update(.05);r.dead=B.dead;return r}''')
@@ -42,7 +54,7 @@ async def main():
           r.seq=seq.join(" ");const m=T.spawnMS(T.S.pos.clone().add(new V(6,0,0)),false);if(m){m.yaw=0;r.cut=T.msCutCheck(m,at,true);r.cutSide=m.cut&&Object.keys(m.cut)}for(let i=0;i<5;i++)T.update(.05);return r}''')
         await pg.evaluate('()=>window.__T.setPaused(false)');await pg.wait_for_timeout(800);await shot('04_duelist')
         # 4) single tutorial: every step enters / ticks without errors
-        await ev('tutorial','''()=>{const T=window.__T;T.setPaused(true);T.TUT.on=true;T.TUT.c={};const out=[];for(let i=0;i<T.TUT_STEPS.length-1;i++){T.TUT.busy=false;T.tutStep(i);for(let k=0;k<6;k++)T.update(.05);out.push(document.getElementById("tutObjTxt").textContent.slice(0,14))}
+        await ev('tutorial','''()=>{const T=window.__T;T.setPaused(true);document.body.classList.add("tut");T.TUT.on=true;T.TUT.c={};const out=[];for(let i=0;i<T.TUT_STEPS.length-1;i++){T.TUT.busy=false;T.tutStep(i);for(let k=0;k<6;k++)T.update(.05);out.push(document.getElementById("tutObjTxt").textContent.slice(0,14))}
           T.TUT.busy=false;T.tutStep(8);for(let k=0;k<4;k++)T.update(.05);return out}''')
         await pg.evaluate('()=>window.__T.setPaused(false)');await pg.wait_for_timeout(600);await shot('05_tutorial')
         await pg.evaluate('()=>{const T=window.__T;T.TUT.on=false;T.TUT.step=-1;document.body.classList.remove("tut");T.restart();T.show("duel")}')

@@ -836,6 +836,13 @@ body.tut #radio{top:calc(150px + env(safe-area-inset-top,0px))}
 /* single boss guide reuses the tutorial objective box: keep the radio below it */
 body.bossguide #radio{top:calc(150px + env(safe-area-inset-top,0px))}
 </style>
+<style>
+/* 1:1 training: the objective box and radio live in a left column (the top centre belongs to the HP bars) */
+body.versus.tut #tutObj{top:calc(150px + env(safe-area-inset-top,0px));left:20px;transform:none;max-width:min(400px,40vw)}
+body.versus.tut #radio{top:auto;bottom:calc(150px + env(safe-area-inset-bottom,0px));left:20px;transform:none;width:min(400px,40vw);max-width:min(400px,40vw)}
+body.versus.tut .hud.tl{display:none}
+</style>
+
 
 
 

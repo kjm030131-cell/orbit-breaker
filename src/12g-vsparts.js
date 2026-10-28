@@ -17,8 +17,9 @@ function vsBodyVisible(R,on){R.root.traverse(o=>{if(o.isMesh&&o.material===R.mat
 function vsBreakPart(R,k,mine){if(!R||!R.broken||R.broken[k])return;R.broken[k]=true;const b=vsPartBone(R,k);if(!b)return;
   R.root.updateMatrixWorld(true);const at=b.getWorldPosition(new V3());
   // burst: flash, metal chunks, sparks, smoke
-  fxImpact(at,0xff7030);flashLight(at,0xff8a40,9,46,.55);chunks(at,k==="head"?9:12,24,1.5);sparks(at,null,0xffc070,38,.7,70);sparks(at,null,0x9fe8ff,30,.5,30);
-  for(let i=0;i<5;i++)emit(NORM,{pos:at.clone(),tex:TX.smoke,color:0x15171a,vel:new V3().randomDirection().multiplyScalar(6),s0:2,s1:9,life:1.3+Math.random()*.6,a:.55,drag:1.4,rot:Math.random()*6});
+  const own=mine&&k==="head"; // own head: the camera is about to sit right there, keep debris out of the pilot's face
+  flashLight(at,0xff8a40,9,46,.55);if(!own){fxImpact(at,0xff7030);chunks(at,k==="head"?9:12,24,1.5);sparks(at,null,0xffc070,38,.7,70);sparks(at,null,0x9fe8ff,30,.5,30)}
+  if(!own)for(let i=0;i<5;i++)emit(NORM,{pos:at.clone(),tex:TX.smoke,color:0x15171a,vel:new V3().randomDirection().multiplyScalar(6),s0:2,s1:9,life:1.3+Math.random()*.6,a:.55,drag:1.4,rot:Math.random()*6});
   emit(ADD,{pos:at.clone(),tex:TX.ring,color:0xff9a50,s0:2,s1:18,life:.45,a:.9});sfx("boom",at);sfx("heavy",at);
   b.scale.setScalar(.001);
   if(k==="armR"){ // weapon arm gone: the saber and the muzzle move to the left hand (mirrored)
@@ -28,18 +29,18 @@ function vsBreakPart(R,k,mine){if(!R||!R.broken||R.broken[k])return;R.broken[k]=
   if(mine)S.shake=Math.max(S.shake,.8);else{S.hitstop=Math.max(S.hitstop||0,.1);impactPunch(1.2);hitMark("kill")}}
 // stumps keep sparking and smoking
 function vsStumps(R,rdt){if(!R||!R.broken)return;R.stumpT=(R.stumpT||0)-rdt;if(R.stumpT>0)return;R.stumpT=.1+Math.random()*.08;
-  for(const k in R.broken){const b=vsPartBone(R,k);if(!b)continue;const at=b.getWorldPosition(new V3());
+  for(const k in R.broken){if(R===P&&k==="head")continue;const b=vsPartBone(R,k);if(!b)continue;const at=b.getWorldPosition(new V3());
     if(Math.random()<.7)sparks(at,new V3(0,1,0),0xffc070,10,.35,4,.8);if(Math.random()<.45)emit(NORM,{pos:at.clone(),tex:TX.smoke,color:0x1a1c20,vel:new V3((Math.random()-.5)*2,3,(Math.random()-.5)*2),s0:.8,s1:3.4,life:1,a:.4,drag:1.2,rot:Math.random()*6})}}
 
 /* ---- your own head lost: the main camera is gone, the hatch is blown half open and you fight on from the pilot seat ---- */
 let COCKPIT=null;
-function vsCockpitBuild(){if(COCKPIT)return COCKPIT;const g=new THREE.Group(),dark=new THREE.MeshStandardMaterial({color:0x2a2e34,metalness:.6,roughness:.55,emissive:0x0d0f12}),
-  trim=new THREE.MeshStandardMaterial({color:0x1b1d21,metalness:.75,roughness:.4,emissive:0x07080a}),amber=new THREE.MeshBasicMaterial({color:0xff9a3a}),red=new THREE.MeshBasicMaterial({color:0xff3020});
+function vsCockpitBuild(){if(COCKPIT)return COCKPIT;const g=new THREE.Group(),dark=new THREE.MeshBasicMaterial({color:0x14161a,toneMapped:false}), // unlit: scene lights / bloom washed the frame out to grey
+  trim=new THREE.MeshBasicMaterial({color:0x0a0b0d,toneMapped:false}),amber=new THREE.MeshBasicMaterial({color:0xff9a3a}),red=new THREE.MeshBasicMaterial({color:0xff3020});
   const box=(w,h,d,x,y,z,rx=0,rz=0,m=dark)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.rotation.set(rx,0,rz);o.frustumCulled=false;g.add(o);return o};
   box(2.1,.5,.62,0,-.74,-.82,-.5);                         // main console
   box(2.1,.03,.05,0,-.5,-.6,-.5,0,amber);                  // console edge light
-  box(.24,1.9,.3,-1.04,0,-.86,0,-.17);box(.24,1.9,.3,1.04,0,-.86,0,.17); // canopy pillars
-  box(.05,1.7,.05,-.9,0,-.72,0,-.17,trim);box(.05,1.7,.05,.9,0,-.72,0,.17,trim);
+  box(.13,1.9,.2,-1.14,0,-.86,0,-.17);box(.13,1.9,.2,1.14,0,-.86,0,.17); // canopy pillars
+  box(.04,1.7,.04,-1.02,0,-.72,0,-.17,trim);box(.04,1.7,.04,1.02,0,-.72,0,.17,trim);
   const hatch=box(2.5,.1,1.15,0,.66,-.78,.34);             // hatch blown half open: space shows through the gap under it
   box(2.3,.025,.04,0,.6,-.33,.34,0,red);                    // hazard light along the hatch edge
   box(2.3,.07,.07,0,.44,-1,0,0,trim);                       // canopy frame bar
