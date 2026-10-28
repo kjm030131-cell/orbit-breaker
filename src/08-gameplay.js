@@ -210,7 +210,8 @@ function gameplayTick(dt,rdt,T){
   if(G.dead>0){G.dead-=rdt;if(G.dead<=0)respawnMech()}
   else if(SCREEN==="play"&&S.started&&!S.ended){const was=cleanMult();G.clean+=dt;const now=cleanMult();if(now>was){popText(`무피격 ×${now.toFixed(1)}`);sfx("chain",null,2)}}
   if(!VS&&G.dead<=0&&SCREEN==="play"&&S.started){G.hpT=(G.hpT||0)+dt;if(G.hpT>HP_REGEN_AFTER&&G.hp<HP_MAX)G.hp=Math.min(HP_MAX,G.hp+HP_REGEN*dt)}
-  {const low=!VS&&G.hp<35&&G.dead<=0;if(low!==document.body.classList.contains("dmg"))document.body.classList.toggle("dmg",low);if(low){const t=$("dmgTxt"),x=`장갑 위험 · ${Math.ceil(G.hp)}`;if(t.textContent!==x)t.textContent=x}}
+  {const low=!VS&&SCREEN==="play"&&S.started&&!S.ended&&G.hp<35&&G.dead<=0; // only during a live sortie (never on menus after a run ends)
+  if(low!==document.body.classList.contains("dmg"))document.body.classList.toggle("dmg",low);if(low){const t=$("dmgTxt"),x=`장갑 위험 · ${Math.ceil(G.hp)}`;if(t.textContent!==x)t.textContent=x}}
   threatMarks();
   G.guardCd=Math.max(0,G.guardCd-dt);
   G.iframe=Math.max(0,G.iframe-dt);G.stagger=Math.max(0,G.stagger-dt);G.dodgeCd=Math.max(0,G.dodgeCd-dt);G.crit=Math.max(0,G.crit-dt);
