@@ -8,7 +8,10 @@ function buildPlayer(gltf,frame,remote){
   let J,mesh,hipY,mix=null;
   if(isMixRig(gltf)){mix=buildMixRig(gltf,remote);J=mix.J;mesh=mix.holder;hipY=mix.hipY;if(remote)mix.skin.material=mix.skin.material.clone()}
   else{const rig=MechRig.build(src,frame);J=rig.J;mesh=rig.mesh;if(remote)mesh.material=mesh.material.clone();hipY=FRAMES[frame].hip;mesh.frustumCulled=false}
-  mesh.scale.setScalar(M_SCALE);mesh.position.y=-hipY*M_SCALE;
+  // frames from different Tripo exports come at slightly different sizes: match the head height of the original Mk-II (0.835)
+  // so hit zones, camera framing and the cockpit stay where they were tuned
+  const ks=mix&&mix.P0.head.y>.3?clamp(.835/mix.P0.head.y,.8,1.25):1;
+  mesh.scale.setScalar(M_SCALE*ks);mesh.position.y=-hipY*M_SCALE*ks;
   const mat=mix?mix.skin.material:mesh.material;if(ENV)mat.envMap=ENV;mat.envMapIntensity=0.35;mat.color.setRGB(.95,.95,.95);
   mat.emissive=new THREE.Color(0x000000);
   const root=new THREE.Group();root.add(mesh);

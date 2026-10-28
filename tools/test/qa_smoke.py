@@ -21,6 +21,7 @@ async def main():
         await pg.goto('http://localhost:8765/test.html')
         await pg.wait_for_function('window.__T&&window.__T.P',timeout=180000)
         await pg.wait_for_timeout(4000);await shot('01_title')
+        await ev('mech','()=>{const P=window.__T.P,b=new THREE.Box3().setFromObject(P.root),z=b.getSize(new THREE.Vector3());return {h:+z.y.toFixed(2),w:+z.x.toFixed(2),muzzle:P.muzzle.position.toArray().map(v=>+v.toFixed(3)),bones:P.skin?0:Object.keys(P.J).length}}')
         # 1) solo 60 s, CPU cost of update()
         await ev('solo','''()=>{const T=window.__T;T.setPaused(true);T.G.unit="mega";T.restart();T.show("play");T.S.started=true;T.S.demo=false;
           let kills=0,minHp=100,dead=0,ms=0,lost=0;const t0=performance.now();
