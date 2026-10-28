@@ -407,3 +407,9 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
   bossTrack padding 4.3% 3% 4.4% 14.4%, bslot 9.6%/2.6%/22%/20%, 부스트 채움 amber(부족 시 hue-rotate -38deg).
 - build_deploy 가 index.html 의 ui/*.webp 참조에 ?v=<빌드시각> 을 붙임(ui/* 1일 캐시 때문에 같은 이름으로 바꾼 그림이 안 보이던 문제).
 - 원본 시트 → 자르기 스크립트는 세션 작업물(필요하면 시트를 다시 받아 같은 방식으로: 알파 정리 → 칸/연결요소로 분할 → 정사각 패딩 → 리사이즈).
+
+## 42. 녹음 배경음악 (10/29 04:00)
+- bgm/title.mp3 = 사용자 제작 "Orbital Dawn"(AI 음악 생성, 3:28, 앞뒤 무음 제거, 128k) → 메인화면·메뉴 음악. 기획서 AI 사용 내역·크레딧에 생성 도구 표기 필요.
+- src/05-audio.js BGM: tracks 에 등록된 곡은 불러오면 생성형 음악 대신 반복 재생(1.5초 페이드인, 전환 시 0.8초 페이드아웃), 실패하면 생성형 그대로.
+  전투·보스·결과 곡이 오면 BGM.tracks 에 battle 등 추가(보스·결과는 music() 호출 지점도 추가 필요). 볼륨은 tracks.*.vol.
+- build_deploy: bgm/ 복사, bgm/*.mp3 참조에도 ?v= 캐시 무효화.
