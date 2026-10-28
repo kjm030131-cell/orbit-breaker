@@ -13,7 +13,6 @@ function special(){
   if(VS){vsSkill(true);return}if(SCREEN!=="play"||S.ended||G.spec<100||G.specT>=0||G.stagger>0)return;
   tutCount("spec");G.spec=0;G.specT=0;G.iframe=2;S.act=null;S.dash=0;S.dashT=null;S.pending=null;startAct("special");S.slow=.55;if(P&&P.J)fxCharge(P.J.torso);
   unitSpecial();sfx("specCharge");
-  if(G.unit==="boost")for(let i=0;i<14;i++){const o=new V3().randomDirection().multiplyScalar(9);emit(ADD,{pos:S.pos.clone().add(o),color:0xffc060,vel:o.clone().multiplyScalar(-2.2),s0:1.4,s1:.3,life:.45,a:.8,drag:0})}
 }
 function specialBurst(){
   const c=S.pos.clone();S.hitstop=.14;S.shake=1.5;flash(.5);sfx("specBurst");

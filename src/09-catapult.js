@@ -68,7 +68,7 @@ function attachShipModel(){
 }
 
 /* ---- overlay text ---- */
-function cineLines(){const n=(PILOT.name||"파일럿"),u=UNITS[G.unit]||UNITS.boost;if(TUT.on)return[
+function cineLines(){const n=(PILOT.name||"파일럿"),u=UNITS[G.unit]||UNITS.mega;if(TUT.on)return[
   {at:-2.35,who:"아스트라이아 함장",txt:"전 기체 전투 배치. 적 편대, 서울 상공 궤도로 진입한다."},
   {at:.25,who:"아스트라이아 CIC · 한서윤 중위",txt:"앰버 1, 첫 출격이죠. 긴장 풀고, 제 말만 따라와요."},
   {at:1.95,who:"아스트라이아 CIC · 한서윤 중위",txt:"서울 상공 통과까지 120초. 발진을 허가합니다."},

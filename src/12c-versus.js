@@ -1,12 +1,12 @@
 /* ================= server-coordinated 1:1 mech battle ================= */
 let VS=null;
 const VS_HP=100,VS_ROUND=99,VS_WIN=2;
-const VS_UNIT_TEXT={boost:{r:"관통 돌진",f:"궤도 파쇄",desc:"R: 직선 돌진 18 피해 · F: 강화 돌진 28 피해 · 부스트 회복 +30%"},pods:{r:"포드 교차사격",f:"올 레인지",desc:"R: 3발 교차사격 · F: 7발 확산사격 · 20초마다 1발 요격"},missile:{r:"미사일 연사",f:"풀 버스트",desc:"R: 3발 연사 · F: 6발 연사 · 라이플 간격 0.3초"},shield:{r:"반사 장벽",f:"카운터 필드",desc:"R: 1초 방어, 첫 0.25초 반사 · F: 2초 방어 후 12m 충격파 · 저스트 회피 장갑"}};
+const VS_UNIT_TEXT={mega:{r:"메가 빔",f:"하이퍼 빔",desc:"R: 0.7초 충전 후 직선 빔 20 피해 · F: 0.9초 충전 후 굵은 빔 30 피해 · 라이플 명중 시 필살 게이지 +6"},pods:{r:"포드 교차사격",f:"올 레인지",desc:"R: 3발 교차사격 · F: 7발 확산사격 · 20초마다 1발 요격"},missile:{r:"미사일 연사",f:"풀 버스트",desc:"R: 3발 연사 · F: 6발 연사 · 라이플 간격 0.3초"},shield:{r:"반사 장벽",f:"카운터 필드",desc:"R: 1초 방어, 첫 0.25초 반사 · F: 2초 방어 후 12m 충격파 · 저스트 회피 장갑"}};
 function vsNow(){return Date.now()+(VS?VS.off:0)}
 function vsCanAct(){return !!VS&&VS.phase==="fight"&&!S.ended&&!PAUSED&&S.started&&G.stagger<=0&&vsNow()<VS.endAt}
 function vsSkills(){return !!VS&&VS.rules.skills}
 function vsSpeed(){return VS&&VS.rules.passives&&P&&P.frame==="swift"?1.15:1}
-function vsRegen(){return (VS&&VS.rules.passives&&P&&P.frame==="swift"?1.1:1)*(vsSkills()&&G.unit==="boost"?1.3:1)}
+function vsRegen(){return (VS&&VS.rules.passives&&P&&P.frame==="swift"?1.1:1)}
 function vsSend(o){if(["swing","shot","skill","dodge"].includes(o.t))S.guard=false;if(VS&&VS.ws&&VS.ws.readyState===1)VS.ws.send(JSON.stringify(o))}
 addEventListener("blur",()=>{if(VS&&S.guard)vsGuard(false)});
 function vsLoadout(){vsSend({t:"loadout",frame:P?P.frame:"mk2",unit:G.unit})}
@@ -30,7 +30,7 @@ for(const id of ["vsPassives","vsSkills"])$(id).addEventListener("change",()=>{i
 function vsOpen(code,name,create=false){
   if(VS)vsClose();VS={code,name,side:null,phase:"wait",hp:100,maxHp:100,oppHp:100,oppMaxHp:100,rules:{passives:false,skills:false},players:{},wins:[0,0],round:0,oppName:"",remote:null,tgt:null,sendT:0,pingT:0,off:0,ready:false};const v=VS;
   const base=window.PVP_URL||((location.protocol==="https:"?"wss://":"ws://")+location.host+"/pvp");
-  try{v.ws=new WebSocket(base+"?room="+code+"&name="+encodeURIComponent(name)+"&v=4&create="+(create?1:0))}catch(e){VS=null;duelErr("대전 서버에 연결할 수 없습니다.");return}
+  try{v.ws=new WebSocket(base+"?room="+code+"&name="+encodeURIComponent(name)+"&v=5&create="+(create?1:0))}catch(e){VS=null;duelErr("대전 서버에 연결할 수 없습니다.");return}
   v.ws.onmessage=e=>{if(VS!==v)return;let m;try{m=JSON.parse(e.data)}catch{return}vsMsg(m)};
   v.ws.onclose=()=>{if(VS!==v)return;if(["wait","lobby"].includes(v.phase)){vsClose();duelErr("대전 서버 연결이 종료됐습니다. 방을 다시 만들어 주세요.")}else if(v.phase!=="end"&&!v.matchDone)vsEnd("disconnect")};
   v.ws.onerror=()=>{if(VS===v)duelErr("대전 서버에 연결할 수 없습니다.")};
@@ -67,6 +67,7 @@ function vsMsg(m){if(!VS)return;const v=VS;
     if(["busy","stagger"].includes(m.reason)&&m.retryAt<q.expires){q.sent=false;q.notBefore=m.retryAt+35;return;}
     v.skillInput=null;const why={disabled:"방장이 옵션 스킬을 꺼 두었습니다",phase:"전투 중에 사용할 수 있습니다",heat:"과열 해제 후 사용하세요",charge:"필살기 게이지가 부족합니다",cooldown:"스킬 재사용 대기 중입니다",busy:"공격 동작이 끝난 뒤 사용하세요",stagger:"피격 경직 중입니다"};popText(why[m.reason]||"스킬을 사용할 수 없습니다");sfx("deny");return;
   }
+  if(m.t==="beam"){megaVsBeam(new V3(...m.from),new V3(...m.dir),!!m.heavy);return}
   if(m.t==="skill"){if(m.side===v.side)v.skillInput=null;vsSkillFX(m);return}
   if(m.t==="roundEnd"){if(v.phase==="end")return;v.phase="roundEnd";v.matchDone=m.done;v.wins=m.wins;S.started=false;S.vel.set(0,0,0);S.act=null;S.vsLunge=0;S.dash=0;G.focus=null;vsClearShots();
     for(const b of G.ebolts){scene.remove(b.g);b.g.traverse(o=>{if(o.material)o.material.dispose()})}G.ebolts=[];
@@ -105,7 +106,7 @@ function vsFocusCamera(rdt){if(!G.focus||!targetable(G.focus))return;const d=G.f
   if(Math.abs(dy)>.06)S.yaw+=clamp(dy*(1-Math.exp(-2*dt)),-.9*dt,.9*dt);
   const pitch=clamp(Math.atan2(d.y-1.5,hz)*.65-.04,-.35,.3);S.pitch+=clamp((pitch-S.pitch)*(1-Math.exp(-2*dt)),-.3*dt,.3*dt);
 }
-function vsSkillFX(m){const mine=m.side===VS.side,pos=mine?S.pos:VS.tgt&&VS.tgt.m.position;if(!pos)return;emit(ADD,{pos:pos.clone(),tex:TX.ring,color:UNITS[m.unit].color,s0:2,s1:m.special?24:12,life:.45});sfx(m.special?"specCharge":"throw",pos);if(mine){popText(VS_UNIT_TEXT[m.unit][m.special?"f":"r"]);if(m.unit==="boost"){S.vsLunge=.24;S.vsDir=new V3(...m.dir).multiplyScalar(95);S.bladeOn=.7;startAct("slash3")}}}
+function vsSkillFX(m){const mine=m.side===VS.side,pos=mine?S.pos:VS.tgt&&VS.tgt.m.position;if(!pos)return;emit(ADD,{pos:pos.clone(),tex:TX.ring,color:UNITS[m.unit].color,s0:2,s1:m.special?24:12,life:.45});sfx(m.special?"specCharge":"throw",pos);if(m.unit==="mega"){const R=VS.remote;megaVsFx(()=>mine?megaMuzzle():R&&R.root?R.root.position.clone().add(new V3(0,1.2,0)):pos.clone(),new V3(...m.dir),!!m.special)}if(mine){popText(VS_UNIT_TEXT[m.unit][m.special?"f":"r"])}}
 function vsSpawn(){const v=VS,a=v.side==="a";S.guard=false;v.gp=100;v.rdisp=null;v.rvel=null;v.rs=null;const i=enemies.indexOf(v.tgt);if(i>=0)enemies.splice(i,1);vsClearShots();restart();S.vsLunge=0;S.shotCd=S.attackCd=0;S.aimT=0;S.face=S.yaw=a?0:Math.PI;S.pitch=-.05;S.pos.set(0,0,a?-26:26);S.vel.set(0,0,0);S.time=99;G.focus=null;target=null;v.shotToken=(v.shotToken||0)+1;v.skillInput=null;v.correctTo=null;P.root.visible=true;camera.position.copy(S.pos).addScaledVector(camFwd(),-10).add(new V3(0,2.8,0));camera.fov=68;camera.updateProjectionMatrix();applyQuality();
   const want=FRAMES[v.oppFrame]&&FRAMES[v.oppFrame].gltf?v.oppFrame:"mk2";if(v.remote&&v.remote.frame!==want){scene.remove(v.remote.root);v.remote=null}if(!v.remote)v.remote=buildPlayer(FRAMES[want].gltf,want,true);
   scene.add(v.remote.root);v.remote.root.visible=true;v.remote.root.position.set(0,0,a?26:-26);v.remote.root.rotation.y=a?Math.PI:0;

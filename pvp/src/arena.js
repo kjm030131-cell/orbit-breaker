@@ -1,11 +1,11 @@
 // Pure room simulation. Server owns rules, readiness, resources, attacks, HP and rounds.
-export const VERSION=4;
+export const VERSION=5;
 const other=s=>s==='a'?'b':'a';const f0=p=>[Math.sin(p.f),0,Math.cos(p.f)];
 const len=v=>Math.hypot(...v),sub=(a,b)=>a.map((x,i)=>x-b[i]),add=(a,b,k=1)=>a.map((x,i)=>x+b[i]*k),dot=(a,b)=>a.reduce((n,x,i)=>n+x*b[i],0);
 const norm=v=>{const l=len(v);return l>0?v.map(x=>x/l):[0,0,1]};
 const vec=v=>Array.isArray(v)&&v.length===3&&v.every(Number.isFinite);
 const segment=(p,a,b)=>{const d=sub(b,a),t=Math.max(0,Math.min(1,dot(sub(p,a),d)/(dot(d,d)||1)));return len(sub(p,add(a,d,t)))};
-const player=(name,side,now)=>({name,frame:'mk2',unit:'boost',ready:false,p:[0,0,side==='a'?-26:26],f:side==='a'?0:Math.PI,hp:100,maxHp:100,boost:100,heat:0,overUntil:0,spec:0,at:now,poseAt:now,moveCredit:8,lock:0,stun:0,iframe:0,dodgeAt:0,crit:0,skillAt:0,guardAt:0,podAt:0,barrier:0,reflect:0,armor:false,boosting:false,guard:false,guardOn:0,gp:100,gpHit:0,gbUntil:0});
+const player=(name,side,now)=>({name,frame:'mk2',unit:'mega',ready:false,p:[0,0,side==='a'?-26:26],f:side==='a'?0:Math.PI,hp:100,maxHp:100,boost:100,heat:0,overUntil:0,spec:0,at:now,poseAt:now,moveCredit:8,lock:0,stun:0,iframe:0,dodgeAt:0,crit:0,skillAt:0,guardAt:0,podAt:0,barrier:0,reflect:0,armor:false,boosting:false,guard:false,guardOn:0,gp:100,gpHit:0,gbUntil:0});
 export function newRoom(){return {version:VERSION,phase:'lobby',rules:{passives:false,skills:false},players:{},wins:[0,0],round:0,serial:0,shots:[],pending:[],at:0,startAt:0,endAt:0,nextAt:0};}
 export class Arena {
  constructor(state=newRoom()){this.s=state;this.events=[];}
@@ -27,10 +27,17 @@ export class Arena {
   s.pending=s.pending.filter(x=>x.side!==side||x.kind==='pulse');this.emit({t:'damage',side,d,dir,kind,hp:p.hp,heavy});this.status();if(p.hp<=0)this.end(other(side),'ko',now);return true;
  }
  advance(now){const s=this.s;s.at=now;if(s.phase==='roundEnd'){if(now>=s.nextAt)this.start(now,s.replay);return;}if(s.phase==='count'&&now>=s.startAt)s.phase='fight';if(s.phase!=='fight')return;
-  for(const p of Object.values(s.players)){const dt=Math.max(0,Math.min(1,(now-p.at)/1000));p.at=now;const regen=22*(s.rules.passives&&p.frame==='swift'?1.1:1)*(s.rules.skills&&p.unit==='boost'?1.3:1);p.boost=Math.max(0,Math.min(100,p.boost+(p.boosting&&now-p.poseAt<250?-38:regen)*dt));p.heat=Math.max(0,p.heat-(now<p.overUntil?30:14)*dt);if(p.overUntil&&now>=p.overUntil){p.overUntil=0;p.heat=40;}if(s.rules.skills)p.spec=Math.min(100,p.spec+5*dt);if(!p.guard&&now-p.gpHit>800)p.gp=Math.min(100,p.gp+30*dt);}
+  for(const p of Object.values(s.players)){const dt=Math.max(0,Math.min(1,(now-p.at)/1000));p.at=now;const regen=22*(s.rules.passives&&p.frame==='swift'?1.1:1);p.boost=Math.max(0,Math.min(100,p.boost+(p.boosting&&now-p.poseAt<250?-38:regen)*dt));p.heat=Math.max(0,p.heat-(now<p.overUntil?30:14)*dt);if(p.overUntil&&now>=p.overUntil){p.overUntil=0;p.heat=40;}if(s.rules.skills)p.spec=Math.min(100,p.spec+5*dt);if(!p.guard&&now-p.gpHit>800)p.gp=Math.min(100,p.gp+30*dt);}
   for(const x of [...s.pending]){if(now<x.at||s.phase!=='fight'||!s.pending.includes(x))continue;s.pending=s.pending.filter(y=>y!==x);const p=s.players[x.side],q=s.players[other(x.side)];if(!p||!q)continue;
    if(x.kind==='volley'){this.projectile(x.side,x.from,x.dir,x.dmg,x.speed,now,x.color);continue;}
    const d=sub(q.p,p.p),dist=len(d),f=[Math.sin(p.f),0,Math.cos(p.f)];
+   if(x.kind==='beam'){const from=add(p.p,[0,1,0]);this.emit({t:'beam',side:x.side,from,dir:x.dir,heavy:!!x.heavy});
+    if(segment(add(q.p,[0,.4,0]),from,add(from,x.dir,x.range))<x.width){
+     if(q.guard&&dot([Math.sin(q.f),0,Math.cos(q.f)],x.dir.map(v=>-v))>.3){q.gp-=x.heavy?70:40;q.gpHit=now;const chip=Math.max(1,Math.round(x.dmg*.12));
+      if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;this.emit({t:'guardBreak',side:other(x.side)});this.damage(other(x.side),chip,x.dir,'chip',now,x.side);q.stun=now+900;}
+      else{this.emit({t:'block',side:other(x.side),kind:'guardShot',gp:Math.round(q.gp),at:q.p});this.damage(other(x.side),chip,x.dir,'chip',now,x.side);}}
+     else this.damage(other(x.side),x.dmg,x.dir,'skill',now,x.side,!!x.heavy);}
+    continue;}
    if(x.kind==='melee'){
     // blades meet: both swings land within 150 ms of each other in reach -> clash, nobody is hurt
     const y=s.pending.find(z=>z.side===other(x.side)&&z.kind==='melee'&&Math.abs(z.at-x.at)<=150);
@@ -52,18 +59,18 @@ export class Arena {
     if(s.rules.skills&&now<q.reflect){this.emit({t:'block',side:other(b.side),kind:'reflect'});this.projectile(other(b.side),end,b.dir.map(x=>-x),b.dmg,b.speed,now,0x8dff7a);continue;}
     if(s.rules.skills&&q.unit==='pods'&&now>=q.podAt){q.podAt=now+20000;this.emit({t:'block',side:other(b.side),kind:'pod'});continue;}
     if(q.guard&&dot([Math.sin(q.f),0,Math.cos(q.f)],b.dir.map(v=>-v))>.3){q.gp-=12;q.gpHit=now;if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;q.stun=now+900;this.emit({t:'guardBreak',side:other(b.side)});}else this.emit({t:'block',side:other(b.side),kind:'guardShot',gp:Math.round(q.gp),at:end});this.status();continue;}
-    this.damage(other(b.side),b.dmg,b.dir,'bolt',now,b.side);
+    if(this.damage(other(b.side),b.dmg,b.dir,'bolt',now,b.side)&&s.rules.skills&&b.rifle&&s.players[b.side]&&s.players[b.side].unit==='mega'){const sh=s.players[b.side];sh.spec=Math.min(100,sh.spec+6);}
    }else if(elapsed>=2.4)s.shots=s.shots.filter(x=>x!==b);
   }
   if(s.phase==='fight'&&now-(s.statusAt||0)>=100){s.statusAt=now;this.status();}
   if(s.phase==='fight'&&now>=s.endAt){const a=s.players.a,b=s.players.b,v=a.hp*b.maxHp-b.hp*a.maxHp;this.end(v===0?null:v>0?'a':'b','time',now);}
  }
- projectile(side,from,dir,dmg,speed,now,color=0x40d8ff){const b={id:++this.s.serial,side,from:[...from],dir:norm(dir),dmg,speed,at:now,color};this.s.shots.push(b);this.emit({t:'projectile',...b});}
+ projectile(side,from,dir,dmg,speed,now,color=0x40d8ff,rifle=false){const b={id:++this.s.serial,side,from:[...from],dir:norm(dir),dmg,speed,at:now,color,rifle};this.s.shots.push(b);this.emit({t:'projectile',...b});}
  handle(side,m,now){const s=this.s,p=s.players[side];if(!p||!m||typeof m.t!=='string')return;this.advance(now);
   if(m.t==='ping'){this.emit({t:'pong',sent:m.sent,now},side);return;}
   if(s.phase==='lobby'){
    if(m.t==='rules'&&side==='a'){s.rules={passives:m.passives===true,skills:m.skills===true};this.resetReady();this.lobby(now);}
-   if(m.t==='loadout'){if(['mk2','swift'].includes(m.frame))p.frame=m.frame;if(['boost','pods','missile','shield'].includes(m.unit))p.unit=m.unit;this.resetReady();this.lobby(now);}
+   if(m.t==='loadout'){if(['mk2','swift'].includes(m.frame))p.frame=m.frame;if(['mega','pods','missile','shield'].includes(m.unit))p.unit=m.unit;this.resetReady();this.lobby(now);}
    if(m.t==='ready'&&s.players.a&&s.players.b){p.ready=m.ready===true;this.lobby(now);if(s.players.a.ready&&s.players.b.ready)this.start(now);}
    return;
   }
@@ -92,11 +99,11 @@ export class Arena {
    const combo=(p.lastSwing&&now-p.lastSwing<1300)?((p.combo||0)+1)%3:0;p.combo=combo;p.lastSwing=now;const heavy=combo===2;p.lock=now+(heavy?950:520);p.heat=Math.min(100,p.heat+(heavy?12:8));if(p.heat>=100)p.overUntil=now+1600;
    s.pending.push({side,kind:'melee',at:now+(heavy?300:180),range:heavy?11:10,dmg:heavy?22:14,heavy,dir:f0(p)});this.emit({t:'swing',side,heavy,combo});return;
   }
-  if(m.t==='shot'&&vec(m.from)&&vec(m.dir)&&len(m.dir)>.9&&len(m.dir)<1.1&&len(sub(m.from,p.p))<8){p.lock=now+(s.rules.skills&&p.unit==='missile'?300:400);p.heat=Math.min(100,p.heat+4);if(p.heat>=100)p.overUntil=now+1600;this.projectile(side,m.from,m.dir,8,170,now);return;}
-  if(m.t==='skill'&&s.rules.skills&&vec(m.dir)&&len(m.dir)>.9&&len(m.dir)<1.1){const special=m.special===true;if(special?p.spec<100:now<p.skillAt){reject(special?'charge':'cooldown',p.skillAt);return;}const cds={boost:7000,pods:8000,missile:9000,shield:10000};if(special)p.spec=0;else p.skillAt=now+cds[p.unit];p.lock=now+400;const dir=norm(m.dir),from=add(p.p,[0,1,0]);
+  if(m.t==='shot'&&vec(m.from)&&vec(m.dir)&&len(m.dir)>.9&&len(m.dir)<1.1&&len(sub(m.from,p.p))<8){p.lock=now+(s.rules.skills&&p.unit==='missile'?300:400);p.heat=Math.min(100,p.heat+4);if(p.heat>=100)p.overUntil=now+1600;this.projectile(side,m.from,m.dir,8,170,now,0x40d8ff,true);return;}
+  if(m.t==='skill'&&s.rules.skills&&vec(m.dir)&&len(m.dir)>.9&&len(m.dir)<1.1){const special=m.special===true;if(special?p.spec<100:now<p.skillAt){reject(special?'charge':'cooldown',p.skillAt);return;}const cds={mega:9000,pods:8000,missile:9000,shield:10000};if(special)p.spec=0;else p.skillAt=now+cds[p.unit];p.lock=now+400;const dir=norm(m.dir),from=add(p.p,[0,1,0]);
    this.emit({t:'skill',side,unit:p.unit,special,dir,seq:m.seq});
    if(p.unit==='shield'){p.barrier=now+(special?2000:1000);p.reflect=now+250;if(special)s.pending.push({side,kind:'pulse',at:now+2000,range:12,dmg:18});}
-   else if(p.unit==='boost'){s.pending.push({side,kind:'dash',at:now+220,from:[...p.p],range:9,dmg:special?28:18,dir});}
+   else if(p.unit==='mega'){s.pending.push({side,kind:'beam',at:now+(special?900:700),range:special?190:150,width:special?5:3,dmg:special?30:20,heavy:special,dir});}
    else{const n=p.unit==='pods'?(special?7:3):(special?6:3),spread=p.unit==='pods'?.065:.025;for(let i=0;i<n;i++){const a=(i-(n-1)/2)*spread,d=[dir[0]*Math.cos(a)+dir[2]*Math.sin(a),dir[1],dir[2]*Math.cos(a)-dir[0]*Math.sin(a)];s.pending.push({side,kind:'volley',at:now+i*(p.unit==='pods'?80:160),from,dir:d,dmg:p.unit==='pods'?5:7,speed:p.unit==='pods'?110:85,color:p.unit==='pods'?0x48d8ff:0xff8a40});}}
    this.status();
   }
