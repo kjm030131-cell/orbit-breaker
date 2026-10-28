@@ -85,7 +85,7 @@ function unitSkill(){
   if(u==="mega"){megaStart("r");G.unitCd=UNITS.mega.cd;
   }else if(u==="pods"){
     const t=target;if(!t){sfx("deny");popText("포드 강습 · 표적 없음");return}
-    G.unitCd=UNITS.pods.cd;G.podsOut=1.4;sfx("throw");
+    G.unitCd=UNITS.pods.cd;G.podsOut=1.4;sfx("throw");tutCount("u_pods");
     BIT.items.forEach((m,i)=>launchProj(m.position.clone(),new V3().randomDirection().multiplyScalar(30).add(new V3(0,12,0)),t,"pod"));
   }else if(u==="missile"){
     G.marking=true;G.markT=0;G.marks=[];const t=target;if(t){G.marks.push(t);sfx("lock")}
@@ -97,6 +97,7 @@ function unitSkill(){
 function unitSkillUp(){
   if(VS)return;
   if(G.unit!=="missile"||!G.marking)return;G.marking=false;
+  tutCount(G.marks.length>=3?"u_missile":"missileShort");
   if(!G.marks.length){return}
   fireMissiles(G.marks,2);G.marks=[];G.unitCd=UNITS.missile.cd;
 }
@@ -120,7 +121,7 @@ function boltDefense(b){
 }
 function reflectBolt(b){
   const o=b.owner&&b.owner.alive?b.owner.m.position:null;
-  b.dir.copy(o?o.clone().sub(b.g.position).normalize():b.dir.clone().negate());b.refl=true;b.speed=110;b.life=1.4;b.color=0x8dff7a;
+  if(G.barrier>0)tutCount("u_shield");b.dir.copy(o?o.clone().sub(b.g.position).normalize():b.dir.clone().negate());b.refl=true;b.speed=110;b.life=1.4;b.color=0x8dff7a;
   b.g.lookAt(b.g.position.clone().add(b.dir));b.g.children[1].material.color.set(0x8dff7a);
   fxImpact(b.g.position,0x8dff7a);sfx("block",b.g.position);addScore(80,b.g.position.clone(),"cyan");
 }

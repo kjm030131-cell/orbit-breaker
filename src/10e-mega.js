@@ -40,7 +40,7 @@ function megaWant(from,range){return camera.position.clone().addScaledVector(aim
 function megaHoldPose(to){S.bladeOn=0;if(P){P.bladeLen=0;if(P.rifleS!==1){P.rifleS=1;P.J.rifle.scale.setScalar(1)}}S.aimPt=to.clone();S.aimT=.3;
   if(S.act!=="shoot"||S.actT>.3)startAct("shoot",.1)}
 
-function megaStart(mode){if(G.mega)megaEnd(true);const c=MEGA_CFG[mode],from=megaMuzzle();
+function megaStart(mode){if(G.mega)megaEnd(true);if(mode==="r")tutCount("u_mega");const c=MEGA_CFG[mode],from=megaMuzzle();
   G.mega={mode,c,t:0,firing:false,slow:true,dir:megaWant(from,c.range),hits:new Map(),beam:null,L:c.range,ringT:0,boomT:0,sparkT:0};
   S.act=null;S.dash=0;S.dashT=null;S.pending=null;S.bufT=0;
   if(mode==="f"){G.iframe=Math.max(G.iframe,c.charge+c.fire+.3);S.slow=Math.max(S.slow,.35)}
