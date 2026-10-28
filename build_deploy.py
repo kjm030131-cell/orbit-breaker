@@ -38,13 +38,19 @@ shutil.copy('admin.html',D+'/admin.html')  # /admin: ranking management (passwor
 os.makedirs(D+'/sfx',exist_ok=True)
 SFX=sorted(f[:-4] for f in os.listdir('sfx') if f.endswith('.mp3')) if os.path.isdir('sfx') else []
 [shutil.copy('sfx/%s.mp3'%k,D+'/sfx/') for k in SFX];os.path.isdir('vo') and shutil.copytree('vo',D+'/vo',dirs_exist_ok=True);json.dump(SFX,open(D+'/sfx/list.json','w'));os.path.exists('sfx/preview.html') and shutil.copy('sfx/preview.html',D+'/sfx/');print('sfx',SFX)
-im=Image.open('ui/logo.webp');im.thumbnail((820,820));im.save(D+'/ui/logo.webp',quality=72,method=6)
+im=Image.open('ui/logo.webp');im.thumbnail((1300,1300));im.save(D+'/ui/logo.webp',quality=86,method=6)  # ARCLIGHT wordmark: shown up to ~720px wide at 1.5x
 Image.open('ui/panel.webp').save(D+'/ui/panel.webp',quality=70,method=6)
 # icons: logo on a dark square
-lg=Image.open('ui/logo.webp').convert('RGBA')
+# icons: the wordmark's "A" with its amber light beam (the full wordmark is unreadable at icon size)
+from PIL import ImageDraw,ImageFilter
+lg=Image.open('ui/logo.webp').convert('RGBA');A=lg.crop((0,0,int(lg.size[0]*.165),lg.size[1]))
 for s in (192,512):
-    bg=Image.new('RGBA',(s,s),(7,8,10,255));l=lg.copy();l.thumbnail((int(s*.9),int(s*.9)));bg.alpha_composite(l,((s-l.size[0])//2,(s-l.size[1])//2));bg.convert('RGB').save(f'{D}/icons/icon-{s}.png')
-json.dump({"name":"ORBIT BREAKER · 오빗 브레이커","short_name":"오빗 브레이커","start_url":"./","scope":"./","display":"fullscreen","orientation":"landscape",
+    bg=Image.new('RGBA',(s,s),(7,8,10,255));l=A.copy();l.thumbnail((int(s*.62),int(s*.62)));ox,oy=(s-l.size[0])//2,(s-l.size[1])//2;bg.alpha_composite(l,(ox,oy))
+    by=oy+int(l.size[1]*.526);x0,x1=ox-int(s*.04),ox+int(l.size[0]*1.05);glow=Image.new('RGBA',(s,s),(0,0,0,0));d=ImageDraw.Draw(glow)
+    d.rounded_rectangle((x0,by-max(2,s//60),x1,by+max(2,s//60)),radius=s//60,fill=(255,150,30,200));glow=glow.filter(ImageFilter.GaussianBlur(s/60));bg.alpha_composite(glow)
+    d2=ImageDraw.Draw(bg);d2.rounded_rectangle((x0+s//40,by-max(1,s//160),x1-s//40,by+max(1,s//160)),radius=s//160,fill=(255,236,200,255))
+    bg.convert('RGB').save(f'{D}/icons/icon-{s}.png')
+json.dump({"name":"ARCLIGHT · 아크라이트","short_name":"ARCLIGHT","start_url":"./","scope":"./","display":"fullscreen","orientation":"landscape",
   "background_color":"#07080a","theme_color":"#07080a","description":"120초 우주 메카 스코어 어택 — 2026 SCHU AI·SW Festival",
   "icons":[{"src":"icons/icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]},open(D+'/manifest.webmanifest','w'),ensure_ascii=False,indent=1)
 ver=str(int(os.path.getmtime('orbit-breaker.html')))

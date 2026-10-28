@@ -1,4 +1,4 @@
-# ORBIT BREAKER — 작업 인수인계 문서
+# ARCLIGHT (구 ORBIT BREAKER) — 작업 인수인계 문서
 
 ## 0. 새 세션 시작 규칙 (필독 · 10/28 갱신)
 **배포는 오직 GitHub main 에 push 하는 것 하나뿐.** push 하면 GitHub Actions 가 빌드 → `node --check` → 테스트 → 대전 워커 → Pages 를 자동 배포한다.
@@ -392,3 +392,9 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
   보스 지휘기 케르고그모스. 진영: 테라 궤도방위군 / 아르고스 연합.
 - 코드 반영: 앰버 1→우리엘 1, 한서윤→최지우, 아스트라이아→이클립스, 카인→바엘, 케르베로스→케르고그모스, 인트로 문자 이름표 유나→다현.
   vo_op04(보스 출현)는 옛 이름을 말해서 연결 해제 — 재녹음 후 10c-boss.js spawnBoss 의 radio 세 번째 인자에 "vo_op04" 다시 넣기.
+
+## 40. 게임 이름 ARCLIGHT · 새 로고 (10/29 02:10)
+- 제목 ORBIT BREAKER → ARCLIGHT (부제 없음). 주소·저장소·localStorage 키(ob.*)는 그대로.
+- ui/logo.webp = 사용자 생성 워드마크(빛줄기 버전)에서 빛줄기를 지우고 A 다리를 복원한 글자만 이미지(1707×251).
+  빛줄기는 CSS `.logo .beam`(A 가로획 자리, left -1.6% · width 23.2% · top 52.6%) — 메인 등장 때 beamFire, 이후 beamIdle 반짝임. 인트로 타이틀 카드(#inTitle)도 같은 로고.
+- 앱 아이콘: build_deploy 가 로고의 A + 빛줄기로 생성. 앱 이름·탭 제목·관리자 화면·CSV 파일명도 ARCLIGHT.

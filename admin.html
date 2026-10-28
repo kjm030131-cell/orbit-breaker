@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>관리자 · ORBIT BREAKER</title>
+<title>관리자 · ARCLIGHT</title>
 <link rel="stylesheet" href="lib/pretendardvariable-dynamic-subset.css">
 <style>
 :root{--bg:#07080a;--panel:#101317;--panel-2:#161a1f;--line:#2a2f35;--line-2:#3a4148;--amber:#ffb21a;--amber-ink:#1d1300;--bone:#ebe6da;--muted:#8d8a82;--red:#ff5a4a;--ok:#a6d96a;--cyan:#7fe0ff;
@@ -80,14 +80,14 @@ section.bk{margin-top:28px}
 <body>
 <div id="login" class="login" hidden>
   <h1>관리자 로그인</h1>
-  <p>ORBIT BREAKER 순위 관리</p>
+  <p>ARCLIGHT 순위 관리</p>
   <form id="loginForm"><input id="pw" type="password" placeholder="관리자 비밀번호" autocomplete="current-password" autofocus><button class="btn pri" type="submit">들어가기</button></form>
   <div class="err" id="loginErr"></div>
 </div>
 
 <div id="app" class="wrap" hidden>
   <header>
-    <div class="brand"><b>ADMIN</b><span>ORBIT BREAKER 순위 관리</span></div>
+    <div class="brand"><b>ADMIN</b><span>ARCLIGHT 순위 관리</span></div>
     <span class="state" id="state"><i></i><span>기록 받는 중</span></span>
     <button class="btn" id="closeBtn" type="button">대회 마감</button>
     <button class="btn" id="csvBtn" type="button">순위 CSV</button>
@@ -241,10 +241,10 @@ function csv(name,head,rows){const q=v=>{v=v==null?"":String(v);return /[",\n]/.
   const s="﻿"+[head,...rows].map(r=>r.map(q).join(",")).join("\r\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([s],{type:"text/csv;charset=utf-8"}));
   a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 const stamp=()=>new Date().toLocaleString("sv-SE",{timeZone:"Asia/Seoul"}).replace(/[: ]/g,"").replace(/-/g,"").slice(0,13);
-$("csvBtn").addEventListener("click",()=>{if(!DATA)return;csv(`orbit-breaker-순위-${stamp()}.csv`,["순위","학번","이름","학과","최고점","출격 횟수","최고점 시각","첫 등록","마지막 플레이","의심 기록 수"],
+$("csvBtn").addEventListener("click",()=>{if(!DATA)return;csv(`arclight-순위-${stamp()}.csv`,["순위","학번","이름","학과","최고점","출격 횟수","최고점 시각","첫 등록","마지막 플레이","의심 기록 수"],
   DATA.players.map(p=>[p.rank||"",p.sid,p.name,p.dept,p.best,p.attempts,fmtFull(p.best_at),fmtFull(p.created_at),fmtFull(p.last_play),p.flagged||0]))});
 $("csvRunsBtn").addEventListener("click",async()=>{try{const {runs}=await api("admin/runs");
-  csv(`orbit-breaker-전적-${stamp()}.csv`,["학번","이름","학과","출격 시각","종료 시각","점수","상태","기체","옵션"],
+  csv(`arclight-전적-${stamp()}.csv`,["학번","이름","학과","출격 시각","종료 시각","점수","상태","기체","옵션"],
     runs.map(r=>[r.sid,r.name||"",r.dept||"",fmtFull(r.started),fmtFull(r.finished),r.finished?Math.abs(r.score):"",!r.finished?"미완료":r.score<0?"의심(순위 제외)":"정상",FRAME[r.frame]||r.frame||"",UNIT[r.unit]||r.unit||""]))}catch(e){fail(e)}});
 
 if(KEY)load().then(()=>{$("app").hidden=false}).catch(e=>{if(e.message!=="auth")logout(e.message)});else logout("");
