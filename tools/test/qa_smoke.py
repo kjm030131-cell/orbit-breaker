@@ -41,13 +41,11 @@ async def main():
           return {livesLost:lost,hitsTaken:hits,dodges,minHp,bossAt:bossT,bossDead:T.BOSS.dead,phase2:T.BOSS.phase2,ended:T.S.ended,timeLeft:+T.S.time.toFixed(1),score:T.S.score}}''')
         # 2) boss: spawn, break the pods, slash twice (phase 2, then death)
         await ev('boss_pre','()=>{const B=window.__T.BOSS;return {e:!!B.e,dead:B.dead,screen:window.__T.SCREEN,ended:window.__T.S.ended}}')
-        await ev('boss','''()=>{const T=window.__T,B=T.BOSS;B.dead=false;T.setPaused(true);T.S.time=120-71;T.G.lives=3;T.G.hp=100;for(let i=0;i<4;i++)T.update(.05);if(!B.e)T.spawnBoss();
-          const r={spawned:!!B.e};const kill=()=>{for(const w of [...B.wps])if(w.alive)T.wpDamage(w,99,w.m.getWorldPosition(new w.m.position.constructor()))};
-          kill();r.down1=B.e&&B.e.down;T.update(.05);r.guide1=document.getElementById("tutObjTxt").textContent;
-          T.update(.05);T.knock(B.e,T.camera().getWorldDirection(new B.e.m.position.constructor()),40,1);r.phase2=B.phase2;r.aliveAfter1=B.e&&B.e.alive;r.down1after=B.e.down;
-          for(let i=0;i<10;i++)T.update(.05);r.wps2=B.wps.filter(w=>w.alive).length;r.guideN=document.getElementById("tutObjN").textContent;
-          kill();r.down2=B.e.down;T.knock(B.e,T.camera().getWorldDirection(new B.e.m.position.constructor()),40,1);r.launched=B.e.launched;
-          for(let i=0;i<120;i++)T.update(.05);r.dead=B.dead;return r}''')
+        await ev('boss','''()=>{const T=window.__T,B=T.BOSS,r={};const st=n=>{r[n]={e:!!B.e,alive:!!(B.e&&B.e.alive),down:B.e?+B.e.down.toFixed(1):null,p2:B.phase2,dead:B.dead,wps:B.wps.filter(w=>w.alive).length,ended:T.S.ended,lives:T.G.lives,guide:document.getElementById("tutObjTxt").textContent.slice(0,16)}};
+          try{B.dead=false;T.setPaused(true);T.restart();T.show("play");T.S.started=true;T.S.ended=false;T.S.demo=false;T.G.lives=3;T.G.hp=100;T.S.time=120-71;for(let i=0;i<4;i++)T.update(.05);if(!B.e)T.spawnBoss();st("spawn");
+          const V=T.S.pos.constructor,kill=()=>{for(const w of [...B.wps])if(w.alive)T.wpDamage(w,99,w.m.getWorldPosition(new V()))};
+          kill();st("podsDown1");T.G.iframe=99;T.update(.05);st("tick1");if(B.e)T.knock(B.e,new V(0,0,1),40,1);st("slash1");for(let i=0;i<10;i++)T.update(.05);st("recover");
+          kill();st("podsDown2");if(B.e)T.knock(B.e,new V(0,0,1),40,1);st("slash2");for(let i=0;i<160;i++)T.update(.05);st("end")}catch(e){r.err=String(e).slice(0,200)}return r}''')
         await shot('03_boss')
         # 3) duelist posture + arm cut
         await ev('duelist','''()=>{const T=window.__T;T.setPaused(true);const V=T.S.pos.constructor;const e=T.spawnMS(T.S.pos.clone().add(new V(0,0,9)),true);if(!e)return "no MS model";
