@@ -2,7 +2,7 @@
 // Three weak-point pods guard it. Destroy all three (slash, rifle, reflected fire, launched drones)
 // and it goes dark for a few seconds: slash it then, and the whole hulk becomes a chain projectile.
 const BOSS={e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0,phase2:false};
-const WP_HP=6,WP_OFF=[new V3(-1.15,.28,.25),new V3(1.15,.28,.25),new V3(0,.95,-.6)];
+const BOSS_TELE=.85,WP_HP=9,WP_OFF=[new V3(-1.15,.28,.25),new V3(1.15,.28,.25),new V3(0,.95,-.6)];
 const wpGeo=new THREE.IcosahedronGeometry(1.3,0),wpArmor=new THREE.OctahedronGeometry(2,0);
 function spawnBoss(){
   if(!EN_MESH||BOSS.e||BOSS.dead||SCREEN!=="play")return;
@@ -18,7 +18,7 @@ function spawnBoss(){
   const eye=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff2040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
   eye.position.set(0,(.655-.5)*sc,.2*sc);eye.scale.set(3,3,1);g.add(eye);g.userData.eye=eye;}
   const from=S.pos.clone().addScaledVector(fwd(),95).add(new V3(0,14,0));g.position.copy(from);scene.add(g);
-  const e={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:0,flash:0,elite:false,rad:BOSS_GLTF?10.5:9,isBoss:true,down:0,yaw:Math.atan2(S.pos.x-from.x,S.pos.z-from.z),tele:0,teleDir:new V3(),fireT:99};
+  const e={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:0,flash:0,elite:false,rad:BOSS_GLTF?17:9,isBoss:true,down:0,yaw:Math.atan2(S.pos.x-from.x,S.pos.z-from.z),tele:0,teleDir:new V3(),fireT:99};
   enemies.push(e);BOSS.e=e;BOSS.atkT=4;BOSS.mode=0;BOSS.down=0;BOSS.introT=3.2;
   buildWPs();
   sfx("radio");setTimeout(()=>{if(!S.ended){sfx("phase");cutin("케르고그모스 출현","아르고스 지휘기")}},400);
@@ -50,7 +50,7 @@ function wpDamage(w,n,at){
     const left=BOSS.wps.filter(x=>x.alive).length;popText(left?`약점 포드 파괴 · 남은 ${left}`:"케르고그모스 기능 정지!");
     if(!left)bossDown()}
 }
-function bossDown(){const b=BOSS.e;if(!b)return;b.down=6;BOSS.downs++;BOSS.tele=0;clearTele(b);
+function bossDown(){const b=BOSS.e;if(!b)return;b.down=5;BOSS.downs++;BOSS.tele=0;clearTele(b);
   S.slow=.6;flash(.35);sfx("specReady");cutin("기능 정지","지금 베어서 날려라");
   radio("CIC","지금이에요! 놈을 베어 날리면 주변 드론까지 한꺼번에 쓸어버릴 수 있어요!");
   for(let i=0;i<5;i++)setTimeout(()=>{if(BOSS.e&&b.alive){const p=b.m.position.clone().add(new V3().randomDirection().multiplyScalar(6));fxImpact(p,0xff8040);sparks(p,null,0xffc080,30,.5,20)}},i*260);
@@ -75,27 +75,35 @@ function bossAI0(b,dt,T){
     if(b.down<=0){b.down=0;buildWPs();sfx("phase");popText("케르고그모스 재기동 · 약점 포드 복구");m.userData.mat.emissive.setRGB(0,0,0)}
     return}
   // approach, then circle at a fixed stand-off
-  const keep=40;if(d>keep+4)m.position.addScaledVector(to,dt*(BOSS.introT>0?22:7));else if(d<keep-8)m.position.addScaledVector(to,-dt*6);
-  const side=new V3(-to.z,0,to.x);m.position.addScaledVector(side,dt*4*Math.sin(b.phase*.35));m.position.y+=(S.pos.y+6-m.position.y)*dt*.6;
+  const big=!!m.userData.anim,keep=big?60:40;if(d>keep+4)m.position.addScaledVector(to,dt*(BOSS.introT>0?22:7));else if(d<keep-8)m.position.addScaledVector(to,-dt*6);
+  const side=new V3(-to.z,0,to.x);m.position.addScaledVector(side,dt*4*Math.sin(b.phase*.35));m.position.y+=(S.pos.y+(big?10:6)-m.position.y)*dt*.6;
   BOSS.introT=Math.max(0,BOSS.introT-dt);
   const want=Math.atan2(S.pos.x-m.position.x,S.pos.z-m.position.z);let dy=Math.atan2(Math.sin(want-b.yaw),Math.cos(want-b.yaw));b.yaw+=clamp(dy,-.9*dt,.9*dt);
   m.rotation.set(0,b.yaw,Math.sin(b.phase*.6)*.05);if(ring)ring.rotation.z+=dt*.5;
   m.userData.eye.material.opacity=.8+Math.sin(T*5)*.2;
   if(SCREEN!=="play"||S.ended||BOSS.introT>0)return;
-  if(BOSS.tele>0){BOSS.tele-=dt;const k=1-BOSS.tele/1;m.userData.eye.scale.setScalar(3+k*5+Math.sin(T*40)*1.2);
+  bossPods(b,dt);const es=big?BOSS_EYE:3;
+  if(BOSS.tele>0){BOSS.tele-=dt;const k=1-BOSS.tele/BOSS_TELE;m.userData.eye.scale.setScalar(es*(1+k*1.7)+Math.sin(T*40)*es*.4);
     if(BOSS.tele<=0)bossFire(b)}
-  else{BOSS.atkT-=dt;if(BOSS.atkT<=0&&d<70){BOSS.tele=1;sfx("tele",m.position,1);sfx("tele",m.position,0)}}
+  else{BOSS.atkT-=dt;if(BOSS.atkT<=0&&d<(big?100:70)){BOSS.tele=BOSS_TELE;sfx("tele",m.position,1);sfx("tele",m.position,0)}}
 }
 function bossFire(b){
   const from=b.m.userData.anim?b.m.userData.eye.getWorldPosition(new V3()):b.m.position.clone().add(new V3(0,1.5,0)),base=S.pos.clone().sub(from).normalize();
   const up=new V3(0,1,0),side=new V3().crossVectors(base,up).normalize();
-  if(BOSS.mode%2===0){ // 5-way fan, aimed: dodge sideways or vertically
-    for(let i=-2;i<=2;i++){const dir=base.clone().applyAxisAngle(up,i*.11);fireEnemyBolt(from,dir,false,b,36)}}
-  else{ // three tight, staggered volleys aimed at where you'll be
-    for(let k=0;k<3;k++)setTimeout(()=>{if(!b.alive||b.down>0||S.ended)return;const lead=S.pos.clone().addScaledVector(S.vel,.35).sub(from).normalize();
-      for(let j=-1;j<=1;j+=2)fireEnemyBolt(from.clone().addScaledVector(side,j*2.5),lead,true,b,34);bossKick(b,.55)},k*(BOSS.phase2?200:260))}
-  bossKick(b,1);BOSS.mode++;BOSS.atkT=(BOSS.phase2?2.1:2.6)+Math.random()*.6;b.m.userData.eye.scale.setScalar(3);S.shake=Math.max(S.shake,.25);
+  const p2=BOSS.phase2,m3=BOSS.mode%3;
+  if(m3===0){ // wide aimed fan: dodge sideways or vertically
+    const n=p2?4:3;for(let i=-n;i<=n;i++){const dir=base.clone().applyAxisAngle(up,i*.1);fireEnemyBolt(from,dir,false,b,36)}}
+  else if(m3===1){ // tight staggered volleys aimed at where you'll be
+    for(let k=0;k<(p2?4:3);k++)setTimeout(()=>{if(!b.alive||b.down>0||S.ended)return;const lead=S.pos.clone().addScaledVector(S.vel,.35).sub(from).normalize();
+      for(let j=-1;j<=1;j+=2)fireEnemyBolt(from.clone().addScaledVector(side,j*3),lead,true,b,34);bossKick(b,.55)},k*(p2?170:230))}
+  else{ // ring cage: a circle of bolts around your position + one dead centre: commit to a big dodge
+    const ring=p2?10:8,vv=new V3().crossVectors(side,base).normalize();fireEnemyBolt(from,base,false,b,30);
+    for(let i=0;i<ring;i++){const a=i/ring*Math.PI*2,dir=base.clone().addScaledVector(side,Math.cos(a)*.16).addScaledVector(vv,Math.sin(a)*.16).normalize();fireEnemyBolt(from,dir,false,b,30)}}
+  bossKick(b,1);BOSS.mode++;BOSS.atkT=(p2?1.15:1.6)+Math.random()*.5;b.m.userData.eye.scale.setScalar(b.m.userData.anim?BOSS_EYE:3);S.shake=Math.max(S.shake,.3);
 }
+// weak-point pods shoot back on their own (each on its own clock), so you cannot park next to one
+function bossPods(b,dt){if(BOSS.tele>0)return;for(const w of BOSS.wps){if(!w.alive)continue;w.fireT=(w.fireT>20?2+w.phase*1.3:w.fireT)-dt;
+  if(w.fireT<=0){w.fireT=(BOSS.phase2?2.4:3.4)+Math.random();const f=w.m.position.clone(),dir=S.pos.clone().addScaledVector(S.vel,.25).sub(f).normalize();fireEnemyBolt(f,dir,false,w,20);w.flash=.4}}}
 function bossTick(dt,rdt,T){placeWPs(T)}
 function resetBoss(){
   if(BOSS.e){disposeEnemy(BOSS.e)}for(const w of BOSS.wps)if(w.alive)disposeEnemy(w);

@@ -6,9 +6,9 @@
    fire  - recoil: lurch forward + shoved back, wings snap down; volleys kick smaller
    down  - wings droop, nose dips, sinks and twitches; phase 2 - faster, bigger, hotter */
 let BOSS_GLTF=null,POD_GLTF=null;
-const BOSS_W=30,POD_S=10,POD_R=4.4;
+const BOSS_W=54,POD_S=12.5,POD_R=5.4,BOSS_EYE=7;
 // pods sit just outside the wing tips and above the crown (boss-local, world units)
-const WP_OFF2=[new V3(-17,3,7),new V3(17,3,7),new V3(0,12.5,1)];
+const WP_OFF2=[new V3(-31,5,10),new V3(31,5,10),new V3(0,21,3)];
 function bossBuildModel(g){
   const o=THREE.SkeletonUtils.clone(BOSS_GLTF.scene);let mat=null;
   o.traverse(m=>{if(!m.isMesh)return;m.frustumCulled=false;m.material=m.material.clone();m.material.envMap=ENV;m.material.envMapIntensity=.9;
@@ -26,7 +26,7 @@ function bossBuildModel(g){
   for(const b of B){const p=B.find(x=>x.n===b.n.parent);b.k=p&&p.lat>.3?.45:1}
   const pivot=new THREE.Group();pivot.add(o);g.add(pivot);
   const eye=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff2040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
-  eye.position.set(0,sz.y*k*.08,sz.z*k*.42);eye.scale.set(4,4,1);pivot.add(eye);
+  eye.position.set(0,sz.y*k*.08,sz.z*k*.42);eye.scale.set(BOSS_EYE,BOSS_EYE,1);pivot.add(eye);
   Object.assign(g.userData,{mat,eye,ring:null,anim:{pivot,B,lean:0,spread:-.5,rec:0,drop:0,q:new THREE.Quaternion()}});
 }
 function bossKick(b,n){const A=b.m.userData.anim;if(A)A.rec=Math.max(A.rec,n)}
@@ -50,7 +50,7 @@ function podBuild(g){const inner=POD_GLTF.scene.clone(true);let mat=null;
   inner.scale.multiplyScalar(k);inner.position.sub(c).multiplyScalar(k);
   const arm=new THREE.Group();arm.add(inner);g.add(arm);
   const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff4030,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
-  glow.position.z=sz.z*k*.5+.4;glow.scale.set(5.5,5.5,1);g.add(glow);
+  glow.position.z=sz.z*k*.5+.4;glow.scale.set(7,7,1);g.add(glow);
   // power tether back to the hulk: tells you these belong to the boss
   const tg=new THREE.BufferGeometry();tg.setAttribute("position",new THREE.Float32BufferAttribute([0,0,0,0,0,0],3));
   const teth=new THREE.Line(tg,new THREE.LineBasicMaterial({color:0xff3a30,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,depthWrite:false}));teth.frustumCulled=false;g.add(teth);
@@ -59,7 +59,7 @@ function podBuild(g){const inner=POD_GLTF.scene.clone(true);let mat=null;
 const _pv=new V3();
 function podPlace(w,b,T){const u=w.m.userData,o=w.off.clone();o.y+=Math.sin(T*1.6+w.phase*2)*.7;o.x+=Math.sin(T*.8+w.phase)*.5;
   w.m.position.copy(o.applyMatrix4(b.m.matrixWorld));w.m.lookAt(S.pos);u.arm.rotation.z=T*(.5+(1-w.hp/WP_HP)*1.5)+w.phase;
-  const k=w.hp/WP_HP,p=.5+.5*Math.sin(T*(5+(1-k)*14));u.glow.material.opacity=.5+.5*p;u.glow.scale.setScalar(5+p*1.5);
+  const k=w.hp/WP_HP,p=.5+.5*Math.sin(T*(5+(1-k)*14));u.glow.material.opacity=.5+.5*p;u.glow.scale.setScalar(6.5+p*2);
   if(w.flash<=0&&u.mat)u.mat.emissive.setRGB(.12+.22*p,.02,.01);
   w.m.updateMatrixWorld();const eye=b.m.userData.eye;eye.getWorldPosition(_pv);w.m.worldToLocal(_pv);
   const a=u.teth.geometry.attributes.position;a.setXYZ(1,_pv.x,_pv.y,_pv.z);a.needsUpdate=true;u.teth.material.opacity=.18+.25*p}
