@@ -1,5 +1,24 @@
 # ORBIT BREAKER — 작업 인수인계 문서
 
+## 0. 새 세션 시작 규칙 (필독 · 10/28 갱신)
+**배포는 오직 GitHub main 에 push 하는 것 하나뿐.** push 하면 GitHub Actions 가 빌드 → `node --check` → 테스트 → 대전 워커 → Pages 를 자동 배포한다.
+- ❌ 금지: `wrangler pages deploy`, `deploy.sh`, 바탕화면 `orbit-breaker-deploy/` 폴더 업로드, Cloudflare 대시보드 직접 업로드, zip 로 받은 옛 소스로 작업.
+  (10/28 새벽 다른 세션이 옛 폴더를 직접 올려서 사이트가 초기 버전으로 덮어써진 사고가 있었음)
+- ✅ 시작할 때: 저장소를 GitHub 에서 새로 clone(또는 `git pull`)하고, 이 문서를 끝까지 읽고 시작.
+- ✅ 수정 흐름: `src/*.js`·`head2.html` 수정 → `python3 build.py` → `node --check game.js` → `node --test tests/*.test.mjs` → commit → `git push` → `gh run watch` 로 배포 성공 확인.
+- ✅ 큰 작업은 브랜치에서 하고 테스트 후 main 에 merge (main 이외 브랜치는 배포 안 됨).
+- 롤백: Actions 에서 이전 성공 run 을 `gh run rerun <id>` 하거나, `origin/stable-pre-tutorial`(튜토리얼 이전) 같은 백업 브랜치를 main 으로 되돌려 push.
+- 대전 서버 프로토콜 VERSION(pvp/src/arena.js) 을 바꾸면 클라이언트 `src/12c-versus.js` 의 `&v=` 도 같이 바꿀 것.
+- 사용자 규칙: 항상 한국어로 답, 쉬지 말고 이어서 작업, AI 에셋 프롬프트는 에셋 하나당 공통 문구까지 합친 완성형 1개, 프롬프트 요청 시 한국어로.
+- 테스트 팁: 클라우드 환경엔 GPU 가 없어 브라우저 테스트가 매우 느림(프레임당 2~3초). 오래 걸리는 시각 검증은 사용자 PC 에서 확인 요청.
+
+## 0-1. 현재 상태 요약 (10/28 오전)
+- 스토리 「유성우 예보」(17절), 오프닝 컷씬 + 튜토리얼 8단계(첫 방문 시 메인에 추천 안내), 빔샤벨 v2 + 사용자 에셋(칼날·잔상·손잡이), Mixamo 검술 모션(내 기체·대전 상대),
+  타격감 레이어, 근접 검투기 적, 1:1 쇼다운 근접전 v4(가드·패리·가드 브레이크·칼날 격돌·콤보), 대전 동기화 30Hz+예측 보간, 락온 경보음 구분, 굵은 SVG 조준선.
+- 진행 중: 오프닝 내레이션 확장(헬리오스 발전망 · 비밀 협정 · 기상청 '유성우 예보' 설정) → 사용자가 다른 채팅에서 대사 정리 후 음성(vo_*.mp3) 녹음 예정 → 컷씬 타이밍 반영 필요.
+- 남은 일: 음성 대사 적용, 기획서 PDF(약 10쪽, AI 사용 내역·라이선스 포함), 5분 시연 영상, D1 테스트 기록(sid 99990001) 마감 전 삭제.
+
+
 2026 SCHU AI·SW Festival 게임개발 경진대회(E-Sports 부문) 출품작.
 마감 **10/30(금) 18:00**. 제출물은 웹 링크, 5분 시연영상, 10쪽 기획서 PDF.
 라이브 주소: **https://orbitbreaker.pages.dev** (Cloudflare Pages + D1 + Durable Object)
@@ -9,7 +28,7 @@
 - `orbit-breaker-deploy/` : 배포 폴더. 이미 바탕화면에 있음. `public/`, `wrangler.toml`, `pvp/`, `deploy.sh`가 들어 있음.
 
 ## 2. 빌드 & 배포
-> **현재 방식 (10/27~): GitHub `kjm030131-cell/orbit-breaker` main에 push하면 GitHub Actions가 빌드 → 테스트 → 대전 워커 + Pages 배포를 자동으로 함.** 아래 수동 방식은 예비용.
+> **현재 방식 (10/27~): GitHub `kjm030131-cell/orbit-breaker` main에 push하면 GitHub Actions가 빌드 → 테스트 → 대전 워커 + Pages 배포를 자동으로 함.** ⚠️ 아래 수동 방식은 **사용 금지**(옛 버전 덮어쓰기 사고). 기록용으로만 남김.
 
 ```
 cd ~/Desktop/orbit-breaker-src
