@@ -113,8 +113,10 @@ function resetBoss(){
 // portraits: ui/face_op.webp (CIC), face_ace.webp (enemy), face_cap.webp (captain) when present
 const FACES={CIC:"face_op",적:"face_ace",함장:"face_cap"};
 // recorded lines (ElevenLabs, vo/*.mp3): one voice at a time, follows the sound on/off (M) setting
-let VO_A=null;function voPlay(id,onDur){if(VO_A){try{VO_A.pause()}catch(_){}VO_A=null}if(!id||!AUD.on)return;try{const a=new Audio(`vo/${id}.mp3`);a.volume=Math.min(1,(AUD.vol??.9)*1.05);
-  if(onDur)a.addEventListener("loadedmetadata",()=>onDur(a.duration));a.play().catch(()=>{});VO_A=a}catch(_){}}
+// preloaded lines (intro narration): fetched up front so the first line starts on cue instead of after a network round trip
+const VO_CACHE={};function voPreload(ids){for(const id of ids)if(id&&!VO_CACHE[id]){try{const a=new Audio(`vo/${id}.mp3`);a.preload="auto";a.load();VO_CACHE[id]=a}catch(_){}}}
+let VO_A=null;function voPlay(id,onDur){if(VO_A){try{VO_A.pause()}catch(_){}VO_A=null}if(!id||!AUD.on)return;try{const c=VO_CACHE[id];if(c)try{c.currentTime=0}catch(_){}const a=c||new Audio(`vo/${id}.mp3`);a.volume=Math.min(1,(AUD.vol??.9)*1.05);
+  if(onDur)a.addEventListener("loadedmetadata",()=>onDur(a.duration));a.play().catch(()=>{setTimeout(()=>{if(VO_A===a)a.play().catch(()=>{})},250)});VO_A=a}catch(_){}}
 function radio(who,txt,vo){const r=$("radio");if(!r)return;$("radioWho").textContent=who;const k=Object.keys(FACES).find(n=>who.includes(n)),f=$("radioFace");
   f.style.backgroundImage=k?`url(ui/${FACES[k]}.webp)`:"";f.textContent="";if(k){const im=new Image();im.onerror=()=>{f.style.backgroundImage=""};im.src=`ui/${FACES[k]}.webp`}$("radioTxt").textContent=txt;r.classList.remove("on");void r.offsetWidth;r.classList.add("on");
   sfx("radio");clearTimeout(radio.h);radio.h=setTimeout(()=>r.classList.remove("on"),4600);if(vo)voPlay(vo,d=>{if(d>3.9){clearTimeout(radio.h);radio.h=setTimeout(()=>r.classList.remove("on"),d*1000+700)}})}

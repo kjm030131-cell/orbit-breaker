@@ -18,6 +18,7 @@ function lazyGLB(name,src,b64,ok){if(window.GLB_BASE){glb(name,b64,ok);return}co
 glb("enemy","ENEMY_GLB_B64",g=>{buildEnemyTemplate(g);for(const e of enemies)disposeEnemy(e);enemies.length=0;fillEnemies();okLoad()});
 glb("mech","MECH_GLB_B64",g=>{FRAMES.mk2.gltf=g;FRAMES.mk2.obj=P=buildPlayer(g,"mk2");scene.add(P.root);okLoad()});
 // boss + weak-point pod models (deployed build only; without them the boss falls back to the procedural hulk)
+setTimeout(()=>voPreload(INTRO_LINES.map(L=>L.vo)),4000); // opening narration ready before the tutorial is clicked
 if(window.GLB_BASE)setTimeout(()=>{glb("boss","",g=>{BOSS_GLTF=g});glb("boss_pod","",g=>{POD_GLTF=g})},2500);
 frame();
 

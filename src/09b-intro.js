@@ -19,6 +19,7 @@ function introMeteor(pos,vel,big){INTRO.meteors.push({p:pos.clone(),v:vel.clone(
 function introProp(pos,vel){if(!EN_MESH)return null;const m=new THREE.Mesh(EN_MESH.geometry,EN_MESH.material.clone());m.scale.setScalar(E_SCALE);m.position.copy(pos);
   m.rotation.y=Math.atan2(vel.x,vel.z);scene.add(m);const o={m,v:vel.clone(),hp:1};INTRO.props.push(o);return o}
 function playIntro(){return new Promise(res=>{
+  voPreload(INTRO_LINES.map(L=>L.vo));
   if(!SHIP)buildShip();SHIP.g.position.set(0,0,0);SHIP.g.rotation.set(0,0,0);SHIP.retreat=-1;
   Object.assign(INTRO,{on:true,t:0,skip:false,done:res,nextBoom:10.2,nextMet:30,cue:{}});
   for(const e of enemies)e.m.visible=false;if(P)P.root.visible=false;
