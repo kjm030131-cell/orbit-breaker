@@ -121,7 +121,7 @@ function fireEnemyBolt(from,dir,elite,owner,dmg){
   if(FXOK.beam){const c=elite?0x40c8ff:0xff3a2a,tr=new THREE.Mesh(ribbonGeo,new THREE.MeshBasicMaterial({map:FXT.beam,color:c,transparent:true,opacity:.95,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide}));
     tr.scale.set(2.2,2.2,-9);tr.frustumCulled=false;g.add(tr);const hd=new THREE.Sprite(new THREE.SpriteMaterial({map:FXOK.hit?FXT.hit:TX.glow,color:c,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));hd.scale.setScalar(3.4);g.add(hd)}
   g.position.copy(from);g.lookAt(from.clone().add(dir));scene.add(g);
-  G.ebolts.push({g,dir:dir.clone(),speed:(PHASES[G.phase].bolt||85)*(elite?1.12:1),life:1.6,dead:false,color:elite?0x40c8ff:0xff3030,owner:owner||null,dmg:dmg||(elite?40:34),refl:false});
+  G.ebolts.push({g,dir:dir.clone(),speed:(PHASES[G.phase].bolt||85)*(elite?1.12:1),life:1.6,dead:false,color:elite?0x40c8ff:0xff3030,owner:owner||null,dmg:dmg||(elite?24:18),refl:false});
   emit(ADD,{pos:from,tex:TX.flare,color:elite?0x80e0ff:0xff6060,s0:3,s1:5,life:.1});sfx("efire",from);
 }
 function stepEBolts(dt){
@@ -142,23 +142,28 @@ function hurt(b){
   if(G.armor>0){G.armor=0;G.iframe=1;sfx("armor");popText("반응 장갑 작동");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:3,s1:14,life:.4});fxImpact(S.pos.clone().add(new V3(0,.8,0)),0x7fe0ff);S.vel.addScaledVector(b.dir,10);S.shake=.5;return}
   if(G.dead>0)return;
   fxImpact(S.pos.clone().add(new V3(0,.8,0)),0xff4030);sparks(S.pos,b.dir,0xffb080,20,.4,24);sfx("hurt");
-  // first hit only cracks the armour (score streak lost, short stagger); a second hit before it repairs destroys the frame
-  if(!(G.dmg>0)){G.dmg=1;G.dmgT=ARMOR_REPAIR;G.clean=0;G.iframe=Math.max(G.iframe,1.2);G.stagger=Math.max(G.stagger,.35);S.hitstop=Math.max(S.hitstop,.06);S.shake=Math.max(S.shake,.6);
-    if(b.dir){S.vel.addScaledVector(b.dir,16);S.freeT=.3}S.act=null;S.dash=0;S.dashT=null;S.pending=null;sfx("armor");flash(.18);
-    const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");document.body.classList.add("dmg");popText("장갑 손상");return}
+  // HP system: every frame has 100 HP; a hit staggers you (no control) unless you break out with Shift
+  const dmg=Math.round(b.dmg||(b.ram?26:20));G.hp=Math.max(0,(G.hp??HP_MAX)-dmg);G.clean=0;G.hpT=0;
+  if(G.hp>0){G.stagger=Math.max(G.stagger,STAGGER);G.iframe=Math.max(G.iframe,.55);G.broke=false;S.hitstop=Math.max(S.hitstop,.06);S.shake=Math.max(S.shake,.55);
+    if(b.dir){S.vel.copy(b.dir).multiplyScalar(18);S.freeT=.3}S.act=null;S.dash=0;S.dashT=null;S.pending=null;flash(.15);
+    const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");popText(`피격 −${dmg} · Shift로 경직 풀기`);return}
   destroyMech(b.dir);
 }
 
 /* ---- dodge / just dodge ---- */
 function dodge(){
   if(VS){
-    if(!vsCanAct()||S.over>0||G.dodgeCd>0||S.attackCd>0||S.shotCd>0||S.boost<25)return;
-    G.dodgeCd=.65;S.boost-=25;G.iframe=Math.max(G.iframe,.18);const d=new V3(),f=fwd(),r=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw));
+    if(!vsCanAct()||S.over>0||G.dodgeCd>0||S.attackCd>0||S.shotCd>0||S.boost<20)return;
+    G.dodgeCd=.65;S.boost-=20;G.iframe=Math.max(G.iframe,.18);const d=new V3(),f=fwd(),r=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw));
     if(keys.KeyW)d.add(f);if(keys.KeyS)d.sub(f);if(keys.KeyA)d.add(r);if(keys.KeyD)d.sub(r);if(keys.Space)d.y+=1;if(keys.KeyC)d.y-=1;if(!d.lengthSq())d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(72));S.freeT=.32;vsSend({t:"dodge"});sfx("dodge");return;
   }
-  if(SCREEN!=="play"||S.ended||PAUSED||G.dodgeCd>0||G.stagger>0||G.dead>0||S.over>0||S.boost<15)return;
+  if(SCREEN==="play"&&!S.ended&&!PAUSED&&G.stagger>0&&G.dead<=0&&!G.broke){ // stagger break-out
+    if(S.boost<BREAK_COST){popText("부스트 부족 · 경직 풀기 불가");sfx("deny");return}
+    G.broke=true;G.stagger=0;S.boost-=BREAK_COST;G.iframe=Math.max(G.iframe,.45);G.dodgeCd=.3;S.vel.multiplyScalar(.2);sfx("just");popText("경직 풀기");
+    emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0xffd060,s0:2,s1:16,life:.4,a:.9});tutCount("break");return}
+  if(SCREEN!=="play"||S.ended||PAUSED||G.dodgeCd>0||G.stagger>0||G.dead>0||S.over>0||S.boost<12)return;
   if(G.mega){if(G.mega.mode!=="r")return;megaEnd(false)} // a dodge cancels the R beam; the F burst is committed
-  G.dodgeCd=.45;S.boost-=15;G.iframe=Math.max(G.iframe,.22);
+  G.dodgeCd=.4;S.boost-=12;G.iframe=Math.max(G.iframe,.22);
   const f=fwd(),r=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw)),d=new V3();
   if(keys.KeyW)d.add(f);if(keys.KeyS)d.sub(f);if(keys.KeyA)d.add(r);if(keys.KeyD)d.sub(r);if(keys.Space)d.y+=1;if(keys.KeyC)d.y-=1;
   if(d.lengthSq()===0)d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(72));S.freeT=.32;sfx("dodge");tutCount("dodge");
@@ -173,12 +178,11 @@ function dodge(){
   if(just)justDodge();
 }
 function justDodge(){tutCount("just");
-  addSpec(12);if(G.unit==="shield"&&!G.armor&&G.guardCd<=0){G.armor=1;G.guardCd=25;popText("실드 비트 · 1회 피격 무효")}
-  S.slow=.75;G.crit=2.6;G.iframe=.9;S.boost=Math.min(100,S.boost+40);S.heat=Math.max(0,S.heat-25);
-  popText("저스트 회피 · 반격 찬스!");sfx("just");addScore(300,S.pos.clone().add(new V3(0,2,0)),"cyan");
-  const f=$("flash");f.style.background="#7fe0ff";flash(.28);setTimeout(()=>{f.style.background="#fff"},220);
-  emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:18,life:.45,a:.9});
+  if(G.unit==="shield"&&!G.armor&&G.guardCd<=0){G.armor=1;G.guardCd=25}
+  G.crit=1.6;G.iframe=Math.max(G.iframe,.4);S.boost=Math.min(100,S.boost+20);addSpec(4);
+  popText("저스트 회피 · 다음 베기 크리티컬");sfx("just");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:16,life:.4,a:.85});
 }
+
 
 /* ---- aim preview: predicted launch path + chain candidates ---- */
 const AIM_DOTS=[];for(let i=0;i<22;i++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.core,color:0xffb21a,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,opacity:0}));sp.scale.set(.45,.45,1);sp.visible=false;scene.add(sp);AIM_DOTS.push(sp)}
@@ -202,8 +206,8 @@ function gameplayTick(dt,rdt,T){
   if(G.kcT>0){G.kcT-=dt;if(G.kcT<=0){if(G.kc>=5)popText("콤보 종료");G.kc=0}}
   if(G.dead>0){G.dead-=rdt;if(G.dead<=0)respawnMech()}
   else if(SCREEN==="play"&&S.started&&!S.ended){const was=cleanMult();G.clean+=dt;const now=cleanMult();if(now>was){popText(`무피격 ×${now.toFixed(1)}`);sfx("chain",null,2)}}
-  if(G.dmg>0&&G.dead<=0&&!VS){G.dmgT-=dt;const t=$("dmgTxt"),txt=`장갑 손상 · 복구까지 ${Math.max(0,G.dmgT).toFixed(1)}초`;if(t.textContent!==txt)t.textContent=txt;
-    if(G.dmgT<=0){G.dmg=0;document.body.classList.remove("dmg");popText("장갑 복구");sfx("pickup");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:12,life:.4})}}
+  if(!VS&&G.dead<=0&&SCREEN==="play"&&S.started){G.hpT=(G.hpT||0)+dt;if(G.hpT>HP_REGEN_AFTER&&G.hp<HP_MAX)G.hp=Math.min(HP_MAX,G.hp+HP_REGEN*dt)}
+  {const low=!VS&&G.hp<35&&G.dead<=0;if(low!==document.body.classList.contains("dmg"))document.body.classList.toggle("dmg",low);if(low){const t=$("dmgTxt"),x=`장갑 위험 · ${Math.ceil(G.hp)}`;if(t.textContent!==x)t.textContent=x}}
   threatMarks();
   G.guardCd=Math.max(0,G.guardCd-dt);
   G.iframe=Math.max(0,G.iframe-dt);G.stagger=Math.max(0,G.stagger-dt);G.dodgeCd=Math.max(0,G.dodgeCd-dt);G.crit=Math.max(0,G.crit-dt);
@@ -213,7 +217,7 @@ function phaseBanner(p){const b=$("phase");$("phaseName").textContent=p.name;$("
 function resetGameplay(){document.body.classList.remove("dmg");
   for(const b of G.ebolts){scene.remove(b.g);b.g.children.forEach(c=>c.material.dispose())}
   for(const e of enemies)clearTele(e);
-  Object.assign(G,{dmg:0,dmgT:0,spawnT:1.5,bigT:4,phase:0,kc:0,kcT:0,maxKC:0,crit:0,iframe:0,stagger:0,dodgeCd:0,ebolts:[],aimN:0,focus:null,lives:MAX_LIVES,dead:0,clean:0,guardCd:0});
+  Object.assign(G,{hp:HP_MAX,hpT:0,broke:false,spawnT:1.5,bigT:4,phase:0,kc:0,kcT:0,maxKC:0,crit:0,iframe:0,stagger:0,dodgeCd:0,ebolts:[],aimN:0,focus:null,lives:MAX_LIVES,dead:0,clean:0,guardCd:0});
   AIM_DOTS.forEach(s=>s.visible=false);resetItems();resetUnits();resetBoss();if(P)P.root.visible=true;
 }
 
@@ -227,14 +231,14 @@ function destroyMech(dir){
 }
 function respawnMech(){
   if(G.lives<=0){finishRun("lost");return}
-  G.dmg=0;document.body.classList.remove("dmg");G.iframe=3;G.respawnBlink=true;setTimeout(()=>{G.respawnBlink=false},2900);G.stagger=0;S.boost=100;S.heat=0;S.over=0;if(P)P.root.visible=true;
+  G.hp=HP_MAX;G.hpT=0;document.body.classList.remove("dmg");G.iframe=3;G.respawnBlink=true;setTimeout(()=>{G.respawnBlink=false},2900);G.stagger=0;S.boost=100;S.heat=0;S.over=0;if(P)P.root.visible=true;
   S.vel.copy(fwd().multiplyScalar(30));sfx("respawn");flash(.3);popText("예비기 출격");
   emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0xffb21a,s0:2,s1:22,life:.5});emit(ADD,{pos:S.pos.clone(),tex:TX.flare,color:0xffffff,s0:8,s1:14,life:.18});
 }
 
 /* ---- rammer drones: hunt, arm (flashing orange line), then charge in a straight line ---- */
 const RAM_SPEED=72;
-const ARMOR_REPAIR=6; // seconds without a hit to repair cracked armour
+const HP_MAX=100,STAGGER=.85,BREAK_COST=30,HP_REGEN_AFTER=6,HP_REGEN=4; // per-frame HP, hit stagger, Shift break-out cost, slow regen when untouched
 function ramAI(e,dt,T){
   const em=e.m,eye=em.userData.eye,live=SCREEN==="play"&&!S.ended&&S.started;e.phase+=dt;
   if(e.rs==="hunt"){const to=S.pos.clone().sub(em.position),d=to.length();to.normalize();
@@ -251,7 +255,7 @@ function ramAI(e,dt,T){
   else if(e.rs==="charge"){e.rt-=dt;const p0=em.position.clone();em.position.addScaledVector(e.rdir,RAM_SPEED*dt);em.rotation.z+=dt*14;
     if(dt>0)emit(ADD,{pos:em.position.clone(),color:0xff7a20,s0:2.2,s1:.2,life:.25,a:.8});
     if(live&&!e.dodged&&G.dead<=0){const c=S.pos.clone().add(new V3(0,.4,0)),seg=em.position.clone().sub(p0),L=seg.length()||1e-6,tt=clamp(c.clone().sub(p0).dot(seg)/(L*L),0,1);
-      if(p0.clone().addScaledVector(seg,tt).distanceTo(c)<2.8){if(G.iframe<=0){hurt({dir:e.rdir.clone()})}ramBlow(e);return}}
+      if(p0.clone().addScaledVector(seg,tt).distanceTo(c)<2.8){if(G.iframe<=0){hurt({dir:e.rdir.clone(),dmg:26})}ramBlow(e);return}}
     if(e.rt<=0){e.rs="hunt";e.rt=2.2+Math.random()*1.5}}
 }
 function ramBlow(e){e.alive=false;const p=e.m.position.clone();disposeEnemy(e);fxExplosion(p,1.2);sfx("boom",p,0)}

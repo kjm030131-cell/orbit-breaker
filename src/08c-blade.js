@@ -50,7 +50,7 @@ function bladeContact(e,to){
   if(S.act&&/^slash/.test(S.act)){bladeClash(e,true);return}
   if(G.iframe>0){e.recT=1.3;S.slow=Math.max(S.slow,.4);popText("간파 · 지금 베어라");addScore(400,S.pos.clone(),"cyan");addSpec(2);sfx("just");
     emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:12,life:.35,a:.7});return}
-  fxSlashHit(S.pos.clone().add(new V3(0,1,0)),0xff3040,true);hurt({dir:to.clone(),g:{position:S.pos.clone()}})}
+  fxSlashHit(S.pos.clone().add(new V3(0,1,0)),0xff3040,true);hurt({dir:to.clone(),dmg:28,g:{position:S.pos.clone()}})}
 // blades meet: sparks, freeze, both thrown apart; the enemy reels (perfect clash = long opening)
 function bladeClash(e,perfect){const mid=S.pos.clone().lerp(e.m.position,.5).add(new V3(0,1.2,0)),dir=e.m.position.clone().sub(S.pos).normalize();
   sparks(mid,dir,0xffe0a0,38,.6,40);sparks(mid,dir.clone().negate(),0x9fe8ff,38,.6,30);fxImpact(mid,0xffd080);if(typeof fxElectric==="function")fxElectric(mid,1.6);

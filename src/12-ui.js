@@ -202,7 +202,7 @@ function hudUpdate(){
   setT("score",S.score.toLocaleString());setT("kills",S.kills||0);setT("best",S.best);
   const top=BOARD.length?BOARD[0].best:0;setT("topScore",top?top.toLocaleString():"—");
   if(top){const g=S.score-top;setT("gap",g>=0?"1위 페이스":g.toLocaleString());setC("gap","ahead",g>=0)}else setT("gap","");
-  {const b=Math.max(.5,S.boost).toFixed(1);if(HC.bst!==b){HC.bst=b;$("boostF").style.setProperty("--b",b)}const low=S.boost<(VS?25:15);if(HC.bstL!==low){HC.bstL=low;$("boostG").classList.toggle("low",low)}}setT("boostV",Math.round(S.boost));
+  {const b=Math.max(.5,S.boost).toFixed(1);if(HC.bst!==b){HC.bst=b;$("boostF").style.setProperty("--b",b)}const low=S.boost<(VS?20:12);if(HC.bstL!==low){HC.bstL=low;$("boostG").classList.toggle("low",low)}}setT("boostV",Math.round(S.boost));
   setW("heatF",S.heat);setT("mult",Math.round(S.heat)+"%");setC("heatG","hot",S.heat>=80||S.over>0);setH("heatG",!VS);
   setC("comboBox","live",G.kc>0);setT("kcNum",G.kc);setT("kcMult","×"+mult().toFixed(1));setW("kcBar",G.kc>0?G.kcT/KC_WINDOW*100:0);
   setT("phaseTag","단계 "+(G.phase+1)+" / 4"+(G.phase>=3?" · ×2":""));setH("critTag",!(G.crit>0));
@@ -210,8 +210,9 @@ function hudUpdate(){
   setW("specBar",G.spec);setC("wSpec","ready",G.spec>=100);setT("specTxt",G.spec>=100?"READY":Math.floor(G.spec)+"%");setH("armorTag",!(G.armor>0));
   const sl=S.act&&S.act.startsWith("slash");setT("chainNow",sl?`콤보 ${S.combo+1} / 3`:"록온 돌진");
   setC("wBlade","act",S.bladeOn>0||sl);setC("wRifle","act",S.shotCd>0);setW("rifleCd",S.shotCd>0?(1-S.shotCd/(G.unit==="missile"?.24:.32))*100:100);
-  setT("warn",G.dead>0?(G.lives>0?"기체 대파 — 예비기 발진 준비":"전 기체 손실"):G.stagger>0?"피격 — 자세 제어 불능":VS&&S.over>0?"과열 정지":VS&&S.heat>=80?"과열 임박":S.boost<15?"부스트 부족 — 회피 불가":"");
+  setT("warn",G.dead>0?(G.lives>0?"기체 대파 — 예비기 발진 준비":"전 기체 손실"):G.stagger>0?(VS?"피격 — 자세 제어 불능":"경직 — Shift로 풀기 (부스트 30)"):VS&&S.over>0?"과열 정지":VS&&S.heat>=80?"과열 임박":S.boost<15?"부스트 부족 — 회피 불가":"");
   {const cm=cleanMult(),nx=cm>=2?1:(G.clean%CLEAN_STEP)/CLEAN_STEP;setT("cleanV","×"+cm.toFixed(1));setW("cleanF",nx*100);setC("cleanBox","max",cm>=2)}
+  if(!VS){const hp=Math.ceil(G.hp??100);if(HC.hp!==hp){HC.hp=hp;$("hpF").style.width=hp+"%";$("hpV").textContent=hp;$("hpRow").classList.toggle("low",hp<35)}}
   if(HC.lives!==G.lives){HC.lives=G.lives;[...$("lives").children].forEach((c,i)=>{if(c.tagName==="I")c.classList.toggle("lost",i>=G.lives)});$("livesTxt").textContent="기체 "+Math.max(0,G.lives)+" / "+MAX_LIVES}
   {const u=UNITS[G.unit],cd=G.unitCd;setW("unitCd",cd>0?(1-cd/u.cd)*100:100);setC("wUnit","ready",cd<=0);setC("wUnit","act",!!G.mega||G.barrier>0||G.marking);
    setT("unitName",G.marking?`${u.r} · ${G.marks.length}/6`:cd>0?`${u.r} ${cd.toFixed(1)}`:u.r)}
