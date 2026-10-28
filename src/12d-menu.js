@@ -23,4 +23,4 @@ try{if(localStorage.getItem("ob.fps")==="1")setTimeout(()=>setFps(true),0)}catch
 function resumePlay(){PAUSED=false;$("pause").hidden=true;muffle(false);lock()}
 $("pResume").addEventListener("click",()=>{sfx("uiok");resumePlay()});
 $("pQuitB").addEventListener("click",()=>{sfx("uiback");PAUSED=false;$("pause").hidden=true;muffle(false);
-  if(VS){vsClose();show("title");return}finishRun("quit")});
+  if(VS){const loc=VS.local;vsClose();if(loc){S.started=false;S.ended=true}show(loc?"duel":"title");return}finishRun("quit")});

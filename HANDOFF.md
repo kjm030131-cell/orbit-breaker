@@ -252,3 +252,11 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 - R 성공 판정 카운터: u_mega(메가 빔 발사), u_pods(포드 발사), u_missile(표적 3기 이상 잡고 발사, 미만이면 missileShort → "너무 짧아요" 안내), u_shield(장벽 반사).
   그 밖에 ramDodge, elite, eliteBlock, ms 카운터 훅 추가. tutKeep 이 keep.kind(ram/elite/ms)·line(일렬 배치)을 지원.
 - 무전 대사 간격 4.3초, 단계 바뀌면 이전 단계 대사 취소(sayTok). 튜토리얼 중 무전창은 목표창 아래(body.tut #radio).
+
+## 27. 쇼다운 튜토리얼 (오프라인, 10/28)
+- 쇼다운 화면 "쇼다운 튜토리얼 · 혼자 연습"(#dTut) → vsOpen("local") → vstLocalSocket: 브라우저 안에서 실제 대전 규칙(LOCAL_ARENA = build.py 가
+  pvp/src/arena.js 를 export 없이 감싸 game.js 앞에 넣음)을 돌리고 가짜 소켓으로 기존 대전 클라이언트를 그대로 사용. 판정이 온라인과 100% 동일.
+- src/12f-vstut.js: 측 b = 훈련 교관 봇(33ms 틱, pose/swing/guard/dodge 를 arena 에 직접 전달). 체력 45 미만이면 회복, 라운드 시계 없음(endAt +1시간).
+  8단계: 연타 3회 / 가드 3회 / 패리(붉은 링이 사라지는 순간 Q) / 간파(같은 타이밍 회피) / 헛스윙 반격 / 가드 브레이크 / 원거리 사격 3발 / 스파링 피해 60.
+  끝나면 컷인 후 쇼다운 화면으로. 일시정지 '작전 종료'도 쇼다운 화면으로 복귀.
+- 서버 규칙 수정: 헛스윙 후딜은 기존 공격 후딜 끝에서 +300ms(p.lock=max(lock,at)+WHIFF_MS) — 이전 식은 약공격 후딜(520ms)에 묻혀 효과가 없었음.

@@ -59,7 +59,7 @@ export class Arena {
     // counter hit: the target was still winding up its own swing
     const counter=x.kind==='melee'&&s.pending.some(z=>z.side===other(x.side)&&z.kind==='melee');if(counter){dmg=Math.round(dmg*COUNTER_K);heavy=true;}
     if(this.damage(other(x.side),dmg,norm(d),x.kind==='pulse'?'skill':'melee',now,x.side,heavy)&&counter)this.emit({t:'counter',side:x.side});}
-   else if(x.kind==='melee'){p.lock=Math.max(p.lock,x.at+WHIFF_MS);this.emit({t:'whiff',side:x.side});}
+   else if(x.kind==='melee'){p.lock=Math.max(p.lock,x.at)+WHIFF_MS;this.emit({t:'whiff',side:x.side});}
   }
   for(const b of [...s.shots]){if(s.phase!=='fight')break;const q=s.players[other(b.side)];if(!q)continue;const elapsed=Math.min(2.4,(now-b.at)/1000),end=add(b.from,b.dir,elapsed*b.speed),start=b.last||b.from;b.last=end;
    if(segment(add(q.p,[0,.4,0]),start,end)<2.6){s.shots=s.shots.filter(x=>x!==b);

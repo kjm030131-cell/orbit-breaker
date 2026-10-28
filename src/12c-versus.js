@@ -30,6 +30,7 @@ for(const id of ["vsPassives","vsSkills"])$(id).addEventListener("change",()=>{i
 function vsOpen(code,name,create=false){
   if(VS)vsClose();VS={code,name,side:null,phase:"wait",hp:100,maxHp:100,oppHp:100,oppMaxHp:100,rules:{passives:false,skills:false},players:{},wins:[0,0],round:0,oppName:"",remote:null,tgt:null,sendT:0,pingT:0,off:0,ready:false};const v=VS;
   const base=window.PVP_URL||((location.protocol==="https:"?"wss://":"ws://")+location.host+"/pvp");
+  if(code==="local"){v.ws=vstLocalSocket(v,name);v.local=true;$("dCodeBig").textContent="연 습";vsLobby();return}
   try{v.ws=new WebSocket(base+"?room="+code+"&name="+encodeURIComponent(name)+"&v=6&create="+(create?1:0))}catch(e){VS=null;duelErr("대전 서버에 연결할 수 없습니다.");return}
   v.ws.onmessage=e=>{if(VS!==v)return;let m;try{m=JSON.parse(e.data)}catch{return}vsMsg(m)};
   v.ws.onclose=()=>{if(VS!==v)return;if(["wait","lobby"].includes(v.phase)){vsClose();duelErr("대전 서버 연결이 종료됐습니다. 방을 다시 만들어 주세요.")}else if(v.phase!=="end"&&!v.matchDone)vsEnd("disconnect")};
