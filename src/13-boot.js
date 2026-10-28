@@ -17,6 +17,8 @@ function glb(name,b64,ok0){const ok=g=>ok0(bakeGLTF(g));const L=new THREE.GLTFLo
 function lazyGLB(name,src,b64,ok){if(window.GLB_BASE){glb(name,b64,ok);return}const sc=document.createElement("script");sc.src=src;sc.onload=()=>glb(name,b64,ok);document.head.appendChild(sc)}
 glb("enemy","ENEMY_GLB_B64",g=>{buildEnemyTemplate(g);for(const e of enemies)disposeEnemy(e);enemies.length=0;fillEnemies();okLoad()});
 glb("mech","MECH_GLB_B64",g=>{FRAMES.mk2.gltf=g;FRAMES.mk2.obj=P=buildPlayer(g,"mk2");scene.add(P.root);okLoad()});
+// boss + weak-point pod models (deployed build only; without them the boss falls back to the procedural hulk)
+if(window.GLB_BASE)setTimeout(()=>{glb("boss","",g=>{BOSS_GLTF=g});glb("boss_pod","",g=>{POD_GLTF=g})},2500);
 frame();
 
 /* ================= installable app (Chrome / Edge) ================= */

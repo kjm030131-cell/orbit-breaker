@@ -47,6 +47,18 @@ async def main():
           kill();st("podsDown1");T.G.iframe=99;T.update(.05);st("tick1");if(B.e)T.knock(B.e,new V(0,0,1),40,1);st("slash1");for(let i=0;i<10;i++)T.update(.05);st("recover");
           kill();st("podsDown2");if(B.e)T.knock(B.e,new V(0,0,1),40,1);st("slash2");for(let i=0;i<160;i++)T.update(.05);st("end")}catch(e){r.err=String(e).slice(0,200)}return r}''')
         await shot('03_boss')
+        # 2b) boss model (10/29): loaded GLBs, idle / telegraph / stalled poses, pods in view
+        try: await pg.wait_for_function('window.__T.BOSS_GLTF&&window.__T.POD_GLTF',timeout=60000)
+        except Exception as e: errs.append('boss model not loaded: '+str(e)[:120])
+        await ev('boss_model','''()=>{const T=window.__T,B=T.BOSS;B.dead=false;T.setPaused(true);T.restart();T.show("play");T.S.started=true;T.S.ended=false;T.S.demo=false;T.G.iframe=999;
+          for(const e of T.enemies)if(!e.isBoss)e.alive=false;T.spawnBoss();if(!B.e)return "no boss";B.introT=0;B.atkT=99;
+          const V=T.S.pos.constructor,f=T.camera().getWorldDirection(new V());B.e.m.position.copy(T.S.pos).addScaledVector(f,48).add(new V(0,2,0));for(let i=0;i<20;i++)T.update(.05);
+          const u=B.e.m.userData;return {model:!!u.anim,bones:u.anim?u.anim.B.length:0,pods:B.wps.map(w=>!!w.pod),rad:B.e.rad,calls:T.renderer.info.render.calls}}''')
+        await pg.evaluate('()=>window.__T.setPaused(false)');await pg.wait_for_timeout(1200);await pg.evaluate('()=>window.__T.setPaused(true)');await shot('03b_boss_idle')
+        await ev('boss_tele','()=>{const T=window.__T,B=T.BOSS;if(!B.e)return null;B.tele=.9;for(let i=0;i<6;i++)T.update(.05);const A=B.e.m.userData.anim;return A?{lean:+A.lean.toFixed(2),spread:+A.spread.toFixed(2),rec:+A.rec.toFixed(2)}:null}')
+        await shot('03c_boss_tele')
+        await ev('boss_down','()=>{const T=window.__T,B=T.BOSS,V=T.S.pos.constructor;if(!B.e)return null;for(const w of [...B.wps])if(w.alive)T.wpDamage(w,99,w.m.getWorldPosition(new V()));for(let i=0;i<30;i++)T.update(.05);const A=B.e.m.userData.anim;return A?{down:+B.e.down.toFixed(1),lean:+A.lean.toFixed(2),spread:+A.spread.toFixed(2)}:null}')
+        await shot('03d_boss_down')
         # 3) duelist posture + arm cut
         await ev('duelist','''()=>{const T=window.__T;T.setPaused(true);const V=T.S.pos.constructor;const e=T.spawnMS(T.S.pos.clone().add(new V(0,0,9)),true);if(!e)return "no MS model";
           const at=e.m.position.clone(),r={hp:e.hp};const seq=[];for(let k=0;k<6;k++){const blocked=T.bladeParry(e,at);seq.push((e.post||0)+(e.broken?"B":"")+(blocked?"":"K"));if(!blocked)break;e.stun=0;e.bs=k%2?"wind":"hunt"}
