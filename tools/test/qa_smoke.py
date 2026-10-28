@@ -40,7 +40,8 @@ async def main():
             const l0=T.G.lives;T.update(.05);if(T.G.lives<l0)lost++;if(T.G.hp<last)hits++;last=T.G.hp;minHp=Math.min(minHp,T.G.hp)}
           return {livesLost:lost,hitsTaken:hits,dodges,minHp,bossAt:bossT,bossDead:T.BOSS.dead,phase2:T.BOSS.phase2,ended:T.S.ended,timeLeft:+T.S.time.toFixed(1),score:T.S.score}}''')
         # 2) boss: spawn, break the pods, slash twice (phase 2, then death)
-        await ev('boss','''()=>{const T=window.__T,B=T.BOSS;T.setPaused(true);T.S.time=120-71;T.G.lives=3;T.G.hp=100;for(let i=0;i<4;i++)T.update(.05);if(!B.e)T.spawnBoss();
+        await ev('boss_pre','()=>{const B=window.__T.BOSS;return {e:!!B.e,dead:B.dead,screen:window.__T.SCREEN,ended:window.__T.S.ended}}')
+        await ev('boss','''()=>{const T=window.__T,B=T.BOSS;B.dead=false;T.setPaused(true);T.S.time=120-71;T.G.lives=3;T.G.hp=100;for(let i=0;i<4;i++)T.update(.05);if(!B.e)T.spawnBoss();
           const r={spawned:!!B.e};const kill=()=>{for(const w of [...B.wps])if(w.alive)T.wpDamage(w,99,w.m.getWorldPosition(new w.m.position.constructor()))};
           kill();r.down1=B.e&&B.e.down;T.update(.05);r.guide1=document.getElementById("tutObjTxt").textContent;
           T.update(.05);T.knock(B.e,T.camera().getWorldDirection(new B.e.m.position.constructor()),40,1);r.phase2=B.phase2;r.aliveAfter1=B.e&&B.e.alive;r.down1after=B.e.down;
@@ -66,6 +67,7 @@ async def main():
         await shot('07_vst_step1')
         for i in [2,3,7]:
             await pg.evaluate(f'()=>{{window.__T.VST.busy=false;window.__T.vstStepGo({i})}}');await pg.wait_for_timeout(5000);await shot(f'08_vst_step{i+1}')
+        await ev('vst_enemies','()=>{const T=window.__T;return T.enemies.filter(e=>e.alive).map(e=>e.isRemote?"remote":e.ms?(e.blade?"blade":"ms"):e.isBoss?"boss":e.elite?"elite":"drone")}')
         await ev('vst_counts','()=>JSON.parse(JSON.stringify(window.__T.VST.c))')
         await ev('parts','''()=>{const T=window.__T,v=T.VS;if(!v)return "no VS";T.vsPartsMsg({t:"part",side:v.side==="a"?"b":"a",part:"armR"});T.vsPartsMsg({t:"part",side:v.side==="a"?"b":"a",part:"head"});
           T.vsPartsMsg({t:"part",side:v.side,part:"armL"});return {oppBroken:Object.keys(v.remote.broken||{}),mine:Object.keys(T.P.broken||{})}}''')
