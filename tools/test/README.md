@@ -27,3 +27,10 @@ P
 - `bake_vs_cover.py` : 대전 맵(VS_COVER) 재생성 — 싱글 FLAYOUT 을 0.5배 위치·0.62배 크기로 옮기고 실제 메시에서 충돌 구를 구워 JSON 출력.
   결과를 pvp/src/arena.js 의 VS_COVER 배열로 교체(서버·클라 공용, build.py 가 LOCAL_ARENA 로 클라에 넣음).
 스크립트 안의 /tmp 경로는 세션마다 맞게 바꿔 쓸 것.
+
+## GitHub Actions QA (10/28 밤, 이 작업 공간에서 three.js 를 못 받을 때)
+- `qa/` 로 시작하는 브랜치에 push 하면 `.github/workflows/qa.yml` 이 실제 Chromium(소프트웨어 WebGL)으로 게임을 띄워 `tools/test/qa_smoke.py` 를 돌림. **배포 안 함.**
+  (타이틀 → 싱글 60초·숙련 플레이 120초 시뮬 → 보스 2페이즈 단계별 → 검투기 자세·팔 절단 → 싱글 튜토리얼 전 단계 → 로비 → 쇼다운 튜토리얼 → 부위 파괴·1인칭)
+- 결과(report.json, errors.txt, 스크린샷 jpg)는 `qa-results` 브랜치에 커밋됨 → `git fetch origin qa-results && git show origin/qa-results:report.json`.
+  (아티팩트·로그 다운로드는 이 작업 공간 프록시에서 막혀 있어서 브랜치로 받음)
+- 주의: QA 스크립트는 적을 `alive=false` 로 강제 처리해서 스크린샷에 잔해 기체가 남아 보임(게임 버그 아님).

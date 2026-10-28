@@ -17,7 +17,7 @@ function vsBodyVisible(R,on){R.root.traverse(o=>{if(o.isMesh&&o.material===R.mat
 function vsBreakPart(R,k,mine){if(!R||!R.broken||R.broken[k])return;R.broken[k]=true;const b=vsPartBone(R,k);if(!b)return;
   R.root.updateMatrixWorld(true);const at=b.getWorldPosition(new V3());
   // burst: flash, metal chunks, sparks, smoke
-  const own=mine&&k==="head"; // own head: the camera is about to sit right there, keep debris out of the pilot's face
+  const own=mine&&(k==="head"||!!(VS&&VS.fp)); // own head: the camera is about to sit right there, keep debris out of the pilot's face
   flashLight(at,0xff8a40,9,46,.55);if(!own){fxImpact(at,0xff7030);chunks(at,k==="head"?9:12,24,1.5);sparks(at,null,0xffc070,38,.7,70);sparks(at,null,0x9fe8ff,30,.5,30)}
   if(!own)for(let i=0;i<5;i++)emit(NORM,{pos:at.clone(),tex:TX.smoke,color:0x15171a,vel:new V3().randomDirection().multiplyScalar(6),s0:2,s1:9,life:1.3+Math.random()*.6,a:.55,drag:1.4,rot:Math.random()*6});
   emit(ADD,{pos:at.clone(),tex:TX.ring,color:0xff9a50,s0:2,s1:18,life:.45,a:.9});sfx("boom",at);sfx("heavy",at);
@@ -28,7 +28,8 @@ function vsBreakPart(R,k,mine){if(!R||!R.broken||R.broken[k])return;R.broken[k]=
   if(k==="head"&&R.eye)R.eye.visible=false;
   if(mine)S.shake=Math.max(S.shake,.8);else{S.hitstop=Math.max(S.hitstop||0,.1);impactPunch(1.2);hitMark("kill")}}
 // stumps keep sparking and smoking
-function vsStumps(R,rdt){if(!R||!R.broken)return;R.stumpT=(R.stumpT||0)-rdt;if(R.stumpT>0)return;R.stumpT=.1+Math.random()*.08;
+function vsStumps(R,rdt){if(!R||!R.broken||R===P&&VS&&VS.fp)return; // first person: own stumps would spark right in the pilot's face
+  R.stumpT=(R.stumpT||0)-rdt;if(R.stumpT>0)return;R.stumpT=.1+Math.random()*.08;
   for(const k in R.broken){if(R===P&&k==="head")continue;const b=vsPartBone(R,k);if(!b)continue;const at=b.getWorldPosition(new V3());
     if(Math.random()<.7)sparks(at,new V3(0,1,0),0xffc070,10,.35,4,.8);if(Math.random()<.45)emit(NORM,{pos:at.clone(),tex:TX.smoke,color:0x1a1c20,vel:new V3((Math.random()-.5)*2,3,(Math.random()-.5)*2),s0:.8,s1:3.4,life:1,a:.4,drag:1.2,rot:Math.random()*6})}}
 
