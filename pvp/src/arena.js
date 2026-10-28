@@ -1,5 +1,5 @@
 // Pure room simulation. Server owns rules, readiness, resources, attacks, HP and rounds.
-export const VERSION=8;
+export const VERSION=9;
 // 1:1 cover: the single-player battlefield objects (station, wrecks, engines, satellite, asteroids) scaled into the
 // arena. Collision spheres were baked from the real meshes (same surface method as the single-player field), so the
 // room server blocks shots and beams exactly where the client draws the objects.
@@ -31,13 +31,22 @@ const coverHit=(a,b,list)=>{if(!list.length)return null;for(const c of COVER_B){
 // distance along a ray to the first cover sphere (Infinity when clear)
 const coverRay=(from,dir,range,list)=>{let best=Infinity;if(!list.length)return best;for(const c of COVER_B){if(segment(c.o,from,add(from,dir,range))>c.r)continue;for(const q of c.s){const o=[q[0],q[1],q[2]],t=dot(sub(o,from),dir);if(t<=0||t>range)continue;const d=len(sub(o,add(from,dir,t)));if(d<q[3])best=Math.min(best,t-Math.sqrt(q[3]*q[3]-d*d))}}return best};
 export const RIFLE_SPEED=230,VS_HP=150,BREAK_COST=30,BOLT_STUN=300,JUST_BOLT_S=.25,JUST_MISS=3.2,READ_WIN=260,READ_DIST=11;
+// parts (v9): each mech has a head and two arms with their own armour on top of the shared HP.
+// right arm = weapon arm (saber + rifle move to the left hand, attacks slow down), left arm = guard arm (guard gauge drains faster),
+// head = main camera (the pilot fights on from the opened cockpit in first person). The last remaining arm cannot be torn off.
+export const PART_HP={head:45,armL:50,armR:50},ARM_R_SLOW=1.3,ARM_R_SHOT=1.4,ARM_L_GUARD=1.6,VS_MS=1.35,BOLT_R=3.4;
+// where on the body a hit lands, from the hit point relative to the mech (y up, lateral toward its own left side)
+export const partAt=(q,hit)=>{const r=sub(hit,q.p),up=r[1],lat=r[0]*Math.cos(q.f)-r[2]*Math.sin(q.f);
+  if(up>1.3&&Math.abs(lat)<.9)return 'head';if(Math.abs(lat)>.8&&up>-1&&up<1.6)return lat>0?'armL':'armR';return null};
+// closest point on a segment to p
+const nearPt=(p,a,b)=>{const d=sub(b,a),t=Math.max(0,Math.min(1,dot(sub(p,a),d)/(dot(d,d)||1)));return add(a,d,t)};
 export const ROUND_MS=75000,MELEE_CONE=.8,WHIFF_MS=300,READ_MS=550,COUNTER_K=1.3,CRIT_K=1.35,FAR_M=60,FAR_DMG=5;
 const other=s=>s==='a'?'b':'a';const f0=p=>[Math.sin(p.f),0,Math.cos(p.f)];
 const len=v=>Math.hypot(...v),sub=(a,b)=>a.map((x,i)=>x-b[i]),add=(a,b,k=1)=>a.map((x,i)=>x+b[i]*k),dot=(a,b)=>a.reduce((n,x,i)=>n+x*b[i],0);
 const norm=v=>{const l=len(v);return l>0?v.map(x=>x/l):[0,0,1]};
 const vec=v=>Array.isArray(v)&&v.length===3&&v.every(Number.isFinite);
 const segment=(p,a,b)=>{const d=sub(b,a),t=Math.max(0,Math.min(1,dot(sub(p,a),d)/(dot(d,d)||1)));return len(sub(p,add(a,d,t)))};
-const player=(name,side,now)=>({name,frame:'mk2',unit:'mega',ready:false,p:[0,0,side==='a'?-26:26],f:side==='a'?0:Math.PI,hp:100,maxHp:100,boost:100,heat:0,overUntil:0,spec:0,at:now,poseAt:now,moveCredit:8,lock:0,stun:0,iframe:0,dodgeAt:0,crit:0,skillAt:0,guardAt:0,podAt:0,barrier:0,reflect:0,armor:false,boosting:false,guard:false,guardOn:0,gp:100,gpHit:0,gbUntil:0});
+const player=(name,side,now)=>({name,frame:'mk2',unit:'mega',ready:false,p:[0,0,side==='a'?-26:26],f:side==='a'?0:Math.PI,hp:100,maxHp:100,boost:100,heat:0,overUntil:0,spec:0,at:now,poseAt:now,moveCredit:8,lock:0,stun:0,iframe:0,dodgeAt:0,crit:0,skillAt:0,guardAt:0,podAt:0,barrier:0,reflect:0,armor:false,boosting:false,guard:false,guardOn:0,gp:100,gpHit:0,gbUntil:0,parts:{...PART_HP}});
 export function newRoom(){return {version:VERSION,phase:'lobby',rules:{passives:false,skills:false},players:{},wins:[0,0],round:0,serial:0,shots:[],pending:[],at:0,startAt:0,endAt:0,nextAt:0};}
 export class Arena {
  constructor(state=newRoom()){this.s=state;this.events=[];}
@@ -46,18 +55,21 @@ export class Arena {
  join(side,name,now){this.s.players[side]=player(name,side,now);this.lobby(now);}
  lobby(now){const s=this.s;this.emit({t:'lobby',rules:s.rules,players:Object.fromEntries(Object.entries(s.players).map(([k,p])=>[k,{name:p.name,frame:p.frame,unit:p.unit,ready:p.ready}])),now,phase:s.phase});}
  resetReady(){for(const p of Object.values(this.s.players))p.ready=false;}
- status(){const s=this.s;this.emit({t:'state',now:s.at,round:s.round,players:Object.fromEntries(Object.entries(s.players).map(([k,p])=>[k,{hp:p.hp,maxHp:p.maxHp,boost:p.boost,spec:p.spec,heat:p.heat,skillAt:p.skillAt,crit:p.crit,barrier:p.barrier,armor:p.armor,gp:Math.round(p.gp),guard:p.guard,gb:p.gbUntil}]))});}
+ status(){const s=this.s;this.emit({t:'state',now:s.at,round:s.round,players:Object.fromEntries(Object.entries(s.players).map(([k,p])=>[k,{hp:p.hp,maxHp:p.maxHp,boost:p.boost,spec:p.spec,heat:p.heat,skillAt:p.skillAt,crit:p.crit,barrier:p.barrier,armor:p.armor,gp:Math.round(p.gp),guard:p.guard,gb:p.gbUntil,pt:p.parts}]))});}
  start(now,replay=false){const s=this.s;if(!s.players.a||!s.players.b)return;if(!replay)s.round++;s.phase='count';s.startAt=now+3000;s.endAt=s.startAt+ROUND_MS;s.shots=[];s.pending=[];
   for(const [side,p] of Object.entries(s.players)){const {name,frame,unit}=p;Object.assign(p,player(name,side,s.startAt),{frame,unit,ready:true});p.maxHp=Math.round((s.hpBase||VS_HP)*(s.rules.passives?(frame==='swift'?.9:1.1):1));p.hp=p.maxHp;}
   this.emit({t:'roundStart',round:s.round,startAt:s.startAt,endAt:s.endAt,now,rules:s.rules,wins:s.wins,players:s.players});
  }
  end(w,why,now){const s=this.s;if(!['fight','count'].includes(s.phase))return;if(w!==null)s.wins[w==='a'?0:1]++;s.phase='roundEnd';s.nextAt=now+2800;s.shots=[];s.pending=[];const done=s.wins.some(n=>n>=2);this.emit({t:'roundEnd',winner:w,why,wins:s.wins,done,now});s.replay=w===null;if(done)s.phase='end';}
- damage(side,d,dir,kind,now,source,heavy=false){const s=this.s,p=s.players[side];if(!p||p.hp<=0||now<p.iframe)return false;
+ damage(side,d,dir,kind,now,source,heavy=false,part=null){const s=this.s,p=s.players[side];if(!p||p.hp<=0||now<p.iframe)return false;
   if(p.armor){p.armor=false;this.emit({t:'block',side,kind:'armor'});return false;}
   if(now<p.barrier)d=Math.max(1,Math.round(d*.4));p.hp=Math.max(0,p.hp-d);if(kind==='chip'){p.stun=Math.max(p.stun,now+140);}else{p.iframe=now+(kind==='melee'?(heavy?800:60):120);p.stun=now+(kind==='melee'?(heavy?900:650):kind==='bolt'?BOLT_STUN:250);p.guard=false;p.broke=false;}p.spec=Math.min(100,p.spec+d*.3);
   if(source&&s.players[source])s.players[source].spec=Math.min(100,s.players[source].spec+d*.6);
-  s.pending=s.pending.filter(x=>x.side!==side||x.kind==='pulse');this.emit({t:'damage',side,d,dir,kind,hp:p.hp,heavy});this.status();if(p.hp<=0)this.end(other(side),'ko',now);return true;
+  s.pending=s.pending.filter(x=>x.side!==side||x.kind==='pulse');if(kind==='chip')part=null;this.emit({t:'damage',side,d,dir,kind,hp:p.hp,heavy,part});this.hurtPart(side,part,d);this.status();if(p.hp<=0)this.end(other(side),'ko',now);return true;
  }
+ hurtPart(side,part,d){const p=this.s.players[side];if(this.s.noParts||!part||!p||!p.parts||p.hp<=0||p.parts[part]<=0)return;const pt=p.parts;
+  const last=part!=='head'&&pt[part==='armL'?'armR':'armL']<=0; // the last arm holds on at 1
+  pt[part]=Math.max(last?1:0,pt[part]-d);if(pt[part]<=0)this.emit({t:'part',side,part});}
  advance(now){const s=this.s;s.at=now;if(s.phase==='roundEnd'){if(now>=s.nextAt)this.start(now,s.replay);return;}if(s.phase==='count'&&now>=s.startAt)s.phase='fight';if(s.phase!=='fight')return;
   for(const p of Object.values(s.players)){const dt=Math.max(0,Math.min(1,(now-p.at)/1000));p.at=now;const regen=34*(s.rules.passives&&p.frame==='swift'?1.1:1);p.boost=Math.max(0,Math.min(100,p.boost+(p.boosting&&now-p.poseAt<250?-22:regen)*dt));p.heat=Math.max(0,p.heat-(now<p.overUntil?30:14)*dt);if(p.overUntil&&now>=p.overUntil){p.overUntil=0;p.heat=40;}if(s.rules.skills)p.spec=Math.min(100,p.spec+5*dt);if(!p.guard&&now-p.gpHit>800)p.gp=Math.min(100,p.gp+30*dt);}
   for(const x of [...s.pending]){if(now<x.at||s.phase!=='fight'||!s.pending.includes(x))continue;s.pending=s.pending.filter(y=>y!==x);const p=s.players[x.side],q=s.players[other(x.side)];if(!p||!q)continue;
@@ -73,7 +85,7 @@ export class Arena {
     if(dist<=x.range&&dot(norm(d),x.dir||f)>0&&q.guard&&facing){
      if(now-q.guardOn<=180){ // parry: guard raised right before the hit
       s.pending=s.pending.filter(z=>z.side!==x.side);p.stun=now+750;p.lock=now+750;p.combo=0;q.crit=now+1200;q.lock=0;this.emit({t:'parry',side:other(x.side)});this.status();continue;}
-     q.gp-=x.heavy?50:24;q.gpHit=now;p.lock=Math.max(p.lock,now+(x.heavy?260:160));const chip=Math.max(1,Math.round(x.dmg*.12));
+     q.gp-=(x.heavy?50:24)*(q.parts.armL<=0?ARM_L_GUARD:1);q.gpHit=now;p.lock=Math.max(p.lock,now+(x.heavy?260:160));const chip=Math.max(1,Math.round(x.dmg*.12));
      if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;this.emit({t:'guardBreak',side:other(x.side)});this.damage(other(x.side),chip,norm(d),'chip',now,x.side);q.stun=now+900;}
      else{this.emit({t:'block',side:other(x.side),kind:'guard',gp:Math.round(q.gp),heavy:!!x.heavy});this.damage(other(x.side),chip,norm(d),'chip',now,x.side);}
      continue;}
@@ -84,22 +96,23 @@ export class Arena {
     if(x.kind==='melee'&&p.crit>=now){dmg=Math.round(dmg*CRIT_K);p.crit=0;}
     // counter hit: the target was still winding up its own swing
     const counter=x.kind==='melee'&&s.pending.some(z=>z.side===other(x.side)&&z.kind==='melee');if(counter){dmg=Math.round(dmg*COUNTER_K);heavy=true;}
-    if(this.damage(other(x.side),dmg,norm(d),x.kind==='pulse'?'skill':'melee',now,x.side,heavy)&&counter)this.emit({t:'counter',side:x.side});}
+    let part=null;if(x.kind==='melee'){const from=norm(sub(p.p,q.p)),lat=from[0]*Math.cos(q.f)-from[2]*Math.sin(q.f);part=Math.abs(lat)>.35?(lat>0?'armL':'armR'):heavy?'head':null;}
+    if(this.damage(other(x.side),dmg,norm(d),x.kind==='pulse'?'skill':'melee',now,x.side,heavy,part)&&counter)this.emit({t:'counter',side:x.side});}
    else if(x.kind==='melee'){p.lock=Math.max(p.lock,x.at)+WHIFF_MS;this.emit({t:'whiff',side:x.side});}
   }
   for(const [side,p] of Object.entries(s.players)){const bm=p.beam;if(!bm)continue;if(now>bm.until||p.hp<=0||now<p.stun){p.beam=null;continue;}
    while(bm.next<=now&&bm.next<bm.until){bm.next+=bm.every;const q=s.players[other(side)];if(!q)break;const from=add(p.p,[0,1,0]),dir=p.aim||f0(p);const reach=Math.min(bm.range,coverRay(from,dir,bm.range,s.noCover?[]:VS_COVER));
     if(segment(add(q.p,[0,.4,0]),from,add(from,dir,reach))<bm.width){
-     if(q.guard&&dot([Math.sin(q.f),0,Math.cos(q.f)],dir.map(v=>-v))>.3){q.gp-=bm.gp;q.gpHit=now;if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;q.stun=now+900;this.emit({t:'guardBreak',side:other(side)});}else this.emit({t:'block',side:other(side),kind:'guardShot',gp:Math.round(q.gp),at:q.p});this.damage(other(side),1,dir,'chip',now,side);}
-     else this.damage(other(side),bm.dmg,dir,'skill',now,side,bm.heavy);}}}
+     if(q.guard&&dot([Math.sin(q.f),0,Math.cos(q.f)],dir.map(v=>-v))>.3){q.gp-=bm.gp*(q.parts.armL<=0?ARM_L_GUARD:1);q.gpHit=now;if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;q.stun=now+900;this.emit({t:'guardBreak',side:other(side)});}else this.emit({t:'block',side:other(side),kind:'guardShot',gp:Math.round(q.gp),at:q.p});this.damage(other(side),1,dir,'chip',now,side);}
+     else this.damage(other(side),bm.dmg,dir,'skill',now,side,bm.heavy,partAt(q,nearPt(add(q.p,[0,.4,0]),from,add(from,dir,reach))));}}}
   for(const b of [...s.shots]){if(s.phase!=='fight')break;const q=s.players[other(b.side)];if(!q)continue;const elapsed=Math.min(2.4,(now-b.at)/1000),end=add(b.from,b.dir,elapsed*b.speed),start=b.last||b.from;b.last=end;
-   const cv=coverHit(start,end,s.noCover?[]:VS_COVER);if(cv&&!(segment(add(q.p,[0,.4,0]),start,end)<3&&len(sub(q.p,start))<len(sub(cv,start)))){s.shots=s.shots.filter(x=>x!==b);continue;}
-   if(segment(add(q.p,[0,.4,0]),start,end)<3){s.shots=s.shots.filter(x=>x!==b);
+   const cv=coverHit(start,end,s.noCover?[]:VS_COVER);if(cv&&!(segment(add(q.p,[0,.4,0]),start,end)<BOLT_R&&len(sub(q.p,start))<len(sub(cv,start)))){s.shots=s.shots.filter(x=>x!==b);continue;}
+   if(segment(add(q.p,[0,.4,0]),start,end)<BOLT_R){s.shots=s.shots.filter(x=>x!==b);
     if(s.rules.skills&&now<q.reflect){this.emit({t:'block',side:other(b.side),kind:'reflect'});this.projectile(other(b.side),end,b.dir.map(x=>-x),b.dmg,b.speed,now,0x8dff7a);continue;}
     if(s.rules.skills&&q.unit==='pods'&&now>=q.podAt){q.podAt=now+20000;this.emit({t:'block',side:other(b.side),kind:'pod'});continue;}
-    if(q.guard&&dot([Math.sin(q.f),0,Math.cos(q.f)],b.dir.map(v=>-v))>.3){q.gp-=12;q.gpHit=now;if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;q.stun=now+900;this.emit({t:'guardBreak',side:other(b.side)});}else this.emit({t:'block',side:other(b.side),kind:'guardShot',gp:Math.round(q.gp),at:end});this.status();continue;}
+    if(q.guard&&dot([Math.sin(q.f),0,Math.cos(q.f)],b.dir.map(v=>-v))>.3){q.gp-=12*(q.parts.armL<=0?ARM_L_GUARD:1);q.gpHit=now;if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;q.stun=now+900;this.emit({t:'guardBreak',side:other(b.side)});}else this.emit({t:'block',side:other(b.side),kind:'guardShot',gp:Math.round(q.gp),at:end});this.status();continue;}
     const far=b.rifle&&len(sub(q.p,b.from))>FAR_M;
-    if(this.damage(other(b.side),far?Math.min(b.dmg,FAR_DMG):b.dmg,b.dir,'bolt',now,b.side)&&s.rules.skills&&b.rifle&&s.players[b.side]&&s.players[b.side].unit==='mega'){const sh=s.players[b.side];sh.spec=Math.min(100,sh.spec+6);}
+    if(this.damage(other(b.side),far?Math.min(b.dmg,FAR_DMG):b.dmg,b.dir,'bolt',now,b.side,false,partAt(q,nearPt(add(q.p,[0,.4,0]),start,end)))&&s.rules.skills&&b.rifle&&s.players[b.side]&&s.players[b.side].unit==='mega'){const sh=s.players[b.side];sh.spec=Math.min(100,sh.spec+6);}
    }else if(elapsed>=2.4)s.shots=s.shots.filter(x=>x!==b);
   }
   if(s.phase==='fight'&&now-(s.statusAt||0)>=100){s.statusAt=now;this.status();}
@@ -141,10 +154,10 @@ export class Arena {
   }
   if(now<p.lock){reject('busy',p.lock);return;}if(now<p.overUntil||p.heat>=100){reject('heat',p.overUntil);return;}
   if(m.t==='swing'){
-   const combo=(p.lastSwing&&now-p.lastSwing<1300)?((p.combo||0)+1)%3:0;p.combo=combo;p.lastSwing=now;const heavy=combo===2;p.lock=now+(heavy?950:520);p.heat=Math.min(100,p.heat+(heavy?12:8));if(p.heat>=100)p.overUntil=now+1600;
-   s.pending.push({side,kind:'melee',at:now+(heavy?300:180),range:heavy?11:10,dmg:heavy?22:14,heavy,dir:f0(p)});this.emit({t:'swing',side,heavy,combo});return;
+   const combo=(p.lastSwing&&now-p.lastSwing<1300)?((p.combo||0)+1)%3:0;p.combo=combo;p.lastSwing=now;const heavy=combo===2;p.lock=now+(heavy?950:520)*(p.parts.armR<=0?ARM_R_SLOW:1);p.heat=Math.min(100,p.heat+(heavy?12:8));if(p.heat>=100)p.overUntil=now+1600;
+   s.pending.push({side,kind:'melee',at:now+(heavy?300:180),range:heavy?12:11,dmg:heavy?22:14,heavy,dir:f0(p)});this.emit({t:'swing',side,heavy,combo});return;
   }
-  if(m.t==='shot'&&vec(m.from)&&vec(m.dir)&&len(m.dir)>.9&&len(m.dir)<1.1&&len(sub(m.from,p.p))<8){p.lock=now+(s.rules.skills&&p.unit==='missile'?300:400);p.heat=Math.min(100,p.heat+4);if(p.heat>=100)p.overUntil=now+1600;this.projectile(side,m.from,m.dir,8,RIFLE_SPEED,now,0x40d8ff,true);return;}
+  if(m.t==='shot'&&vec(m.from)&&vec(m.dir)&&len(m.dir)>.9&&len(m.dir)<1.1&&len(sub(m.from,p.p))<8){p.lock=now+(s.rules.skills&&p.unit==='missile'?300:400)*(p.parts.armR<=0?ARM_R_SHOT:1);p.heat=Math.min(100,p.heat+4);if(p.heat>=100)p.overUntil=now+1600;this.projectile(side,m.from,m.dir,8,RIFLE_SPEED,now,0x40d8ff,true);return;}
   if(m.t==='skill'&&s.rules.skills&&vec(m.dir)&&len(m.dir)>.9&&len(m.dir)<1.1){const special=m.special===true;if(special?p.spec<100:now<p.skillAt){reject(special?'charge':'cooldown',p.skillAt);return;}const cds={mega:9000,pods:8000,missile:9000,shield:10000};if(special)p.spec=0;else p.skillAt=now+cds[p.unit];p.lock=now+400;const dir=norm(m.dir),from=add(p.p,[0,1,0]);
    this.emit({t:'skill',side,unit:p.unit,special,dir,seq:m.seq});
    if(p.unit==='shield'){p.barrier=now+(special?2000:1000);p.reflect=now+250;if(special)s.pending.push({side,kind:'pulse',at:now+2000,range:12,dmg:18});}

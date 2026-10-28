@@ -562,6 +562,22 @@ body.tut #radio{top:calc(96px + env(safe-area-inset-top,0px))}
 #hpV{min-width:34px;text-align:right;font-weight:700}
 body.versus #hpRow,body.tut #hpRow{display:none}
 </style>
+<style>
+/* 1:1 part damage (v9): small per-part armour cells under each HP bar; broken parts turn red and struck through */
+#vsBar .pt{display:flex;gap:6px;margin-top:5px;font:600 11px var(--f-body);letter-spacing:.02em;color:rgba(255,255,255,.72)}
+#vsBar .op .pt{justify-content:flex-end}
+#vsBar .pt span{position:relative;min-width:44px;padding:1px 6px 3px;background:rgba(255,255,255,.08);text-align:center}
+#vsBar .pt span i{position:absolute;left:0;bottom:0;height:2px;width:var(--w,100%);background:#cfd6de;transition:width .15s}
+#vsBar .pt span.low i{background:#ff8a40}
+#vsBar .pt span.gone{color:#ff5a48;text-decoration:line-through;background:rgba(255,60,40,.16)}
+#vsBar .pt span.gone i{width:0}
+/* head lost: first-person cockpit frame (vignette + slow red emergency pulse); the 3D cockpit itself is drawn in the scene */
+#vsFp{position:fixed;inset:0;pointer-events:none;z-index:4;background:radial-gradient(ellipse 72% 64% at 50% 46%,transparent 58%,rgba(0,0,0,.55) 82%,rgba(0,0,0,.9) 100%)}
+#vsFp::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 100%,rgba(255,40,30,.22),transparent 60%);animation:vsFpPulse 1.6s ease-in-out infinite}
+#vsFp[hidden]{display:none}
+@keyframes vsFpPulse{0%,100%{opacity:.25}50%{opacity:.9}}
+</style>
+
 
 <div id="stage"></div>
 <div id="flash"></div>
@@ -575,7 +591,7 @@ body.versus #hpRow,body.tut #hpRow{display:none}
   <div id="phase"><div id="phaseSub" class="lbl">단계</div><div id="phaseName">—</div></div>
   <div id="bossBar" hidden><div class="bn"><b id="bossName">MA-09 케르베로스</b><span id="bossState">약점 포드 3</span></div><div class="bossTrack"><i><b></b></i><i><b></b></i><i><b></b></i></div></div>
   <div id="duelBar" hidden><div class="me"><span class="lbl">나</span><b id="duMe">0</b></div><div class="vs" id="duLead">VS</div><div class="op"><span class="lbl" id="duOpN">상대</span><b id="duOp">0</b></div></div>
-  <div id="vsBar" hidden><div class="side"><b id="vsMeN">나</b><div class="hp"><i id="vsHpMe" style="width:100%"></i></div><div class="gp"><i id="vsGpMe" style="width:100%"></i></div></div><div class="mid"><span class="lbl" id="vsRound">1라운드</span><b id="vsScore">0 : 0</b></div><div class="side op"><b id="vsOpN">상대</b><div class="hp"><i id="vsHpOp" style="width:100%"></i></div></div></div>
+  <div id="vsBar" hidden><div class="side"><b id="vsMeN">나</b><div class="hp"><i id="vsHpMe" style="width:100%"></i></div><div class="gp"><i id="vsGpMe" style="width:100%"></i></div><div class="pt" id="vsPtMe"><span data-p="head">머리<i></i></span><span data-p="armL">왼팔<i></i></span><span data-p="armR">오른팔<i></i></span></div></div><div class="mid"><span class="lbl" id="vsRound">1라운드</span><b id="vsScore">0 : 0</b></div><div class="side op"><b id="vsOpN">상대</b><div class="hp"><i id="vsHpOp" style="width:100%"></i></div><div class="pt" id="vsPtOp"><span data-p="head">머리<i></i></span><span data-p="armL">왼팔<i></i></span><span data-p="armR">오른팔<i></i></span></div></div></div><div id="vsFp" hidden></div>
   <div id="oppMark" hidden><i></i><span id="oppTxt">상대</span></div>
   <div id="radio"><i id="radioFace"></i><span id="radioWho">CIC</span><span id="radioTxt"></span></div>
   <div id="marks"></div>

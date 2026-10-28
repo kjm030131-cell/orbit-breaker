@@ -54,3 +54,18 @@ test('v8 HP 150 by default; a staggered player breaks out with dodge once (costs
  a.s.players.b.p=[0,0,-20];a.handle('a',{t:'swing'},4000);a.advance(4180);assert.ok(a.s.players.b.stun>4500);a.handle('b',{t:'dodge'},4250);assert.ok(a.drain().some(e=>e.m.t==='break'&&e.m.side==='b'));assert.equal(a.s.players.b.stun,4250);assert.equal(Math.round(a.s.players.b.boost),70);
  a.s.players.b.stun=9000;a.handle('b',{t:'dodge'},4300);assert.equal(a.s.players.b.stun,9000);});
 test('v8 bolt hits stagger briefly',()=>{const a=start(room());a.s.players.b.p=[0,0,-14];a.projectile('a',[0,1,-24],[0,0,1],8,170,4000,0x40d8ff,true);a.advance(4100);assert.equal(a.s.players.b.hp,92);assert.ok(a.s.players.b.stun>=4300);});
+// v9 parts
+test('partAt maps hit points to head / arms / body in the target frame',async()=>{const {partAt}=await import('../pvp/src/arena.js');
+ const q={p:[0,0,0],f:0};assert.equal(partAt(q,[0,1.7,.3]),'head');assert.equal(partAt(q,[1.3,.5,0]),'armL');assert.equal(partAt(q,[-1.3,.5,0]),'armR');assert.equal(partAt(q,[0,0,1]),null);
+ const r={p:[0,0,0],f:Math.PI};assert.equal(partAt(r,[1.3,.5,0]),'armR');assert.equal(partAt(r,[-1.3,.5,0]),'armL');});
+test('head shot wears the head; destroying the weapon arm slows attacks',()=>{const a=start(room());const b=a.s.players.b;
+ a.handle('a',{t:'shot',from:[0,1.8,-24],dir:[0,0,1]},4000);a.advance(4300);assert.equal(b.parts.head,45-8);assert.equal(b.hp,100-8);
+ b.parts.armR=5;b.iframe=0;b.stun=0;a.handle('a',{t:'shot',from:[1.3,.5,-24],dir:[0,0,1]},5000);a.advance(5300);
+ assert.equal(b.parts.armR,0);assert.ok(a.drain().some(e=>e.m.t==='part'&&e.m.side==='b'&&e.m.part==='armR'));
+ b.stun=0;b.lock=0;a.handle('b',{t:'swing'},6000);assert.equal(b.lock,6000+Math.round(520*1.3));});
+test('the last arm cannot be torn off; side swings hit the near arm, frontal heavy hits the head',()=>{const a=start(room());const b=a.s.players.b;
+ b.parts.armR=0;b.parts.armL=3;a.s.players.a.p=[0,0,22];a.s.players.a.f=0;b.f=Math.PI/2; // b faces +x, attacker on its left (-z side)
+ a.handle('a',{t:'swing'},4000);a.advance(4200);assert.equal(b.parts.armL,1);
+ const c=start(room());const q=c.s.players.b;c.s.players.a.p=[0,0,20];q.p=[0,0,26];q.f=Math.PI;
+ for(const t of [4000,4600,5200]){c.s.players.a.lock=0;q.iframe=0;q.stun=0;c.handle('a',{t:'swing'},t);c.advance(t+320);}
+ assert.equal(q.parts.head,45-22);});
