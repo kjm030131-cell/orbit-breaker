@@ -31,7 +31,7 @@ function vsOpen(code,name,create=false){
   if(VS)vsClose();VS={code,name,side:null,phase:"wait",hp:100,maxHp:100,oppHp:100,oppMaxHp:100,rules:{passives:false,skills:false},players:{},wins:[0,0],round:0,oppName:"",remote:null,tgt:null,sendT:0,pingT:0,off:0,ready:false};const v=VS;
   const base=window.PVP_URL||((location.protocol==="https:"?"wss://":"ws://")+location.host+"/pvp");
   if(code==="local"){v.ws=vstLocalSocket(v,name);v.local=true;$("dCodeBig").textContent="연 습";vsLobby();return}
-  try{v.ws=new WebSocket(base+"?room="+code+"&name="+encodeURIComponent(name)+"&v=9&create="+(create?1:0))}catch(e){VS=null;duelErr("대전 서버에 연결할 수 없습니다.");return}
+  try{v.ws=new WebSocket(base+"?room="+code+"&name="+encodeURIComponent(name)+"&v=10&create="+(create?1:0))}catch(e){VS=null;duelErr("대전 서버에 연결할 수 없습니다.");return}
   v.ws.onmessage=e=>{if(VS!==v)return;let m;try{m=JSON.parse(e.data)}catch{return}vsMsg(m)};
   v.ws.onclose=()=>{if(VS!==v)return;if(["wait","lobby"].includes(v.phase)){vsClose();duelErr("대전 서버 연결이 종료됐습니다. 방을 다시 만들어 주세요.")}else if(v.phase!=="end"&&!v.matchDone)vsEnd("disconnect")};
   v.ws.onerror=()=>{if(VS===v)duelErr("대전 서버에 연결할 수 없습니다.")};
@@ -52,6 +52,10 @@ function vsMsg(m){if(!VS)return;const v=VS;
   if(m.t==="projectile"){if(v.phase!=="fight")return;const from=new V3(...m.from),dir=new V3(...m.dir);fireEnemyBolt(from,dir,false,v.tgt,m.dmg);const b=G.ebolts[G.ebolts.length-1];b.vsVisual=true;b.speed=m.speed;b.life=2.4;b.color=m.color;b.g.children[1].material.color.set(m.color);return}
   if(m.t==="swing"){if(m.side!==v.side){if(v.remote){v.remote.act="slash"+((m.combo??(m.heavy?2:0))+1);v.remote.actT=0;v.remote.guard=false}if(m.heavy)popText("상대 강공격 · 가드 또는 회피")}return}
   if(m.t==="guard"){if(m.side===v.side){S.guard=m.on}else if(v.remote)v.remote.guard=m.on;return}
+  if(m.t==="deflect"){const mine=m.side===v.side,at=vsMid(),d=vsAway();sfx("clash",at);sfx("sizzle",at);sparks(at,d,0xffe0a0,40,.5,34);sparks(at,d.clone().negate(),0x9fe8ff,40,.5,26);fxImpact(at,0xffd080);
+    emit(ADD,{pos:at,tex:TX.ring,color:0xffe0a0,s0:2,s1:16,life:.3,a:.9});S.hitstop=Math.max(S.hitstop||0,.07);impactPunch(.8);hitMark("block");
+    if(mine){popText("튕겨냄! 몰아쳐요");S.attackCd=Math.min(S.attackCd,.22);S.shotCd=Math.min(S.shotCd,.22);S.vel.addScaledVector(d,6);if(v.remote){v.remote.act=null;v.remote.hitT=.3}}
+    else{popText("튕겨남 · 다시 받아쳐요");S.act=null;S.vsLunge=0;S.dashT=null;S.attackCd=Math.max(S.attackCd,.3);S.vel.addScaledVector(d,16)}return}
   if(m.t==="clash"){vsClashFX(m.at?new V3(...m.at):null);return}
   if(m.t==="parry"){const mine=m.side===v.side;if(mine){popText("패리! 지금 반격");sfx("clash");sfx("just");flash(.3);S.slow=.4;G.crit=1.2;impactPunch(1.1);emit(ADD,{pos:S.pos.clone().add(new V3(0,1,0)),tex:TX.ring,color:0x7fe0ff,s0:2,s1:22,life:.45,a:.9})}
     else{popText("패리당함 · 경직!");G.stagger=.75;S.act=null;S.vsLunge=0;sfx("clash");sfx("deny");S.shake=.6}vsSparks(.9);return}

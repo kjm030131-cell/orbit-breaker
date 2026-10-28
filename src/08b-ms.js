@@ -42,7 +42,7 @@ function msPose(e,T){const J=e.J;if(!J)return;const a=Math.max(.35,e.aimK),sw=Ma
   J.armL.rotation.set(-.55+ds*.6-sw,0,-1.2);J.foreL.rotation.set(-.9+ds*.4,0,0);
   const leg=Math.sin(T*1.6+e.phase)*.08;J.thighR.rotation.set(.45-ds*.55+leg,0,-.08);J.thighL.rotation.set(.3-ds*.65-leg,0,.08);
   J.shinR.rotation.set(.95-ds*.5,0,0);J.shinL.rotation.set(1.15-ds*.6,0,0)}
-function msMove(e,dt,T){if(e.blade)return bladeMove(e,dt,T);if(e.J){e.aimK+=((e.tele>0||e.burstN>0?1:0)-e.aimK)*Math.min(1,dt*8);msPose(e,T)}const em=e.m,to=S.pos.clone().sub(em.position),d=to.length();to.normalize();const side=new V3(to.z,0,-to.x);let lean=0;
+function msMove(e,dt,T){if(e.blade)return bladeMove(e,dt,T);msStumps(e,dt);if(e.J){e.aimK+=((e.tele>0||e.burstN>0?1:0)-e.aimK)*Math.min(1,dt*8);msPose(e,T)}const em=e.m,to=S.pos.clone().sub(em.position),d=to.length();to.normalize();const side=new V3(to.z,0,-to.x);let lean=0;
   if(e.stun>0){e.stun-=dt;em.position.addScaledVector(e.push,dt);e.push.multiplyScalar(Math.exp(-4*dt));em.rotation.set(-.35*(e.stun/.75),e.yaw,Math.sin(T*30)*.06);return true}
   if(d>e.keep+3)em.position.addScaledVector(to,dt*8);else if(d<e.keep-5)em.position.addScaledVector(to,-dt*7);
   em.position.addScaledVector(side,e.orbit2*(d<e.keep+10?7:2)*dt); // circle strafe

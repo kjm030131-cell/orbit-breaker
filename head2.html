@@ -711,6 +711,17 @@ body.tut #radio{top:calc(150px + env(safe-area-inset-top,0px))}
 #scrDuel [hidden]{display:none!important}
 .dxCard em{position:static;align-self:flex-start;margin-bottom:-2px}
 </style>
+<style>
+/* duelist posture bar (single): fills with every blade contact, full = 자세 붕괴 */
+#postBar{--p:0;position:fixed;z-index:5;pointer-events:none;transform:translate(-50%,-100%);width:96px;height:7px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.35)}
+#postBar[hidden]{display:none}
+#postBar i{position:absolute;left:0;top:0;bottom:0;width:calc(var(--p)*1%);background:linear-gradient(90deg,#ffb21a,#ff5a30);transition:width .12s}
+#postBar span{position:absolute;left:50%;bottom:9px;transform:translateX(-50%);font:700 11px var(--f-body);color:#ffd27a;text-shadow:0 1px 4px #000;white-space:nowrap}
+#postBar.broken i{background:#fff;animation:pbB .25s steps(2) infinite}
+#postBar.broken span{color:#fff}
+@keyframes pbB{50%{background:#ffd060}}
+</style>
+
 
 
 
@@ -723,7 +734,7 @@ body.tut #radio{top:calc(150px + env(safe-area-inset-top,0px))}
 
 <!-- in-game HUD -->
 <div id="hud" hidden>
-  <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="lockWarn"><b>피격 경고</b></div>
+  <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="postBar" hidden><i></i><span>자세</span></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="lockWarn"><b>피격 경고</b></div>
   <div id="lock"><i></i><i></i><i></i><i></i><span id="lockTxt">록온</span></div>
   <div id="pop"></div>
   <div id="phase"><div id="phaseSub" class="lbl">단계</div><div id="phaseName">—</div></div>

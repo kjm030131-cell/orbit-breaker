@@ -72,11 +72,12 @@ function shoot(){
     S.heat=Math.min(100,S.heat+4);S.shake=Math.max(S.shake,.32);S.vel.addScaledVector(dir,-6)},70);
 }
 function slashStrike(){ // called on the strike frame of a slash action
-  const heavy=S.act==="slash3";if(VS&&!vsCanAct())return;if(heavy)tutCount("combo");sfx("slash",null,S.act==="slash2"?1:heavy?2:0);{const f=new V3(Math.sin(S.face),0,Math.cos(S.face)),r=new V3(Math.cos(S.face),0,-Math.sin(S.face));fxSlashArt(S.pos.clone().addScaledVector(f,4.5).add(new V3(0,1.4,0)),S.combo===1?r.clone().negate():r,heavy,S.combo)}
+  const heavy=S.act==="slash3";if(VS&&!vsCanAct())return;S.lastStrikeT=clockT;if(heavy)tutCount("combo");sfx("slash",null,S.act==="slash2"?1:heavy?2:0);{const f=new V3(Math.sin(S.face),0,Math.cos(S.face)),r=new V3(Math.cos(S.face),0,-Math.sin(S.face));fxSlashArt(S.pos.clone().addScaledVector(f,4.5).add(new V3(0,1.4,0)),S.combo===1?r.clone().negate():r,heavy,S.combo)}
   const e=S.dashT&&S.dashT.alive&&S.dashT.launched<=0&&S.dashT.m.position.distanceTo(S.pos)<7.5?S.dashT:null;
   if(!e){fieldSlash(heavy);return}
   const tip=new V3();P.tipObj.getWorldPosition(tip);const at=e.m.position.clone().lerp(tip,.4);
   if(e.isRemote){vsAttackHit(heavy,G.crit>0,at);hitMark(heavy?"kill":"hit");impactPunch(heavy?.8:.45);sfx("thud",at,heavy?1:0);sfx("sizzle",at);return}
+  if(e.ms&&!e.isRemote&&msCutCheck(e,at,heavy||G.crit>0)&&e.blade){S.dashT=null;return}
   if(e.blade&&bladeParry(e,at))return;
   if(e.isWP){wpDamage(e,3,at);S.hitstop=.08;S.shake=.6;flash(.18);fxSlashHit(at,0xff8a2a,true);sfx("heavy",at);addSpec(2);S.vel.multiplyScalar(.1);S.dashT=null;return}
   if(eliteBlocks(e,S.pos)){tutCount("eliteBlock");shieldFlash(e);fxImpact(at,0x48d8ff);sparks(at,null,0xbff4ff,24,.4,26);sfx("block",at);

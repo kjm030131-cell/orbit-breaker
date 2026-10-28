@@ -147,6 +147,7 @@ function update(rdt){
   const fovT=VS?(VS.fp?74:66):boosting||S.dash>0?66:61;S.fovB=S.fovB||fovT;S.fovB+=(fovT-S.fovB)*(1-Math.exp(-8*rdt));if(!(S.hitstop>0))S.punch=Math.max(0,(S.punch||0)-rdt*4.5);
   const fv=S.fovB-(S.punch||0)*4.5;if(Math.abs(fv-camera.fov)>.01){camera.fov=fv;camera.updateProjectionMatrix();}}
   if(typeof vsCockpitTick==="function")vsCockpitTick(rdt);
+  if(typeof bladeUiTick==="function")bladeUiTick();
 
   if(SCREEN==="play"||SCREEN==="launch"){hudUpdate();if(VS)vsHud();}
 }

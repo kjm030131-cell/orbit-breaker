@@ -1,5 +1,5 @@
 // Pure room simulation. Server owns rules, readiness, resources, attacks, HP and rounds.
-export const VERSION=9;
+export const VERSION=10;
 // 1:1 cover: the single-player battlefield objects (station, wrecks, engines, satellite, asteroids) scaled into the
 // arena. Collision spheres were baked from the real meshes (same surface method as the single-player field), so the
 // room server blocks shots and beams exactly where the client draws the objects.
@@ -40,6 +40,11 @@ export const partAt=(q,hit)=>{const r=sub(hit,q.p),up=r[1],lat=r[0]*Math.cos(q.f
   if(up>1.3&&Math.abs(lat)<.9)return 'head';if(Math.abs(lat)>.8&&up>-1&&up<1.6)return lat>0?'armL':'armR';return null};
 // closest point on a segment to p
 const nearPt=(p,a,b)=>{const d=sub(b,a),t=Math.max(0,Math.min(1,dot(sub(p,a),d)/(dot(d,d)||1)));return add(a,d,t)};
+// v10 saber deflect: swing into the opponent's swing just before it lands (DEFLECT_WIN) -> no damage, their swing is knocked away.
+// The deflected side reels only briefly (DEFLECTED_MS) so it can deflect the follow-up in turn: clang-clang rallies. Each deflect
+// drains the deflected side's guard gauge (posture); empty = guard break.
+// Heavy (3rd) swings cannot be deflected (guard, parry or dodge them); swings started within DEFLECT_SIM of each other clash instead.
+export const DEFLECT_SIM=90,DEFLECT_WIN=230,DEFLECTED_MS=300,DEFLECT_LOCK=220,DEFLECT_GP=30;
 export const ROUND_MS=75000,MELEE_CONE=.8,WHIFF_MS=300,READ_MS=550,COUNTER_K=1.3,CRIT_K=1.35,FAR_M=60,FAR_DMG=5;
 const other=s=>s==='a'?'b':'a';const f0=p=>[Math.sin(p.f),0,Math.cos(p.f)];
 const len=v=>Math.hypot(...v),sub=(a,b)=>a.map((x,i)=>x-b[i]),add=(a,b,k=1)=>a.map((x,i)=>x+b[i]*k),dot=(a,b)=>a.reduce((n,x,i)=>n+x*b[i],0);
@@ -78,8 +83,8 @@ export class Arena {
    if(x.kind==='beam'){const dur=x.heavy?2400:600;p.beam={until:now+dur,next:now,heavy:!!x.heavy,width:x.width,range:x.range,dmg:x.dmg,gp:x.heavy?9:12,every:x.heavy?200:150};p.lock=Math.max(p.lock,now+dur+150);
     this.emit({t:'beam',side:x.side,heavy:!!x.heavy,dur});continue;}
    if(x.kind==='melee'){
-    // blades meet: both swings land within 150 ms of each other in reach -> clash, nobody is hurt
-    const y=s.pending.find(z=>z.side===other(x.side)&&z.kind==='melee'&&Math.abs(z.at-x.at)<=150);
+    // blades meet: both swings started together (DEFLECT_SIM) in reach -> clash, nobody is hurt
+    const y=s.pending.find(z=>z.side===other(x.side)&&z.kind==='melee'&&Math.abs((z.t0??z.at)-(x.t0??x.at))<=DEFLECT_SIM);
     if(y&&dist<=Math.max(x.range,y.range)+1.5){s.pending=s.pending.filter(z=>z!==y);p.lock=Math.max(p.lock,now+450);q.lock=Math.max(q.lock,now+450);p.combo=q.combo=0;this.emit({t:'clash',side:x.side,at:add(p.p,d,.5)});continue;}
     const facing=dot([Math.sin(q.f),0,Math.cos(q.f)],norm(sub(p.p,q.p)))>.2;
     if(dist<=x.range&&dot(norm(d),x.dir||f)>0&&q.guard&&facing){
@@ -154,8 +159,16 @@ export class Arena {
   }
   if(now<p.lock){reject('busy',p.lock);return;}if(now<p.overUntil||p.heat>=100){reject('heat',p.overUntil);return;}
   if(m.t==='swing'){
+   const inc=s.pending.find(z=>z.side===other(side)&&z.kind==='melee'&&!z.heavy&&z.at-now>=0&&z.at-now<=DEFLECT_WIN&&now-(z.t0??0)>=DEFLECT_SIM),to=sub(q.p,p.p); // started together = clash, not deflect
+   if(inc&&len(to)<=inc.range+1.5&&dot(f0(p),norm(to))>.3){ // deflect
+    s.pending=s.pending.filter(z=>z!==inc);q.lock=now+DEFLECTED_MS;q.combo=0; // their swing is gone: its recovery is replaced by the short reel
+    q.gp-=DEFLECT_GP*(q.parts.armL<=0?ARM_L_GUARD:1);q.gpHit=now;
+    p.lock=now+DEFLECT_LOCK;p.lastSwing=now;p.heat=Math.min(100,p.heat+6);
+    this.emit({t:'deflect',side,heavy:!!inc.heavy});
+    if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;q.stun=now+900;this.emit({t:'guardBreak',side:other(side)});}
+    this.status();return;}
    const combo=(p.lastSwing&&now-p.lastSwing<1300)?((p.combo||0)+1)%3:0;p.combo=combo;p.lastSwing=now;const heavy=combo===2;p.lock=now+(heavy?950:520)*(p.parts.armR<=0?ARM_R_SLOW:1);p.heat=Math.min(100,p.heat+(heavy?12:8));if(p.heat>=100)p.overUntil=now+1600;
-   s.pending.push({side,kind:'melee',at:now+(heavy?300:180),range:heavy?12:11,dmg:heavy?22:14,heavy,dir:f0(p)});this.emit({t:'swing',side,heavy,combo});return;
+   s.pending.push({side,kind:'melee',t0:now,at:now+(heavy?300:180),range:heavy?12:11,dmg:heavy?22:14,heavy,dir:f0(p)});this.emit({t:'swing',side,heavy,combo});return;
   }
   if(m.t==='shot'&&vec(m.from)&&vec(m.dir)&&len(m.dir)>.9&&len(m.dir)<1.1&&len(sub(m.from,p.p))<8){p.lock=now+(s.rules.skills&&p.unit==='missile'?300:400)*(p.parts.armR<=0?ARM_R_SHOT:1);p.heat=Math.min(100,p.heat+4);if(p.heat>=100)p.overUntil=now+1600;this.projectile(side,m.from,m.dir,8,RIFLE_SPEED,now,0x40d8ff,true);return;}
   if(m.t==='skill'&&s.rules.skills&&vec(m.dir)&&len(m.dir)>.9&&len(m.dir)<1.1){const special=m.special===true;if(special?p.spec<100:now<p.skillAt){reject(special?'charge':'cooldown',p.skillAt);return;}const cds={mega:9000,pods:8000,missile:9000,shield:10000};if(special)p.spec=0;else p.skillAt=now+cds[p.unit];p.lock=now+400;const dir=norm(m.dir),from=add(p.p,[0,1,0]);

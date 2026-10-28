@@ -1,7 +1,7 @@
 /* ================= gameplay systems ================= */
 const PHASES=[
   {at:0,name:"1단계 · 선발 정찰대",sub:"",count:7,gap:[2.2,3],elites:0,rams:0,ms:0,maxTele:2,fire:[4.5,7.5],tele:.9,bolt:85},
-  {at:25,name:"2단계 · 돌격 드론 출현",sub:"",count:9,gap:[2,2.8],elites:0,rams:1,ms:1,blade:0,maxTele:2,fire:[3.4,5.4],tele:.85,bolt:92},
+  {at:25,name:"2단계 · 돌격 드론 출현",sub:"",count:9,gap:[2,2.8],elites:0,rams:1,ms:1,blade:1,maxTele:2,fire:[3.4,5.4],tele:.85,bolt:92},
   {at:55,name:"3단계 · 정예 호위기",sub:"",count:9,gap:[1.9,2.6],elites:1,rams:2,ms:1,blade:1,maxTele:3,fire:[3,4.8],tele:.8,bolt:100},
   {at:90,name:"최종 단계 · 지휘기 케르베로스",sub:"",count:6,gap:[2.6,3.4],elites:1,rams:1,ms:0,blade:1,maxTele:3,fire:[2.8,4.4],tele:.75,bolt:108}];
 // clean streak: every 15s without a hit adds +0.2 to the score multiplier (max ×2.0); a hit resets it

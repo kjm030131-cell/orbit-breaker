@@ -43,7 +43,7 @@ test('simultaneous swings clash without damage',()=>{const a=start(room());const
 test('light hits chain into a combo (no long i-frames after a light hit)',()=>{const a=start(room());const b=a.s.players.b;b.p=[0,0,-20];a.handle('a',{t:'swing'},4000);a.advance(4180);a.handle('a',{t:'swing'},4530);a.advance(4710);assert.equal(b.hp,72);});
 test('v6 melee: sidestep out of the swing cone whiffs and adds recovery',()=>{const a=start(room());a.s.players.b.p=[0,0,-20];a.handle('a',{t:'swing'},4000);a.s.players.b.p=[6,0,-21];a.advance(4180);assert.equal(a.s.players.b.hp,100);assert.ok(a.drain().some(e=>e.m.t==='whiff'&&e.m.side==='a'));assert.equal(a.s.players.a.lock,4820);
  const b=start(room());b.s.players.b.p=[0,0,-20];b.handle('a',{t:'swing'},4000);b.s.players.b.p=[2,0,-20];b.advance(4180);assert.equal(b.s.players.b.hp,86);});
-test('v6 counter hit: hitting a winding-up opponent deals +30%',()=>{const a=start(room());a.s.players.b.p=[0,0,-20];a.s.players.b.f=Math.PI;a.handle('a',{t:'swing'},4000);a.handle('b',{t:'swing'},4170);a.advance(4190);assert.equal(a.s.players.b.hp,82);assert.ok(a.drain().some(e=>e.m.t==='counter'&&e.m.side==='a'));assert.equal(a.s.players.a.hp,100);});
+test('v6 counter hit: hitting a winding-up opponent deals +30%',()=>{const a=start(room());const B=a.s.players.b;B.p=[0,0,-20];B.f=Math.PI;B.combo=1;B.lastSwing=3900;a.handle('b',{t:'swing'},4010); /* v10: A's light (lands 4290) beats B's slow heavy (lands 4310) */a.handle('a',{t:'swing'},4110);a.advance(4295);assert.equal(a.s.players.b.hp,82);assert.ok(a.drain().some(e=>e.m.t==='counter'&&e.m.side==='a'));assert.equal(a.s.players.a.hp,100);});
 test('v6 read: just-dodging a swing freezes the attacker',()=>{const a=start(room());a.s.players.b.p=[0,0,-20];a.handle('b',{t:'swing'},4000);a.handle('a',{t:'dodge'},4100);assert.ok(a.drain().some(e=>e.m.t==='read'&&e.m.side==='a'));assert.ok(a.s.players.b.stun>=4650);assert.equal(a.s.players.a.crit,5300);});
 test('v6 rifle falloff past 60 m',()=>{const a=start(room());a.s.players.b.p=[0,0,60];a.projectile('a',[0,.4,-26],[0,0,1],8,170,4000,0x40d8ff,true);a.advance(4600);assert.equal(a.s.players.b.hp,95);});
 test('1:1 cover: map objects stop shots and cut beams short',()=>{const q=VS_COVER[0][7][0],o=[q[0],q[1],q[2]];const a=start(room({skills:true},true));
@@ -69,3 +69,17 @@ test('the last arm cannot be torn off; side swings hit the near arm, frontal hea
  const c=start(room());const q=c.s.players.b;c.s.players.a.p=[0,0,20];q.p=[0,0,26];q.f=Math.PI;
  for(const t of [4000,4600,5200]){c.s.players.a.lock=0;q.iframe=0;q.stun=0;c.handle('a',{t:'swing'},t);c.advance(t+320);}
  assert.equal(q.parts.head,45-22);});
+// v10 saber deflect
+test('swinging into an incoming swing deflects it: no damage, deflected side reels and loses posture',()=>{const a=start(room());const A=a.s.players.a,B=a.s.players.b;
+ A.p=[0,0,20];B.p=[0,0,26];A.f=0;B.f=Math.PI;
+ a.handle('b',{t:'swing'},4000);a.drain(); // lands at 4180
+ a.handle('a',{t:'swing'},4100);const ev=a.drain().map(e=>e.m.t);
+ assert.ok(ev.includes('deflect'));assert.equal(a.s.pending.length,0);assert.equal(B.lock,4400);assert.equal(A.lock,4320);assert.equal(B.gp,70);
+ a.advance(4300);assert.equal(A.hp,100);assert.equal(B.hp,100);});
+test('deflect rally: the deflected side can deflect the follow-up; posture runs out into a guard break',()=>{const a=start(room());const A=a.s.players.a,B=a.s.players.b;
+ A.p=[0,0,20];B.p=[0,0,26];A.f=0;B.f=Math.PI;
+ a.handle('b',{t:'swing'},4000);a.handle('a',{t:'swing'},4100); // A deflects, B locked to 4400
+ a.handle('a',{t:'swing'},4320);                                  // A follow-up lands 4500
+ a.handle('b',{t:'swing'},4410);assert.equal(A.gp,70);             // B deflects back
+ B.gp=20;const t=B.lock;a.handle('b',{t:'swing'},t);a.handle('a',{t:'swing'},t+100);
+ const ev=a.drain().map(e=>e.m.t);assert.ok(ev.includes('guardBreak'));assert.ok(B.stun>B.lock-1);});
