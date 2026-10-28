@@ -3,7 +3,7 @@
 // a fake socket, so every judgement (guard, parry, read, whiff, guard break, falloff) is exactly the online one.
 // Side "b" is a scripted sparring bot; each step sets how it behaves and what counts as done. HP never runs out.
 const VST={on:false,arena:null,step:-1,t:0,c:{},timer:null,busy:false,whiffAt:0,bot:null,ws:null,last:0};
-const VST_OP="교관 · 한서윤 중위";
+const VST_OP="교관 · 최지우 중위";
 function vstLocalSocket(v,name){const A=new LOCAL_ARENA.Arena(LOCAL_ARENA.newRoom());A.s.noParts=true; // practice: no part destruction
 VST.arena=A;VST.on=true;VST.step=-1;VST.c={};VST.busy=false;
   VST.bot={p:[0,0,26],f:Math.PI,next:0,cueAt:0,guard:false,side:1,dodgeAt:0};

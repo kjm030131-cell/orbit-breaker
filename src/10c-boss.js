@@ -20,8 +20,8 @@ function spawnBoss(){
   const e={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:0,flash:0,elite:false,rad:9,isBoss:true,down:0,yaw:Math.atan2(S.pos.x-from.x,S.pos.z-from.z),tele:0,teleDir:new V3(),fireT:99};
   enemies.push(e);BOSS.e=e;BOSS.atkT=4;BOSS.mode=0;BOSS.down=0;BOSS.introT=3.2;
   buildWPs();
-  sfx("radio");setTimeout(()=>{if(!S.ended){sfx("phase");cutin("케르베로스 출현","아르고스 지휘기")}},400);
-  radio("CIC","지휘기 케르베로스 출현! 붉게 빛나는 약점 포드 3개를 먼저 부숴요!","vo_op04");
+  sfx("radio");setTimeout(()=>{if(!S.ended){sfx("phase");cutin("케르고그모스 출현","아르고스 지휘기")}},400);
+  radio("CIC","지휘기 케르고그모스 출현! 붉게 빛나는 약점 포드 3개를 먼저 부숴요!") /* vo_op04 says the old boss name: re-record, then add "vo_op04" back */;
 }
 function buildWPs(){
   BOSS.wps=WP_OFF.map((off,i)=>{const g=new THREE.Group();
@@ -44,7 +44,7 @@ function wpDamage(w,n,at){
   addScore(120*n,w.m.position.clone(),"");
   if(w.hp<=0){w.alive=false;const p=w.m.position.clone();disposeEnemy(w);fxExplosion(p,1.6);sfx("boom",p,2);S.shake=Math.max(S.shake,.9);
     addScore(1200,p,"big");if(SCREEN==="play")S.kills=(S.kills||0)+1;
-    const left=BOSS.wps.filter(x=>x.alive).length;popText(left?`약점 포드 파괴 · 남은 ${left}`:"케르베로스 기능 정지!");
+    const left=BOSS.wps.filter(x=>x.alive).length;popText(left?`약점 포드 파괴 · 남은 ${left}`:"케르고그모스 기능 정지!");
     if(!left)bossDown()}
 }
 function bossDown(){const b=BOSS.e;if(!b)return;b.down=6;BOSS.downs++;BOSS.tele=0;clearTele(b);
@@ -59,7 +59,7 @@ function bossDie(b,chainN){
   addScore(12000,p,"big");if(SCREEN==="play")S.kills=(S.kills||0)+1;onKill(b);
   for(const w of BOSS.wps)if(w.alive){w.alive=false;disposeEnemy(w)}
   setTimeout(()=>{scene.remove(b.m);b.m.traverse(o=>{if(o.material)o.material.dispose()})},50);clearTele(b);
-  cutin("지휘기 격파","+12,000");radio("CIC","케르베로스 격파 확인! 앰버 1, 최고예요!");
+  cutin("지휘기 격파","+12,000");radio("CIC","케르고그모스 격파 확인! 우리엘 1, 최고예요!");
   BOSS.e=null;
 }
 function bossAI(b,dt,T){
@@ -68,7 +68,7 @@ function bossAI(b,dt,T){
   if(b.down>0){b.down-=dt;m.rotation.z=Math.sin(b.phase*3)*.12;m.position.y-=dt*1.2;if(ring)ring.rotation.z+=dt*.2;
     m.userData.eye.material.opacity=.15+.15*Math.random();m.userData.mat.emissive.setRGB(.25*Math.random(),.05,0);
     if(dt>0&&Math.random()<.25)emit(NORM,{pos:m.position.clone().add(new V3().randomDirection().multiplyScalar(4)),tex:TX.smoke,color:0x2a2b2e,s0:2,s1:7,life:1.2,a:.4});
-    if(b.down<=0){b.down=0;buildWPs();sfx("phase");popText("케르베로스 재기동 · 약점 포드 복구");m.userData.mat.emissive.setRGB(0,0,0)}
+    if(b.down<=0){b.down=0;buildWPs();sfx("phase");popText("케르고그모스 재기동 · 약점 포드 복구");m.userData.mat.emissive.setRGB(0,0,0)}
     return}
   // approach, then circle at a fixed stand-off
   const keep=40;if(d>keep+4)m.position.addScaledVector(to,dt*(BOSS.introT>0?22:7));else if(d<keep-8)m.position.addScaledVector(to,-dt*6);
@@ -112,7 +112,7 @@ function bossGuideTick(){const b=BOSS.e,on=!!(b&&b.alive&&!TUT.on&&!VS&&SCREEN==
   if(!on){if(BOSS.guide){BOSS.guide=false;$("tutObj").hidden=true;$("tutMark").hidden=true}return}
   if(!BOSS.guide){BOSS.guide=true;$("tutObj").hidden=false;$("tutSkip").hidden=true}{const n=`보스 ${BOSS.phase2?2:1} / 2`;if($("tutObjN").textContent!==n)$("tutObjN").textContent=n}
   let tgt=null,obj,how,prog;
-  if(b.down>0){obj=BOSS.phase2?"② 지금! 베어서 끝내세요":"② 지금! 케르베로스를 베세요 (1차)";how=BOSS.phase2?"마지막이에요. 가까이 붙어 좌클릭으로 베면 주변 적까지 한꺼번에 쓸려 나가요.":"약점이 모두 부서져 멈췄어요. 가까이 붙어 좌클릭으로 베면 1차 격파. 그 뒤 한 번 더 반복해요.";prog=`멈춤 남은 시간 ${Math.ceil(b.down)}초`;tgt=b.m.position}
+  if(b.down>0){obj=BOSS.phase2?"② 지금! 베어서 끝내세요":"② 지금! 케르고그모스를 베세요 (1차)";how=BOSS.phase2?"마지막이에요. 가까이 붙어 좌클릭으로 베면 주변 적까지 한꺼번에 쓸려 나가요.":"약점이 모두 부서져 멈췄어요. 가까이 붙어 좌클릭으로 베면 1차 격파. 그 뒤 한 번 더 반복해요.";prog=`멈춤 남은 시간 ${Math.ceil(b.down)}초`;tgt=b.m.position}
   else{const al=BOSS.wps.filter(w=>w.alive);obj="① 붉은 약점 포드 부수기";how="본체는 단단해요. 몸에 붙은 붉은 포드를 베거나 쏴서 부수세요. 3개를 다 부수면 잠깐 멈춥니다.";prog=`${3-al.length} / 3`;
     let bd=1e9;for(const w of al){const p=w.m.getWorldPosition?w.m.getWorldPosition(new V3()):w.m.position,d=p.distanceTo(S.pos);if(d<bd){bd=d;tgt=p}}}
   if($("tutObjTxt").textContent!==obj){$("tutObjTxt").textContent=obj;const o=$("tutObj");o.classList.remove("new");void o.offsetWidth;o.classList.add("new")}
@@ -125,5 +125,5 @@ function bossGuideTick(){const b=BOSS.e,on=!!(b&&b.alive&&!TUT.on&&!VS&&SCREEN==
 function bossPhase2(b){if(BOSS.phase2||!(b.down>0))return false;BOSS.phase2=true;b.down=0;b.flash=1;
   const p=b.m.position.clone();for(let i=0;i<4;i++)setTimeout(()=>{if(BOSS.e===b&&b.alive){fxExplosion(p.clone().add(new V3().randomDirection().multiplyScalar(6)),1.4);sfx("boom",p,3)}},i*140);
   S.hitstop=Math.max(S.hitstop||0,.14);S.slow=Math.max(S.slow,.5);flash(.35);impactPunch(1.4);addScore(3000,p,"big");
-  cutin("1차 격파","케르베로스 분노 · 공격이 거세집니다");radio("CIC","1차 격파! 아직 살아 있어요. 약점이 다시 열려요, 한 번 더!","vo_op05");
+  cutin("1차 격파","케르고그모스 분노 · 공격이 거세집니다");radio("CIC","1차 격파! 아직 살아 있어요. 약점이 다시 열려요, 한 번 더!","vo_op05");
   buildWPs();b.m.userData.mat.emissive.setRGB(.35,.04,.02);setTimeout(()=>{if(BOSS.e===b)b.m.userData.mat.emissive.setRGB(0,0,0)},900);BOSS.atkT=1.6;return true}

@@ -3,7 +3,7 @@
 // from the CIC, one objective line top-left (AC style), a setup and a completion test. Counters come from hooks
 // in dodge / justDodge / onKill / slashStrike / specials / blade parry.
 const TUT={on:false,step:-1,t:0,c:{},wp:null,kills:0,busy:false};
-const OP="아스트라이아 CIC · 한서윤 중위",ACE="적 에이스 · 카인";
+const OP="이클립스 CIC · 최지우 중위",ACE="적 에이스 · 바엘";
 function tutCount(k){if(TUT.on)TUT.c[k]=(TUT.c[k]||0)+1}
 function tutDrone(pos,passive){const e=spawnEnemy(pos,false);if(e&&passive){e.fireT=1e9;e.tutPassive=true}return e}
 function tutAhead(d,side,up){const f=camFwd().setY(0).normalize(),r=new V3(f.z,0,-f.x);return S.pos.clone().addScaledVector(f,d).addScaledVector(r,side||0).add(new V3(0,up||0,0))}
@@ -55,7 +55,7 @@ function unitStep(k){const T=UNIT_TXT[k],rDone=()=>(TUT.c["u_"+k]||0)>=1,fase=()
 function tutLine(n){for(let i=0;i<n;i++)tutDrone(tutAhead(26+i*9,(i%2?1:-1)*1.2,2),true)}
 const TUT_STEPS=[
   {obj:"화면을 클릭해서 마우스 고정",how:"클릭하면 마우스 커서가 사라지고 조종이 시작돼요. 나중에 Esc를 누르면 일시정지예요.",keys:["LMB"],limit:30,
-   say:[[OP,"기체 동조 확인. 들려요, 앰버 1? 차근차근 해 봐요."]],done(){return locked}},
+   say:[[OP,"기체 동조 확인. 들려요, 우리엘 1? 차근차근 해 봐요."]],done(){return locked}},
   {obj:"마우스로 주변 둘러보기",how:"마우스를 움직이면 시점과 조준선(화면 가운데)이 같이 돌아가요. 좌우 위아래로 크게 둘러봐요.",keys:["Mouse"],limit:30,
    prog:()=>`${Math.min(100,Math.round((TUT.c.look||0)/3*100))}%`,enter(){TUT.c.look=0;TUT.y0=S.yaw;TUT.p0=S.pitch},
    tick(){TUT.c.look+=Math.abs(S.yaw-TUT.y0)+Math.abs(S.pitch-TUT.p0);TUT.y0=S.yaw;TUT.p0=S.pitch},done(){return TUT.c.look>=3}},
@@ -105,7 +105,7 @@ const TUT_STEPS=[
    cue:()=>{for(const e of enemies)if(e.tutAce&&e.alive&&e.bs==="wind"&&e.m.position.distanceTo(S.pos)<40)return {now:true,key:"LMB"};return null},
    ace:true,enter(){tutRestoreUnit();tutAce()},
    done(){return (TUT.c.counter||0)>=1}},
-  {obj:"귀환",how:"수고했어요. 잠시 후 튜토리얼이 끝나요.",say:[[ACE,"…좋은 반응이다. 다음에 떨어지는 건 네 쪽일지도 모르지."],[OP,"추진제 한계예요. …버텼네요. 귀환해요, 앰버 1."]],
+  {obj:"귀환",how:"수고했어요. 잠시 후 튜토리얼이 끝나요.",say:[[ACE,"…좋은 반응이다. 다음에 떨어지는 건 네 쪽일지도 모르지."],[OP,"추진제 한계예요. …버텼네요. 귀환해요, 우리엘 1."]],
    enter(){setTimeout(()=>{for(const e of enemies)if(e.tutAce){fxExplosion(e.m.position,.8);sfx("dash",e.m.position);e.alive=false;disposeEnemy(e)}enemies.length=0},2600);setTimeout(tutEnding,6500)},done(){return false}}];
 function tutRestoreUnit(){if(TUT.unit0&&G.unit!==TUT.unit0)tutSetUnit(TUT.unit0);G.spec=0}
 function tutAce(){const e=spawnMS(tutAhead(46,0,2),true);if(e){e.tutAce=true;e.windT=.85}}
@@ -170,7 +170,7 @@ function tutHurt(b){if(G.iframe>0)return;G.iframe=1.4;fxImpact(S.pos.clone().add
 async function startTutorial(){if(TUT.on||!P)return;sfx("uiok");lock();
   TUT.on=true;TUT.step=-1;TUT.c={};TUT.busy=false;TUT.unit0=UNITS[G.unit]?G.unit:"mega";restart();S.yaw=S.face;S.pitch=-.08;
   const U=UNITS[G.unit];document.documentElement.style.setProperty("--uc",U.css);$("unitName").textContent=U.r;$("specName").textContent=U.f;$("uIconR").src=`ui/r_${G.unit}.webp`;$("uIconF").src=`ui/f_${G.unit}.webp`;buildBits(G.unit);
-  $("pName").textContent=PILOT.name||"앰버 1";$("pDept").textContent="첫 출격";$("pSortie").textContent="—";
+  $("pName").textContent=PILOT.name||"우리엘 1";$("pDept").textContent="첫 출격";$("pSortie").textContent="—";
   document.body.classList.add("tut");show("launch");
   await playIntro();if(!TUT.on)return;await playCatapult();if(!TUT.on)return;
   show("play");S.started=true;tutStep(0)}

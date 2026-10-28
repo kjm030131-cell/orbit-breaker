@@ -164,9 +164,9 @@ async function launch(){
   show("play");S.started=true;launching=false;phaseBanner(PHASES[0]);sfx("phase");
 }
 function debriefLine(lost,score){const n=S.kills||0;
-  if(lost)return `앰버 1, 기체 반응 소실… 회수정 보냈어요. 오늘 밤 서울 하늘엔 유성이 ${n}개. 다음엔 조준선 깜빡임을 놓치지 마세요.`;
-  if(BOSS.dead)return `케르베로스 격파 확인. 추진제 소진 전 귀환, 유성 ${n}개. …지상에선 역대급 유성우라고 난리예요.`;
-  if(score>=60000)return `방위선 사수 완료. 오늘 밤 유성 ${n}개. 훌륭해요, 앰버 1.`;
+  if(lost)return `우리엘 1, 기체 반응 소실… 회수정 보냈어요. 오늘 밤 서울 하늘엔 유성이 ${n}개. 다음엔 조준선 깜빡임을 놓치지 마세요.`;
+  if(BOSS.dead)return `케르고그모스 격파 확인. 추진제 소진 전 귀환, 유성 ${n}개. …지상에선 역대급 유성우라고 난리예요.`;
+  if(score>=60000)return `방위선 사수 완료. 오늘 밤 유성 ${n}개. 훌륭해요, 우리엘 1.`;
   if(score>=25000)return `방위선 사수 완료. 유성 ${n}개. 지휘기는 아직 남아 있어요. 다음엔 놈을 노려봐요.`;
   return `추진제 소진, 귀환하세요. 오늘 밤 유성은 ${n}개. 연쇄 폭발을 노려봐요.`;
 }
@@ -189,7 +189,7 @@ function finishRun(reason){
   music(null);sfx("end");if(pb&&score>0)sfx("pb");setTimeout(()=>{if(SCREEN==="result"){music("title");muffle(true)}},2600);
   $("rScore").textContent=score.toLocaleString();{const g=score>=250000?"S":score>=150000?"A":score>=70000?"B":"C",im=$("rGrade");im.hidden=false;im.src=`ui/grade_${g}.webp`;im.alt=g+" 등급";im.style.animation="none";void im.offsetWidth;im.style.animation=""}$("rKills").textContent=S.kills||0;$("rCombo").textContent=G.maxKC;$("rChain").textContent=S.best;$("rBest").textContent=(rec.best||0).toLocaleString();
   $("rPb").innerHTML=(pb&&score>0?'<span class="pb">개인 최고 기록 갱신</span> ':"")+(lost?'<span class="note">전 기체 손실 · 작전 조기 종료</span>':`<span class="note">생존 보너스 +${bonus.toLocaleString()} (전투 점수의 ${Math.round(rate*100)}% · 남은 기체 ${G.lives}${G.lives===MAX_LIVES?" · 무피격 클리어":""})</span>`);
-  $("rDebrief").innerHTML='<span class="who">아스트라이아 CIC · 한서윤 중위</span>'+debriefLine(lost,score);
+  $("rDebrief").innerHTML='<span class="who">이클립스 CIC · 최지우 중위</span>'+debriefLine(lost,score);
   $("rSortie").textContent=`출격 ${rec.attempts} / ${MAX_SORTIE}`;
   const left=MAX_SORTIE-rec.attempts,ag=$("againBtn");ag.disabled=left<=0;
   ag.firstChild.textContent=left>0?`재출격 · ${left}회 남음 `:"출격 횟수 소진 ";

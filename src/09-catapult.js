@@ -3,7 +3,7 @@ POSE.cata={hips:[0,0,0],torso:[.42,0,0],head:[-.38,0,0],armR:[.5,0,-.3],foreR:[-
 POSE.stand={hips:[0,0,0],torso:[.05,0,0],head:[0,0,0],armR:[-.2,0,-.08],foreR:[-.3,0,0],armL:[-.1,0,.1],foreL:[-.35,0,0],thighR:[0,0,-.03],shinR:[.05,0,0],thighL:[0,0,.03],shinL:[.05,0,0]};
 const CINE={on:false,t:0,z:-130,v:0,thr:.6,crouch:0,pose:null,skip:false,done:null,line:-1,typed:0,camPos:new V3(),camLook:new V3(),flags:{}};
 let SHIP=null;
-// PILOT_HOLD: extra seconds on the pilot close-up ("앰버 1, 출격한다!") before the launch; everything after it shifts by this much
+// PILOT_HOLD: extra seconds on the pilot close-up ("우리엘 1, 출격한다!") before the launch; everything after it shifts by this much
 const PILOT_HOLD=1.6,DECK_Y=-2.6,HATCH_Z=-30,START_Z=-130,T_LAUNCH=3.75+PILOT_HOLD,T_END=6.1+PILOT_HOLD;
 
 function panelTex(w,h,draw){const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");draw(x,w,h);const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.encoding=THREE.sRGBEncoding;t.anisotropy=4;return t}
@@ -70,10 +70,10 @@ function attachShipModel(){
 
 /* ---- overlay text ---- */
 function cineLines(){const n=(PILOT.name||"파일럿"),u=UNITS[G.unit]||UNITS.mega;if(TUT.on)return[
-  {at:-2.5,who:"아스트라이아 CIC · 한서윤 중위",txt:"추진제는 120초분. 다 쓰기 전에 돌아와야 해요. 발진을 허가합니다.",vo:"vo_op03"},
-  {at:3.3,who:"앰버 1",txt:"앰버 1, 출격한다!"}];return[
-  {at:-2.5,who:"아스트라이아 CIC · 한서윤 중위",txt:"추진제는 120초분. 다 쓰기 전에 돌아와야 해요. 발진을 허가합니다.",vo:"vo_op03"},
-  {at:3.3,who:`앰버 1 · ${n}`,txt:`${n}, ${(FRAMES[P&&P.frame]||FRAMES.mk2).name}. 앰버 1, 출격한다!`}]}
+  {at:-2.5,who:"이클립스 CIC · 최지우 중위",txt:"추진제는 120초분. 다 쓰기 전에 돌아와야 해요. 발진을 허가합니다.",vo:"vo_op03"},
+  {at:3.3,who:"우리엘 1",txt:"우리엘 1, 출격한다!"}];return[
+  {at:-2.5,who:"이클립스 CIC · 최지우 중위",txt:"추진제는 120초분. 다 쓰기 전에 돌아와야 해요. 발진을 허가합니다.",vo:"vo_op03"},
+  {at:3.3,who:`우리엘 1 · ${n}`,txt:`${n}, ${(FRAMES[P&&P.frame]||FRAMES.mk2).name}. 우리엘 1, 출격한다!`}]}
 function setSub(i){const L=cineLines()[i];CINE.line=i;CINE.typed=0;$("subWho").textContent=L.who;$("subTxt").textContent="";$("cineSub").classList.add("on");sfx("radio");if(L.vo)voPlay(L.vo)}
 
 /* ---- control ---- */
