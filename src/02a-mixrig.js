@@ -29,7 +29,7 @@ function buildMixRig(gltf,remote){
       const hi=sk.bones.indexOf(hand),bones=sk.bones.concat([gun]),inv=sk.boneInverses.concat([sk.boneInverses[hi].clone()]),gi=bones.length-1;
       for(const i of idx){si.setXYZW(i,gi,0,0,0);sw.setXYZW(i,1,0,0,0)}si.needsUpdate=sw.needsUpdate=true;
       skin.bind(new THREE.Skeleton(bones,inv),skin.bindMatrix);skin.userData.gunSplit=true;
-      let lo=null;for(const i of idx){v.fromBufferAttribute(pa,i);skin.boneTransform(i,v);v.applyMatrix4(skin.matrixWorld);if(!lo||v.y<lo.y)lo=v.clone()}gun.userData.muzzle=lo}}
+      /* muzzle = the gun vertex farthest from the hand (the barrel tip, however the rifle is held in the bind pose) */let lo=null,ld=-1;for(const i of idx){v.fromBufferAttribute(pa,i);skin.boneTransform(i,v);v.applyMatrix4(skin.matrixWorld);const dd=v.distanceTo(P0.rifle);if(dd>ld){ld=dd;lo=v.clone()}}gun.userData.muzzle=lo}}
   else if(hand)gun=hand.children.find(c=>c.name==="gun")||null;
   const holder=new THREE.Group();holder.add(scene,drv);
   const qa=new THREE.Quaternion(),qb=new THREE.Quaternion(),qr=new THREE.Quaternion();
