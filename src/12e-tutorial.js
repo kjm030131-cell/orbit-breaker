@@ -67,7 +67,7 @@ async function startTutorial(){if(TUT.on||!P)return;sfx("uiok");lock();
   document.body.classList.add("tut");show("launch");
   await playIntro();if(!TUT.on)return;await playCatapult();if(!TUT.on)return;
   show("play");S.started=true;tutStep(0)}
-function tutEnding(){if(!TUT.on)return;try{localStorage.setItem("ob.tutDone","1")}catch(e){}const n=Math.max(1,(S.kills||0)+(TUT.c.kill||0)*0);$("tutObj").hidden=true;if(document.pointerLockElement)document.exitPointerLock();
+function tutEnding(){if(!TUT.on)return;const n=Math.max(1,(S.kills||0)+(TUT.c.kill||0)*0);$("tutObj").hidden=true;if(document.pointerLockElement)document.exitPointerLock();
   const e=$("tutEnd");$("tutEndA").textContent=`그날 밤, 서울 하늘에는 유성 ${n}개가 내렸다.`;$("tutEndB").textContent="동생은 그중 하나에 소원을 빌었다.";e.hidden=false;e.classList.remove("on");void e.offsetWidth;e.classList.add("on");sfx("phase");
   setTimeout(()=>$("tutGo").focus(),2600)}
 function tutExit(to){TUT.on=false;TUT.step=-1;tutWaypoint(null);$("tutObj").hidden=true;$("tutEnd").hidden=true;document.body.classList.remove("tut");
@@ -76,16 +76,15 @@ function tutExit(to){TUT.on=false;TUT.step=-1;tutWaypoint(null);$("tutObj").hidd
 $("tutGo").addEventListener("click",()=>{sfx("uiok");tutExit("form")});
 $("tutBack").addEventListener("click",()=>{sfx("uiback");tutExit("title")});
 $("tutBtn").addEventListener("click",startTutorial);
-// first visit: point new players at the tutorial
-function tutDone(){try{return localStorage.getItem("ob.tutDone")==="1"}catch(e){return true}}
-function tutHintRefresh(){const d=tutDone();$("tutHint").hidden=d;$("tutBtn").classList.toggle("hot",!d);if(!d&&SCREEN==="title"){const i=menuItems.indexOf($("tutBtn"));if(i>=0&&menuSel!==i){menuSel=i;markMenu()}}}
+// shared event PC: every player starts at the title, so the tutorial is always recommended (no per-browser memory)
+function tutDone(){return false}
+function tutHintRefresh(){$("tutHint").hidden=false;$("tutBtn").classList.add("hot")}
 tutHintRefresh();
 
-// first sortie of a browser that has never played the tutorial: offer it once per session
-let tutAskSeen=false;try{tutAskSeen=sessionStorage.getItem("ob.tutAsk")==="1"}catch(e){}
+// every sortie from the title asks once: tutorial first, or straight to the pilot form
 function tutAskOpen(){$("tutAsk").hidden=false;sfx("ui");setTimeout(()=>$("taTut").focus(),40)}
-function tutAskClose(){$("tutAsk").hidden=true;tutAskSeen=true;try{sessionStorage.setItem("ob.tutAsk","1")}catch(e){}}
-document.addEventListener("click",e=>{const b=e.target.closest('#scrTitle [data-go="form"]');if(!b||tutDone()||tutAskSeen)return;e.stopImmediatePropagation();e.preventDefault();tutAskOpen()},true);
+function tutAskClose(){$("tutAsk").hidden=true}
+document.addEventListener("click",e=>{const b=e.target.closest('#scrTitle [data-go="form"]');if(!b)return;e.stopImmediatePropagation();e.preventDefault();tutAskOpen()},true);
 $("taTut").addEventListener("click",()=>{tutAskClose();startTutorial()});
 $("taGo").addEventListener("click",()=>{tutAskClose();sfx("uiok");show("form")});
 addEventListener("keydown",e=>{if($("tutAsk").hidden)return;if(e.code==="Escape"){e.preventDefault();e.stopImmediatePropagation();$("taGo").click()}else if(e.code==="Enter"&&document.activeElement!==$("taGo")){e.preventDefault();e.stopImmediatePropagation();$("taTut").click()}},true);
