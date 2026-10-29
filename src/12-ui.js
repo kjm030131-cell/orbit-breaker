@@ -73,7 +73,8 @@ function show(name){
   $("hud").hidden=name!=="play";
   SCREEN=name;S.demo=!(name==="play"||name==="launch");
   if(name==="title"){markMenu();PILOT.sid=PILOT.sid;if(TITLE)titleEnter()}
-  if(name==="form"){{const tb=$("tipBox");if(tb){tb.classList.remove("glow");void tb.offsetWidth;tb.classList.add("glow")}}if(prev==="title"){["fName","fDept","fSid"].forEach(id=>$(id).value="");$("fErr").textContent="";meter(null)}setTimeout(()=>$("fName").focus(),60)}
+  if(name!=="form"&&$("rulesDlg"))$("rulesDlg").hidden=true;
+  if(name==="form"){if(prev==="title"){["fName","fDept","fSid"].forEach(id=>$(id).value="");$("fErr").textContent="";meter(null)}setTimeout(()=>$("fName").focus(),60)}
   if(name==="load"){renderUnits();setTimeout(()=>$("loadGo").focus(),60)}
   if(name==="brief"){const l=briefMode==="launch";$("briefStep").textContent=l?"3 / 3":"조작법";$("launchBtn").hidden=!l;$("launchNote").hidden=!l;setTimeout(()=>(l?$("launchBtn"):$("briefBack")).focus(),60)}
   if(name==="rank")renderBoards();
@@ -131,8 +132,16 @@ $("pilotForm").addEventListener("submit",async e=>{
   if(rec&&(rec.attempts||0)>=MAX_SORTIE)return err("이 학번은 출격 3회를 모두 사용했습니다.");
   Object.assign(PILOT,{name,dept,sid,rec:rec||{name,dept,sid,best:0,attempts:0,chain:0,kills:0}});
   if(rec&&rec.unit&&UNITS[rec.unit])G.unit=rec.unit;
-  sfx("uiok");show("load");
+  sfx("uiok");meter(rec);rulesOpen();
 });
+// rules confirm dialog: shown after a valid registration; 확인했습니다 → unit select, 다시 입력 / Esc → back to the form
+function rulesOpen(){const d=$("rulesDlg");d.hidden=false;const tb=$("tipBox");if(tb){tb.classList.remove("glow");void tb.offsetWidth;tb.classList.add("glow")}setTimeout(()=>$("rulesOk").focus(),60)}
+function rulesClose(){$("rulesDlg").hidden=true}
+$("rulesOk").addEventListener("click",()=>{if($("rulesDlg").hidden)return;rulesClose();sfx("uiok");show("load")});
+$("rulesBack").addEventListener("click",()=>{rulesClose();sfx("uiback");setTimeout(()=>$("fName").focus(),40)});
+addEventListener("keydown",e=>{if(SCREEN!=="form"||$("rulesDlg").hidden)return;
+  if(e.code==="Escape"){e.preventDefault();e.stopImmediatePropagation();$("rulesBack").click()}
+  else if(e.code==="Enter"||e.code==="NumpadEnter"){e.preventDefault();e.stopImmediatePropagation();$("rulesOk").click()}},{capture:true});
 
 /* ================= loadout ================= */
 const U_SHORT={mega:"메가",boost:"부스트",pods:"포드",missile:"미사일",shield:"실드"};

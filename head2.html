@@ -1105,6 +1105,12 @@ body.bossguide #bossBar{top:calc(128px + env(safe-area-inset-top,0px))} /* below
 #edgeNote{position:fixed;left:50%;bottom:calc(214px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font:700 13px var(--f-kdisp);letter-spacing:.06em;color:#9fb8c8;text-shadow:0 1px 4px #000;pointer-events:none;animation:bcBlink 1.2s steps(2) infinite}
 #edgeNote[hidden]{display:none}
 @media (max-height:800px){#scrForm #fNote{display:none}#scrForm .pane>.pHead[style]{margin:14px 0 8px!important}.tipBox li,.tbT{font-size:13.5px}}
+/* registration: one pane; the rules open as a confirm dialog after 다음 */
+#scrForm .console{grid-template-columns:1fr;width:min(560px,100%)}
+.rulesDlg{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:16px;background:rgba(4,5,8,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.rulesDlg[hidden]{display:none}
+.rulesDlg>.pane{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;animation:rdIn .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes rdIn{from{opacity:0;transform:translateY(18px) scale(.98)}}
 </style>
 <div id="hud" hidden>
   <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="feed"></div><div id="aimPart" hidden></div><div id="postBar" hidden><i></i><span>자세</span></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="tutEquip" hidden></div><div id="tutEquipFx"></div><div id="lockWarn"><b>피격 경고</b></div>
@@ -1195,8 +1201,10 @@ body.bossguide #bossBar{top:calc(128px + env(safe-area-inset-top,0px))} /* below
       <div class="err" id="fErr"></div>
       <div class="btns"><button class="btn primary" type="submit" id="fGo">다음 <kbd>Enter</kbd></button><button class="btn" type="button" data-go="title">돌아가기 <kbd>Esc</kbd></button></div>
     </form>
+  </div>
+  <div class="rulesDlg" id="rulesDlg" hidden role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
     <div class="frame pane">
-      <div class="pHead"><h2>규칙</h2></div>
+      <div class="pHead"><h2 id="rulesTitle">작전 규칙 확인</h2><span class="lbl">출격 전 필독</span></div>
       <ul class="rules">
         <li><b>120초</b><span>시간 안에 최대한 많은 점수를 올리세요.</span></li>
         <li><b>3회</b><span>학번당 3번 출격. <b class="hl">가장 높은 점수만</b> 순위에 올라갑니다.</span></li>
@@ -1212,6 +1220,7 @@ body.bossguide #bossBar{top:calc(128px + env(safe-area-inset-top,0px))} /* below
         <div class="tbT"><i class="k">자폭</i><span>붉게 깜빡이며 돌진 → <b>붙기 전에 사격</b></span></div>
         <div class="tbT"><i class="s">저격</i><span>보라색 조준선 → <b>보이는 즉시 회피</b></span></div>
       </div>
+          <div class="btns" style="margin-top:18px"><button class="btn primary" type="button" id="rulesOk">확인했습니다 <kbd>Enter</kbd></button><button class="btn" type="button" id="rulesBack">다시 입력 <kbd>Esc</kbd></button></div>
     </div>
   </div>
 </section>
