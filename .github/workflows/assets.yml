@@ -23,7 +23,8 @@ jobs:
           mkdir -p out /tmp/aout
           GT="npx gltf-transform"
           for f in tools/assets/src/*.glb; do n=$(basename $f .glb)
-            $GT optimize $f out/$n.glb --compress meshopt --simplify false --texture-compress webp --texture-size 2048
+            case $n in *_hi) o=${n%_hi}; $GT optimize $f out/$o.glb --compress meshopt --simplify-ratio 0.012 --simplify-error 0.02 --texture-compress webp --texture-size 1024; n=$o;;
+              *) $GT optimize $f out/$n.glb --compress meshopt --simplify false --texture-compress webp --texture-size 2048;; esac
             $GT inspect out/$n.glb > /tmp/aout/$n.txt; done
           ls -la out >> /tmp/aout/sizes.txt
           cp out/*.glb /tmp/aout/
