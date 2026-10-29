@@ -932,6 +932,9 @@ body:not(.versus):not(.tut) #hud[hidden]~#feed{display:none}
 .cks{margin-top:6px;font-size:10.5px;letter-spacing:.06em;color:rgba(232,230,223,.5)}
 .ckL .bframe{width:100%}
 .ckRt .bar{height:12px}
+.ckHp .hpBar{height:12px;background:rgba(255,255,255,.1);overflow:hidden}.ckHp .hpBar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#5ad0ff,#bff0ff);transition:width .12s}
+.ckHp.low .hpBar i{background:linear-gradient(90deg,#ff3a30,#ff8a60)}.ckHp.low .ckh b{color:var(--red);animation:blow .5s steps(2) infinite}
+#ckHp[hidden]{display:none}.plate .hpRow{display:none} /* armour lives in the cockpit console now */
 .ckRt.hot .ckh b{color:var(--red)}
 .boostG.low .ckh b{color:var(--red);animation:blow .5s steps(2) infinite}
 .ckR{position:relative;width:168px;height:168px;border-radius:50%;background:radial-gradient(circle,rgba(10,16,22,.9) 60%,rgba(6,8,12,.95) 100%);
@@ -979,6 +982,7 @@ body:not(.versus):not(.tut) #hud[hidden]~#feed{display:none}
     <div class="cockpit">
       <div class="ckw ckL boostG" id="boostG"><div class="ckh"><span class="lbl">부스트</span><b class="num" id="boostV">100</b></div><div class="bframe"><div class="bslot"><i id="boostF"></i></div></div><div class="cks">SHIFT 꾹 · 부스트 / 톡 · 회피</div></div>
       <div class="ckR"><canvas class="radar" id="radar" width="320" height="320"></canvas><span class="ckRl">RADAR</span></div>
+      <div class="ckw ckRt ckHp" id="ckHp"><div class="ckh"><span class="lbl">장갑</span><b class="num" id="ckHpV">180</b></div><div class="hpBar"><i id="ckHpF"></i></div><div class="cks">8초 안 맞으면 회복</div></div>
       <div class="ckw ckRt" id="heatG"><div class="ckh"><span class="lbl">과열</span><b class="num" id="mult">0%</b></div><div class="bar"><i id="heatF"></i></div><div class="cks">사격·베기 연타 시 상승</div></div>
     </div>
   </div>

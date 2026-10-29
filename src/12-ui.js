@@ -223,7 +223,8 @@ function hudUpdate(){
   setC("wBlade","act",S.bladeOn>0||sl);setC("wRifle","act",S.shotCd>0);setW("rifleCd",S.shotCd>0?(1-S.shotCd/(G.unit==="missile"?.24:.32))*100:100);
   setT("warn",G.dead>0?(G.lives>0?"기체 대파 — 예비기 발진 준비":"기체 대파"):G.stagger>0?(G.broke?"자세 회복 중":"경직 — Shift로 풀기 (부스트 30)"):VS&&S.over>0?"과열 정지":VS&&S.heat>=80?"과열 임박":S.boost<15?"부스트 부족 — 회피 불가":"");
   {const cm=cleanMult(),nx=cm>=2?1:(G.clean%CLEAN_STEP)/CLEAN_STEP;setT("cleanV","×"+cm.toFixed(1));setW("cleanF",nx*100);setC("cleanBox","max",cm>=2)}
-  if(!VS){const hp=Math.ceil(G.hp??HP_MAX);if(HC.hp!==hp){HC.hp=hp;$("hpF").style.width=(hp/HP_MAX*100)+"%";$("hpV").textContent=hp;$("hpRow").classList.toggle("low",hp<HP_MAX*.35)}}
+  if(!VS){const hp=Math.ceil(G.hp??HP_MAX);if(HC.hp!==hp){HC.hp=hp;$("hpF").style.width=(hp/HP_MAX*100)+"%";$("hpV").textContent=hp;$("hpRow").classList.toggle("low",hp<HP_MAX*.35);$("ckHpF").style.width=(hp/HP_MAX*100)+"%";$("ckHpV").textContent=hp;$("ckHp").classList.toggle("low",hp<HP_MAX*.35)}}
+  setH("ckHp",VS);
   if(HC.lives!==G.lives){HC.lives=G.lives;[...$("lives").children].forEach((c,i)=>{if(c.tagName==="I")c.classList.toggle("lost",i>=G.lives)});$("livesTxt").textContent="기체 "+Math.max(0,G.lives)+" / "+MAX_LIVES}
   {const u=UNITS[G.unit],cd=G.unitCd;setW("unitCd",cd>0?(1-cd/u.cd)*100:100);setC("wUnit","ready",cd<=0);setC("wUnit","act",!!G.mega||G.barrier>0||G.marking);
    setT("unitName",G.marking?`${u.r} · ${G.marks.length}/6`:cd>0?`${u.r} ${cd.toFixed(1)}`:u.r)}
