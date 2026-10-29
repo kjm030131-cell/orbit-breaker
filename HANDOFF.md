@@ -544,3 +544,12 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
   finish·관리자 POST 는 캐시를 비움(finish 응답은 새로 계산). start/finish 는 IP당 분당 40회 제한(429). runs(sid) 색인 추가.
 - 클라: 순위 조회 30초 간격, 순위가 보이는 화면 + 탭이 보일 때만, 실패 시 최대 5분까지 간격 늘림. 명예의 전당은 1분에 한 번. 관리자 자동 새로고침 30초.
 - .github/workflows/pages-status.yml: Pages 배포 이력 + /api/board 응답 확인(읽기 전용, 수동 실행).
+
+## 56. 튜토리얼 정확한 통과 조건·도움말 / 보스 등장 연출·위협 표시 (10/30 02:30)
+- 무기 판별: 03-enemies `HIT_SRC`("rifle"/"blade") → knock 이 e.hitBy 기록, onKill 이 kill_<src>·elite_<src> 카운트. slashStrike 는 slashStrike0 래퍼(HIT_SRC="blade").
+- 튜토리얼: 라이플 단계 = 라이플 격추만(kill_rifle), 정예기 = 사벨만(elite_blade), 3단 콤보 = 그 콤보 중 한 번이라도 적을 벤 경우만(S.comboHit),
+  중력탄 = 던진 뒤 사벨 격추(gravSlash). MS·이동·회피·옵션 R/F·에이스는 그대로. 다른 행동엔 짧은 안내(tutWrong/tutWrongKill).
+- 도움말 카드 #tutHelp(왼쪽): 단계에서 max(15초, 제한시간×0.35) 넘게 못 넘어가면 TUT_HELP[단계] 표시. TUT_STEPS 순서와 1:1 (20개).
+- src/12m-alerts.js: 보스 등장 시 5.2초 연출(BCINE: 세계·타이머 정지, 카메라 보스, 공략 2단계 자막, 1.5초 후 Space/클릭 건너뛰기, 끝나면 보스 쪽을 바라봄).
+  약점 포드 "약점" 표식/화면 밖 화살표, 보스 정지 중 "지금! 가까이 붙어 베기" + 남은 시간 막대, 자폭 드론 첫 등장 경고(컷인+슬로) + "자폭" 표식/방향 화살표·거리(35m 안 빠른 깜빡임).
+- bossguide 중 보스 체력바를 목표창 아래(128px)로 내림(겹침 수정).

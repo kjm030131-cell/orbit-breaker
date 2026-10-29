@@ -83,8 +83,8 @@ const TUT_STEPS=[
   {obj:"회피 2번",how:"Shift 톡 = 회피 · A/D와 같이 누르면 옆으로",keys:["Shift","A","D"],hl:"boostG",limit:40,
    prog:()=>`${Math.min(2,TUT.c.dodge||0)} / 2`,enter(){TUT.c.dodge=0},done(){return (TUT.c.dodge||0)>=2}},
   {obj:"빔 라이플로 정찰기 3기 격추",how:"조준선이 빨개지면 우클릭",keys:["Mouse","RMB"],hl:"wRifle",limit:70,mark:true,
-   prog:()=>`${Math.min(3,TUT.c.kill||0)} / 3`,say:[[OP,"전방에 적 정찰기. 노란 화살표가 가리키는 놈부터."]],
-   keep:{n:3,passive:true,d:[44,60]},enter(){TUT.c.kill=0;[-14,0,14].forEach((s,i)=>tutDrone(tutAhead(48+i*6,s,2+i*2),true))},done(){return (TUT.c.kill||0)>=3},exit(){tutClear()}},
+   want:"rifle",prog:()=>`${Math.min(3,TUT.c.kill_rifle||0)} / 3`,say:[[OP,"전방에 적 정찰기. 노란 화살표가 가리키는 놈부터."]],
+   keep:{n:3,passive:true,d:[44,60]},enter(){TUT.c.kill=0;TUT.c.kill_rifle=0;[-14,0,14].forEach((s,i)=>tutDrone(tutAhead(48+i*6,s,2+i*2),true))},done(){return (TUT.c.kill_rifle||0)>=3},exit(){tutClear()}},
   {obj:"빔 사벨 3연속 베기",how:"적을 조준하고 좌클릭 3번, 리듬 있게",keys:["LMB"],hl:"wBlade",limit:60,mark:true,
    prog:()=>`${Math.min(1,TUT.c.combo||0)} / 1`,say:[[OP,"근접은 빔 사벨. 날려 보낸 적이 다른 적에 부딪히면 연쇄 폭발해요."]],
    keep:{n:3,passive:true,d:[16,28]},enter(){TUT.c.combo=0;[-6,6,0].forEach((s,i)=>tutDrone(tutAhead(18+i*4,s,1),true))},done(){return (TUT.c.combo||0)>=1},exit(){tutClear()}},
@@ -98,16 +98,16 @@ const TUT_STEPS=[
    prog:()=>`${Math.min(1,TUT.c.ramDodge||0)} / 1`,say:[[OP,"주황 드론이 선을 깜빡이면 곧 돌진이에요."]],cue:()=>cueDodge(cueRam(),.22,.7),
    keep:{n:1,kind:"ram",d:[34,42]},enter(){TUT.c.ramDodge=0},done(){return (TUT.c.ramDodge||0)>=1},exit(){tutClear()}},
   {obj:"정예기를 옆이나 뒤에서 베기",how:"부스트로 옆·뒤로 돌아가서 좌클릭",keys:["Shift","A","D","LMB"],limit:60,mark:"elite",
-   prog:()=>`${Math.min(1,TUT.c.elite||0)} / 1`,say:[[OP,"파란 실드 정예기. 굼뜨니까 돌아 들어가요."]],
-   keep:{n:1,kind:"elite",d:[26,32]},enter(){TUT.c.elite=0;TUT.c.eliteBlock=0;TUT.ebSaid=false},
+   want:"blade",prog:()=>`${Math.min(1,TUT.c.elite_blade||0)} / 1`,say:[[OP,"파란 실드 정예기. 굼뜨니까 돌아 들어가요."]],
+   keep:{n:1,kind:"elite",d:[26,32]},enter(){TUT.c.elite=0;TUT.c.elite_blade=0;TUT.c.eliteBlock=0;TUT.ebSaid=false},
    tick(){if((TUT.c.eliteBlock||0)>0&&!TUT.ebSaid){TUT.ebSaid=true;popText("막혔어요 · 실드 반대편으로!")}},
-   done(){return (TUT.c.elite||0)>=1},exit(){tutClear()}},
+   done(){return (TUT.c.elite_blade||0)>=1},exit(){tutClear()}},
   {obj:"이족보행 MS 격파",how:"한 번 베고, 비틀거릴 때 한 번 더",keys:["LMB","Shift"],limit:60,mark:"ms",
    prog:()=>`${Math.min(1,TUT.c.ms||0)} / 1`,say:[[OP,"적 MS 접근. 한 번에 안 쓰러져요, 두 번 베요."]],
    keep:{n:1,kind:"ms",d:[26,34]},enter(){TUT.c.ms=0},done(){return (TUT.c.ms||0)>=1},exit(){tutClear()}},
   {obj:"중력탄으로 적을 모은 뒤 베기",how:"Q로 적을 모으고 좌클릭 · 중력탄은 실전에서 보급 컨테이너에서만",keys:["Q","LMB"],hl:"wGrav",limit:50,mark:true,
-   prog:()=>`${Math.min(1,TUT.c.grav||0)} / 1`,say:[[OP,"모인 덩어리를 베어 날리면 연쇄 폭발이 크게 터져요."]],
-   keep:{n:5,passive:true,d:[26,40]},enter(){TUT.c.grav=0;G.grav=Math.max(G.grav||0,2)},tick(){if(G.grav<1&&!(TUT.c.grav>0))G.grav=1},done(){return (TUT.c.grav||0)>=1&&TUT.t>4},exit(){tutClear()}},
+   prog:()=>`중력탄 ${(TUT.c.grav||0)>=1?"✓":"…"}   베기 ${(TUT.c.gravSlash||0)>=1?"✓":"…"}`,say:[[OP,"모인 덩어리를 베어 날리면 연쇄 폭발이 크게 터져요."]],
+   keep:{n:5,passive:true,d:[26,40]},enter(){TUT.c.grav=0;TUT.c.gravSlash=0;G.grav=Math.max(G.grav||0,2)},tick(){if(G.grav<1&&!(TUT.c.grav>0))G.grav=1},done(){return (TUT.c.grav||0)>=1&&(TUT.c.gravSlash||0)>=1},exit(){tutClear()}},
   {obj:"옵션 장비 알아보기",how:"R = 장비 기능 · F = 필살기 · 실전엔 1개만 장착 · Enter로 시작",keys:["Enter"],limit:20,
    say:[[OP,"이번엔 옵션 장비예요. 실전에서는 하나만 들고 나가요. 뭐가 맞는지 여기서 골라 봐요."]],
    enter(){TUT.c.next=0;tutUnitsCard(true)},done(){return (TUT.c.next||0)>0},exit(){tutUnitsCard(false)}},
@@ -253,3 +253,39 @@ document.addEventListener("click",e=>{const b=e.target.closest('#scrTitle [data-
 $("taTut").addEventListener("click",()=>{tutAskClose();startTutorial()});
 $("taGo").addEventListener("click",()=>{tutAskClose();sfx("uiok");show("form")});
 addEventListener("keydown",e=>{if($("tutAsk").hidden)return;if(e.code==="Escape"){e.preventDefault();e.stopImmediatePropagation();$("taGo").click()}else if(e.code==="Enter"&&document.activeElement!==$("taGo")){e.preventDefault();e.stopImmediatePropagation();$("taTut").click()}},true);
+
+/* ---- 10/30: only the taught action passes a step; doing something else gets a short nudge, and a help card appears when stuck ---- */
+function tutWrong(kind){const now=performance.now();if(now-(TUT.wrongT||0)<2500)return;TUT.wrongT=now;
+  if(kind==="combo")popText("헛스윙이에요 · 적을 조준하고 좌클릭 3번")}
+function tutWrongKill(e,src){const s=TUT_STEPS[TUT.step];if(!s||!s.want||src===s.want)return;
+  if(s.want==="rifle"&&!e.elite){const now=performance.now();if(now-(TUT.wrongT||0)<2500)return;TUT.wrongT=now;popText(src==="blade"?"사벨 말고 빔 라이플(우클릭)로 쏴서 격추하세요":"빔 라이플(우클릭)로 맞혀야 인정돼요")}
+  if(s.want==="blade"&&e.elite){TUT.wrongT=performance.now();popText("정예기는 빔 사벨(좌클릭)로 옆·뒤에서 베어야 인정돼요")}}
+// help card (left side) per step: shows after a while without passing; numbered, plain words, one common mistake
+const TUT_HELP=[
+ {s:["게임 화면 아무 곳이나 마우스 왼쪽 버튼으로 한 번 클릭하세요","마우스 커서가 사라지면 성공이에요"],x:"Esc를 누르면 커서가 다시 나와요"},
+ {s:["마우스를 왼쪽·오른쪽으로 크게 움직여요","위·아래로도 움직여 봐요","화면이 따라 돌아가면 잘하고 있는 거예요"]},
+ {s:["마우스로 노란 고리를 화면 가운데에 놓아요","W 키를 계속 누르고 있어요","고리를 통과하면 끝"],x:"W를 톡톡 누르지 말고 꾹 누르세요"},
+ {s:["Space를 1초쯤 꾹 → 위로 올라가요","C를 1초쯤 꾹 → 아래로 내려가요","둘 다 하면 통과"]},
+ {s:["W를 누른 채로","Shift도 같이 꾹 누르세요","1~2초 쭉 날아가면 통과"],x:"Shift만 누르면 안 돼요. 방향키(W)와 같이!"},
+ {s:["Shift를 '톡' 짧게 눌렀다 바로 떼요","휙 하고 옆으로 피하면 1번","2번 하면 통과"],x:"Shift를 꾹 누르면 부스트예요. 짧게!"},
+ {s:["노란 화살표 쪽으로 마우스를 돌려요","적에게 조준선을 맞추면 빨갛게 변해요","마우스 오른쪽 버튼 = 빔 라이플 발사"],x:"왼쪽 버튼(칼)으로 잡은 건 이 단계에서 안 쳐요"},
+ {s:["적에게 조준선을 맞춰요","마우스 왼쪽 버튼을 '탁, 탁, 탁' 3번","세 번째 베기까지 이어서 적을 베면 통과"],x:"적이 멀면 허공을 베요. 가까이 가서!"},
+ {s:["적이 쏘는 탄을 기다려요","화면에 '지금!'이 뜨는 순간","Shift를 톡 눌러 피해요 (2번)"],x:"너무 일찍 누르면 안 쳐요. '지금!'에 맞춰서"},
+ {s:["주황 드론이 선을 깜빡이면 곧 돌진해요","A나 D를 누른 채 기다려요","'지금!'에 Shift를 톡 → 옆으로 피하기"]},
+ {s:["파란 실드가 있는 쪽(정면)은 공격이 막혀요","Shift+A 또는 D로 옆이나 뒤로 돌아가요","적 옆·뒤에서 마우스 왼쪽 버튼으로 베기"],x:"라이플이나 정면 베기는 막혀요"},
+ {s:["MS에게 다가가 한 번 베요","비틀거릴 때 한 번 더 베거나 쏘면 끝","총에 맞을 것 같으면 Shift로 피해요"]},
+ {s:["적 무리를 조준하고 Q = 중력탄","적들이 한 덩어리로 모여요","모인 곳에 가서 마우스 왼쪽 버튼으로 베기"],x:"Q만 누르면 통과 안 돼요. 꼭 베어야 해요"},
+ {s:["오른쪽 카드에서 옵션 장비를 확인해요","준비되면 Enter"]},
+ {s:["R = 메가 빔: 적 쪽을 보고 R","빔이 나가면 R 완료","F = 하이퍼 빔: F를 누르고 마우스로 쓸어요"]},
+ {s:["조준선을 적 위에 올려요","R = 포드가 날아가 그 적을 때려요","다음은 F = 올 레인지"],x:"조준선이 적에 없으면 포드가 안 나가요"},
+ {s:["R을 누른 채로 손을 떼지 말고","조준선으로 적 3기 이상을 훑어요","R에서 손을 떼면 발사 → 다음은 F"],x:"R을 짧게 누르면 안 돼요. 꾹!"},
+ {s:["적이 쏘기 직전(조준 경보)에 R","장벽에 맞은 적탄이 되돌아가면 R 완료","다음은 F = 카운터 필드"]},
+ {s:["에이스가 칼을 들어 올리면 화면이 느려져요","그때 마우스 왼쪽 버튼으로 베기 (카운터)","어려우면 Shift로 피한 뒤 빈틈에 베어도 돼요"]},
+ {s:["잠시 후 튜토리얼이 끝나요"]}];
+function tutHelpTick(){const el=$("tutHelp");const s=TUT.on&&SCREEN==="play"?TUT_STEPS[TUT.step]:null,h=s?TUT_HELP[TUT.step]:null;
+  const wait=s?Math.max(15,(s.limit||40)*.35):0,on=!!(h&&!TUT.busy&&TUT.t>wait&&!(s.done&&s.done()));
+  if(!el){if(!on)return}const box=el||(()=>{const d=document.createElement("div");d.id="tutHelp";d.hidden=true;$("hud").appendChild(d);return d})();
+  if(!on){if(!box.hidden)box.hidden=true;return}
+  if(box.dataset.k!==String(TUT.step)){box.dataset.k=TUT.step;box.innerHTML=`<div class="thH"><b>막혔나요? 이렇게 해 보세요</b><span>Tab = 이 단계 건너뛰기</span></div><ol>${h.s.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>${h.x?`<p>⚠ ${esc(h.x)}</p>`:""}`}
+  if(box.hidden){box.hidden=false;box.classList.remove("in");void box.offsetWidth;box.classList.add("in");sfx("ui")}}
+setInterval(()=>{try{tutHelpTick()}catch(_){}},250);

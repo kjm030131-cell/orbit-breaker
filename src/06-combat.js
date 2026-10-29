@@ -88,13 +88,15 @@ function shoot(){
     fxMuzzle(m,dir,0x40e8ff);fireBolt(m,to,tt);
     S.heat=Math.min(100,S.heat+4);S.shake=Math.max(S.shake,.32);S.vel.addScaledVector(dir,-6)},70);
 }
-function slashStrike(){ // called on the strike frame of a slash action
-  const heavy=S.act==="slash3";if(VS&&!vsCanAct())return;S.lastStrikeT=clockT;if(heavy)tutCount("combo");sfx("slash",null,S.act==="slash2"?1:heavy?2:0);{const f=new V3(Math.sin(S.face),0,Math.cos(S.face)),r=new V3(Math.cos(S.face),0,-Math.sin(S.face));fxSlashArt(S.pos.clone().addScaledVector(f,4.5).add(new V3(0,1.4,0)),S.combo===1?r.clone().negate():r,heavy,S.combo)}
+function slashStrike(){HIT_SRC="blade";try{return slashStrike0()}finally{HIT_SRC=null}}
+function slashStrike0(){ // called on the strike frame of a slash action
+  const heavy=S.act==="slash3";if(VS&&!vsCanAct())return;S.lastStrikeT=clockT;if(S.act==="slash1")S.comboHit=false;sfx("slash",null,S.act==="slash2"?1:heavy?2:0);{const f=new V3(Math.sin(S.face),0,Math.cos(S.face)),r=new V3(Math.cos(S.face),0,-Math.sin(S.face));fxSlashArt(S.pos.clone().addScaledVector(f,4.5).add(new V3(0,1.4,0)),S.combo===1?r.clone().negate():r,heavy,S.combo)}
   let e=S.dashT&&S.dashT.alive&&S.dashT.launched<=0&&S.dashT.m.position.distanceTo(S.pos)<(VS?7.5:meleeReach(S.dashT))?S.dashT:null;
   // single: the target slipped out (or none was picked) -> whatever sits in reach inside the blade's ~110 deg arc takes the cut
   if(!e&&!VS){const f=new V3(Math.sin(S.face),0,Math.cos(S.face));let bd=1e9;for(const o of enemies){if(!targetable(o)||o.isRemote)continue;const d=o.m.position.clone().sub(S.pos),L=d.length();
     if(L>meleeReach(o)||L>=bd||d.setY(0).normalize().dot(f)<.57)continue;bd=L;e=o}}
-  if(!e){fieldSlash(heavy);return}
+  if(!e){if(heavy&&S.comboHit)tutCount("combo");else if(heavy&&TUT.on)tutWrong("combo");fieldSlash(heavy);return}
+  S.comboHit=true;if(heavy)tutCount("combo");e.hitBy="blade";
   const tip=new V3();P.tipObj.getWorldPosition(tip);const at=e.m.position.clone().lerp(tip,.4);
   if(e.isRemote){vsAttackHit(heavy,G.crit>0,at);return} // 1:1: the hit spark / sound / punch come with the server's damage event, so a whiff never looks like a hit
   if(e.ms&&!e.isRemote&&msCutCheck(e,at,heavy||G.crit>0)&&e.blade){S.dashT=null;return}

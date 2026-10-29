@@ -13,6 +13,7 @@ function update(rdt){
   let dt=Math.min(rdt,.05);
   if(VS){S.hitstop=Math.min(S.hitstop,.12);S.slow=Math.min(S.slow,.4)}
   if(S.hitstop>0){S.hitstop-=rdt;dt=0}else if(S.slow>0){S.slow-=rdt;dt*=.3}
+  if(typeof BCINE!=="undefined"&&BCINE.on)dt=0; /* boss intro: the world (and the sortie clock) holds still while the camera shows the boss */
   clockT+=rdt;const T=clock.elapsedTime;
   if(!S.demo)mouseLook(rdt); // mouse counts gathered by the mousemove handler (04-input) turn the camera here, once per frame
   if(S.demo){S.demoT+=rdt;S.yaw=Math.sin(S.demoT*.15)*.9+Math.PI*.15;titleYaw()}
@@ -152,6 +153,7 @@ function update(rdt){
     camera.lookAt(S.pos.clone().add(new V3(0,SCREEN==="load"?.2:.9,0)).addScaledVector(R,-(innerWidth>820?(SCREEN==="load"?4.6:4.5):0)))}
   else if(VS)camera.lookAt(camera.position.clone().addScaledVector(cf,18));
   else camera.lookAt(S.pos.clone().addScaledVector(cf,8).add(new V3(0,1.4,0)));
+  if(typeof BCINE!=="undefined"&&BCINE.on)bossCineCam(rdt);
   const fovT=VS?(VS.fp?74:66):boosting||S.dash>0?64:61;S.fovB=S.fovB||fovT;S.fovB+=(fovT-S.fovB)*(1-Math.exp(-5.5*rdt));if(!(S.hitstop>0))S.punch=Math.max(0,(S.punch||0)-rdt*4.5);
   const fv=S.fovB-(S.punch||0)*2.5;if(Math.abs(fv-camera.fov)>.01){camera.fov=fv;camera.updateProjectionMatrix();}}
   if(typeof vsCockpitTick==="function")vsCockpitTick(rdt);

@@ -21,7 +21,7 @@ function spawnBoss(){
   const e={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:0,flash:0,elite:false,rad:BOSS_GLTF?39:9,isBoss:true,down:0,yaw:Math.atan2(S.pos.x-from.x,S.pos.z-from.z),tele:0,teleDir:new V3(),fireT:99};
   enemies.push(e);BOSS.e=e;BOSS.atkT=4;BOSS.mode=0;BOSS.down=0;BOSS.introT=3.2;
   buildWPs();
-  sfx("radio");setTimeout(()=>{if(!S.ended){sfx("phase");cutin("케르고그모스 출현","아르고스 지휘기")}},400);
+  sfx("radio");if(typeof bossCineStart==="function"&&bossCineStart()){}else setTimeout(()=>{if(!S.ended){sfx("phase");cutin("케르고그모스 출현","아르고스 지휘기")}},400);
   radio("이클립스 CIC · 최지우 중위","지휘기 케르고그모스 출현입니다! 우리엘 1, 붉은 약점 포드부터 노리세요.","vo_op04");
 }
 function buildWPs(){

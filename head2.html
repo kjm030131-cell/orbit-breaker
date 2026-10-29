@@ -1048,6 +1048,48 @@ body:not(.tutdock):not(.versus) #radioTxt{font-size:13.5px;line-height:1.38;disp
 .crBar{position:absolute;right:28px;bottom:24px;display:flex;align-items:center;gap:16px;z-index:3}
 .crHint{font:600 13px var(--f-kdisp);color:var(--muted)}
 @media (max-width:700px){.crList{grid-template-columns:1fr}.crHint{display:none}.crRow .crN{font-size:22px}}
+/* tutorial help card (12e-tutorial.js tutHelpTick): left side, below the docked dialogue */
+#tutHelp{position:fixed;left:22px;top:calc(260px + env(safe-area-inset-top,0px));z-index:6;width:min(330px,30vw);pointer-events:none;padding:14px 18px 14px 20px;background:rgba(8,10,14,.9);border:1px solid rgba(255,178,26,.6);border-left:4px solid #ffb21a;box-shadow:0 8px 28px rgba(0,0,0,.5);color:var(--bone);font-family:var(--f-kdisp)}
+#tutHelp[hidden]{display:none}
+#tutHelp.in{animation:thIn .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes thIn{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+.thH{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:8px}.thH b{font:800 16px var(--f-kdisp);color:#ffd48a}.thH span{font:600 11px var(--f-kdisp);color:var(--muted);white-space:nowrap}
+#tutHelp ol{margin:0;padding-left:22px;display:grid;gap:7px}#tutHelp li{font:700 15px/1.4 var(--f-kdisp)}#tutHelp li::marker{color:#ffb21a;font-weight:800}
+#tutHelp p{margin:10px 0 0;padding-top:8px;border-top:1px solid rgba(255,255,255,.12);font:600 13px/1.4 var(--f-kdisp);color:#ffb08a}
+@media (max-width:900px){#tutHelp{width:min(300px,44vw)}}
+/* boss intro + threat markers (12m-alerts.js) */
+#bcine{position:fixed;inset:0;z-index:40;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .35s,visibility 0s .35s}
+#bcine.on{opacity:1;visibility:visible;transition:opacity .35s}
+.bcBar{position:absolute;left:0;right:0;height:11vh;background:#000;transition:transform .5s cubic-bezier(.2,.8,.2,1)}.bcBar.t{top:0;transform:translateY(-100%)}.bcBar.b{bottom:0;transform:translateY(100%)}
+#bcine.on .bcBar{transform:none}
+.bcTag{position:absolute;top:calc(11vh + 18px);left:50%;transform:translateX(-50%);font:700 13px var(--f-mono);letter-spacing:.3em;color:#ff5a3a;text-shadow:0 0 12px rgba(255,60,30,.7);animation:bcBlink .8s steps(2) infinite}
+@keyframes bcBlink{50%{opacity:.35}}
+.bcName{position:absolute;left:50%;bottom:calc(11vh + 150px);transform:translateX(-50%);text-align:center}
+.bcName b{display:block;font:900 clamp(40px,6vw,76px)/1 var(--f-kdisp);color:#fff;letter-spacing:.06em;text-shadow:0 0 30px rgba(255,60,30,.6),0 4px 18px rgba(0,0,0,.8)}
+.bcName span{display:block;margin-top:8px;font:700 13px var(--f-mono);letter-spacing:.3em;color:#ffb08a}
+.bcHow{position:absolute;left:50%;bottom:calc(11vh + 22px);transform:translateX(-50%);display:grid;gap:10px;width:min(720px,92vw)}
+.bcHow>div{display:flex;align-items:center;gap:14px;padding:10px 18px;background:rgba(10,8,8,.82);border:1px solid rgba(255,90,58,.55);opacity:0;transform:translateY(14px);transition:opacity .4s,transform .4s}
+.bcHow>div.s2{transition-delay:.45s}#bcine.how .bcHow>div{opacity:1;transform:none}
+.bcHow em{flex:none;width:30px;height:30px;display:grid;place-items:center;background:#ff3a20;color:#fff;font:900 17px var(--f-kdisp);font-style:normal}
+.bcHow span{font:700 clamp(15px,1.5vw,19px)/1.35 var(--f-kdisp);color:var(--bone)}.bcHow span b{color:#ff8a60}
+.bcSkip{position:absolute;right:24px;bottom:calc(11vh - 34px);font:600 13px var(--f-kdisp);color:rgba(255,255,255,.55);opacity:0;transition:opacity .3s}#bcine.skip .bcSkip{opacity:1}
+body:has(#bcine.on) #hud{opacity:.15;transition:opacity .3s}
+#alerts{position:absolute;inset:0;pointer-events:none;z-index:4}
+.am{position:absolute;left:0;top:0;width:0;height:0}
+.am>i{position:absolute;left:-14px;top:-14px;width:28px;height:28px}
+.am.on.wp>i{border:3px solid #ff3a2a;border-radius:50%;box-shadow:0 0 14px #ff3a2a;animation:amPulse .9s ease-in-out infinite}
+.am.on.kami>i{border:3px solid #ff2a10;transform:rotate(45deg)!important;box-shadow:0 0 14px #ff2a10;animation:amPulse .5s ease-in-out infinite}
+.am.off>i{left:-16px;top:-12px;width:32px;height:24px;background:#ff3a2a;clip-path:polygon(0 0,100% 50%,0 100%,22% 50%);filter:drop-shadow(0 0 6px #ff3a2a)}
+.am.off.kami>i{background:#ff6a1a}.am.near>i{animation:amPulse .25s ease-in-out infinite}
+@keyframes amPulse{50%{opacity:.45;scale:1.25}}
+.am b,.am s{position:absolute;left:0;transform:translateX(-50%);white-space:nowrap;font:800 13px var(--f-kdisp);color:#fff;text-shadow:0 1px 4px #000,0 0 8px rgba(255,60,30,.8);text-decoration:none}
+.am b{top:-34px;padding:1px 7px;background:rgba(160,20,10,.8)}.am s{top:18px;font:700 12px var(--f-mono);color:#ffd2b0}
+.am.off b{top:18px}.am.off s{top:38px}
+#downBan{position:absolute;left:50%;top:calc(30% + env(safe-area-inset-top,0px));transform:translateX(-50%);text-align:center;padding:12px 30px 14px;background:rgba(10,6,4,.78);border:2px solid #ffb21a;box-shadow:0 0 30px rgba(255,178,26,.35);animation:dbIn .3s ease-out}
+#downBan[hidden]{display:none}#downBan b{display:block;font:900 clamp(26px,3vw,38px) var(--f-kdisp);color:#ffd48a;animation:bcBlink .6s steps(2) infinite}
+#downBan span{display:block;font:700 14px var(--f-kdisp);color:var(--bone);margin-top:2px}#downBan i{display:block;height:6px;margin-top:10px;background:rgba(255,255,255,.15)}#downBan u{display:block;height:100%;width:100%;background:#ffb21a}
+@keyframes dbIn{from{transform:translateX(-50%) scale(1.3);opacity:0}}
+body.bossguide #bossBar{top:calc(128px + env(safe-area-inset-top,0px))} /* below the boss guide objective box (they overlapped) */
 </style>
 <div id="hud" hidden>
   <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="feed"></div><div id="aimPart" hidden></div><div id="postBar" hidden><i></i><span>자세</span></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="tutEquip" hidden></div><div id="tutEquipFx"></div><div id="lockWarn"><b>피격 경고</b></div>

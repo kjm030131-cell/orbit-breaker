@@ -13,7 +13,7 @@ const KC_WINDOW=3.5;
 function comboMult(){const k=G.kc;return k>=35?3:k>=20?2.5:k>=10?2:k>=5?1.5:1}
 function mult(){return comboMult()*cleanMult()*(G.phase>=3?2:1)}
 function addScore(n,pos,cls){if(S.ended)return 0;const v=Math.round(n*mult());S.score+=v;if(pos&&SCREEN==="play")scorePop(pos,"+"+v.toLocaleString(),cls);return v}
-function onKill(e){if(SCREEN!=="play")return;tutCount("kill");hitMark("kill");sfx("killmark");impactPunch(.35);addSpec(4);G.kc++;G.kcT=KC_WINDOW;G.maxKC=Math.max(G.maxKC,G.kc);
+function onKill(e){if(SCREEN!=="play")return;tutCount("kill");{const src=HIT_SRC||e.hitBy||"other";tutCount("kill_"+src);if(e.elite)tutCount("elite_"+src);if(src==="blade"&&TUT.on&&(TUT.c.grav||0)>0)tutCount("gravSlash");if(TUT.on)tutWrongKill(e,src)}hitMark("kill");sfx("killmark");impactPunch(.35);addSpec(4);G.kc++;G.kcT=KC_WINDOW;G.maxKC=Math.max(G.maxKC,G.kc);
   if(G.kc===5||G.kc===10||G.kc===20||G.kc===35)popText(`콤보 ×${comboMult()}`);
   if(e.elite){tutCount("elite");addScore(1500,e.m.position.clone(),"big");popText("정예기 격파")}
   if(e.ms&&!e.blade)tutCount("ms");
