@@ -81,7 +81,7 @@ function bossAI0(b,dt,T){
   const big=!!m.userData.anim,keep=big?95:40;if(d>keep+6)m.position.addScaledVector(to,dt*(BOSS.introT>0?26:7));else if(d<(big?45:keep-8))m.position.addScaledVector(to,-dt*(big?4.5:6));
   const side=new V3(-to.z,0,to.x);if(big){b.sstep=(b.sstep||4)-dt;if(b.sstep<=0){b.sstep=4+Math.random()*3;b.sdir=Math.random()<.5?-1:1;b.sT=1.2}if(b.sT>0)b.sT-=dt}
   m.position.addScaledVector(side,dt*(big?(4*Math.sin(b.phase*.3)+(b.sT>0?5*b.sdir*Math.sin(Math.PI*b.sT/1.2):0)):4*Math.sin(b.phase*.35)));m.position.y+=(S.pos.y+(big?23:6)-m.position.y)*dt*(big?.25:.6);
-  bossKeepIn(m.position);if((BOSS.stage||0)>=BOSS_WAVES-1&&!BOSS.saidRun&&big&&d<45&&BOSS.introT<=0){BOSS.saidRun=true;radio("이클립스 CIC · 최지우 중위","놈이 물러납니다! 놓치지 마세요, 구역 안에 묶여 있어요!","vo_op32")}
+  bossKeepIn(m.position);if((BOSS.stage||0)>=BOSS_WAVES-1&&!BOSS.saidRun&&big&&d<45&&BOSS.introT<=0){BOSS.saidRun=true;radio("이클립스 CIC · 최지우 중위","놈이 도망갑니다! 놓치지 마세요!","vo_op32")}
   BOSS.introT=Math.max(0,BOSS.introT-dt);
   const want=Math.atan2(S.pos.x-m.position.x,S.pos.z-m.position.z);let dy=Math.atan2(Math.sin(want-b.yaw),Math.cos(want-b.yaw));const yr=m.userData.anim?.22:.9;b.yaw+=clamp(dy,-yr*dt,yr*dt); /* the big hulk turns slowly: its wing-tip pods swung ~40 m/s when it snapped to face you */
   m.rotation.set(0,b.yaw,Math.sin(b.phase*.6)*.05);if(ring)ring.rotation.z+=dt*.5;
@@ -155,7 +155,7 @@ function bossPhase2(b){if((BOSS.stage||0)>=BOSS_WAVES-1||!(b.down>0))return fals
   const p=b.m.position.clone();for(let i=0;i<4;i++)setTimeout(()=>{if(BOSS.e===b&&b.alive){fxExplosion(p.clone().add(new V3().randomDirection().multiplyScalar(6)),1.4);sfx("boom",p,3)}},i*140);
   S.hitstop=Math.max(S.hitstop||0,.14);S.slow=Math.max(S.slow,.5);flash(.35);impactPunch(1.4);addScore(3000,p,"big");
   if(BOSS.stage===1){cutin("1차 격파","케르고그모스 분노 · 공격이 거세집니다");radio("CIC","1차 격파! 아직 살아 있어요. 약점이 다시 열려요, 한 번 더!","vo_op05")}
-  else{cutin(`${BOSS.stage}차 격파`,"마지막 약점이 열립니다 · 한 번만 더!");radio("이클립스 CIC · 최지우 중위","2차 격파 확인! 마지막이에요. 약점이 다시 열립니다, 한 번만 더!","vo_op31")}
+  else{cutin(`${BOSS.stage}차 격파`,"마지막 약점이 열립니다 · 한 번만 더!");radio("이클립스 CIC · 최지우 중위","2차 격파 확인! 마지막이에요… 약점이 다시 열립니다, 한 번만 더!","vo_op31")}
   buildWPs();b.m.userData.mat.emissive.setRGB(.35,.04,.02);setTimeout(()=>{if(BOSS.e===b)b.m.userData.mat.emissive.setRGB(0,0,0)},900);BOSS.atkT=1.6;return true}
 
 // body hit while it is still armoured (weak points up): sparks and a clang, no knockback, a hint now and then

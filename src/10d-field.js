@@ -79,7 +79,7 @@ function fieldStep(dt,T){const show=!inVS()&&!CINE.on;VSC.g.visible=inVS();FIELD
   // soft edge of the operation area
   if(SCREEN==="play"&&S.started&&!S.ended){const d=S.pos.clone().sub(FIELD.C),L=d.length();FIELD.warnT-=dt;
     if(L>FIELD.R){S.vel.addScaledVector(d.normalize(),-(L-FIELD.R)*4*dt);if(FIELD.warnT<=0){FIELD.warnT=3;popText("작전 구역 경계 · 복귀하세요")}
-      if(!TUT.on&&!DUEL&&(FIELD.voT||0)<clockT){FIELD.voT=clockT+20;radio("이클립스 CIC · 최지우 중위","우리엘 1, 작전 구역 경계입니다. 더 나가면 추진이 안 됩니다. 안쪽으로 복귀하세요.","vo_op30")}}}
+      if(!TUT.on&&!DUEL&&(FIELD.voT||0)<clockT){FIELD.voT=clockT+20;radio("이클립스 CIC · 최지우 중위","우리엘 1, 작전 구역 경계입니다. 더 나가면 추진이 안 돼요. 안쪽으로 복귀하세요!","vo_op30")}}}
   fieldWall(L0());function L0(){return S.pos.distanceTo(FIELD.C)}}
 setTimeout(loadField,1200);
 
