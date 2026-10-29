@@ -1,5 +1,6 @@
 /* ================= items & special ================= */
-const SUPPLY=[{at:40,item:"grav"},{at:75,item:"armor"},{at:100,item:"grav"}];
+// gravity bombs now come only from breakable supply containers (08d-foes.js crate); the timed drop keeps only the reactive armor
+const SUPPLY=[{at:75,item:"armor"}];
 const ITEM_NAME={grav:"중력탄",armor:"반응 장갑"};
 Object.assign(G,{spec:0,grav:0,armor:0,specT:-1,supplyI:0,crates:[],wells:[]});
 ACT.special={dur:1.05,strike:1,keys:[

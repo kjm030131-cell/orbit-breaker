@@ -3,7 +3,7 @@
    kami    - blinks red and rams you; dies in a chain blast (knocks every drone nearby) — shoot / slash it near a pack
    sniper  - hangs back at ~80 m, paints you with a thin violet line for 1.8 s (locks 0.45 s before), then one fast heavy shot
    form    - every 30 s five drones form a V far ahead, warn for 1.2 s, then rush straight through: line them up for the mega beam
-   crate   - supply container drifting nearby: break it for +30 special gauge, full boost and +25 HP */
+   crate   - supply container drifting nearby: break it for a gravity bomb (the only source), +30 special gauge and full boost */
 const FOE_LIMIT=[{kami:0,sniper:0},{kami:1,sniper:1},{kami:2,sniper:1},{kami:2,sniper:1}];
 function foesReset(){G.nf={kamiT:6,snipeT:4,formT:15,crateT:9}}
 function foesTick(dt){if(TUT.on||VS)return;if(!G.nf)foesReset();const n=G.nf,el=120-S.time,lim=FOE_LIMIT[G.phase]||FOE_LIMIT[3];
@@ -79,9 +79,9 @@ function spawnCrate(pos){const g=new THREE.Group();const mat=new THREE.MeshStand
   const m=new THREE.Mesh(CRATE_GEO,mat);g.add(m);g.userData.mat=mat;
   const edge=new THREE.LineSegments(new THREE.EdgesGeometry(CRATE_GEO),new THREE.LineBasicMaterial({color:0xffd070,transparent:true,opacity:.9}));g.add(edge);
   const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0x7dff8a,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));glow.scale.setScalar(7);g.add(glow);g.userData.glow=glow;
-  const e=foeAdd(g,pos,{crate:true,rad:3.4,life:20});popText("보급 컨테이너 투하 · 부수면 필살 게이지");return e}
+  const e=foeAdd(g,pos,{crate:true,rad:3.4,life:20});popText("보급 컨테이너 · 부수면 중력탄 획득");return e}
 function crateAI(e,dt,T){const em=e.m;e.phase+=dt;em.rotation.y+=dt*.6;em.rotation.x=Math.sin(e.phase*.7)*.2;em.position.y+=Math.sin(e.phase*1.2)*dt*.6;
   const gl=em.userData.glow;if(gl)gl.material.opacity=.4+.3*Math.sin(T*5);
   if(foeLive()){e.life-=dt;if(e.life<=0){e.alive=false;const p=em.position.clone();disposeEnemy(e);emit(ADD,{pos:p,tex:TX.ring,color:0xd8a040,s0:2,s1:10,life:.4})}}}
-function crateReward(e){const p=e.m.position.clone();addSpec(30);S.boost=100;G.hp=Math.min(100,(G.hp||0)+25);
-  addScore(600,p,"big");popText("보급 확보 · 필살 +30 · 부스트·장갑 회복");sfx("uiok");emit(ADD,{pos:p,tex:TX.ring,color:0x7dff8a,s0:3,s1:22,life:.5})}
+function crateReward(e){const p=e.m.position.clone();const was=G.grav||0;G.grav=Math.min(3,was+1);addSpec(30);S.boost=100;
+  addScore(600,p,"big");popText(G.grav>was?`보급 확보 · 중력탄 +1 (×${G.grav}) · 필살 +30`:"보급 확보 · 필살 +30 (중력탄 가득)");sfx("pickup");emit(ADD,{pos:p,tex:TX.ring,color:0x7dff8a,s0:3,s1:22,life:.5})}

@@ -92,7 +92,7 @@ const TUT_STEPS=[
   {obj:"이족보행 MS 격파",how:"첫 공격은 장갑이 막고 MS가 비틀거려요. 비틀거릴 때 한 번 더 베면 격파. 연사 예고가 뜨면 먼저 회피.",keys:["LMB","Shift"],limit:60,mark:"ms",
    prog:()=>`${Math.min(1,TUT.c.ms||0)} / 1`,say:[[OP,"적 MS 접근. 한 번에 안 쓰러져요, 두 번 베요."]],
    keep:{n:1,kind:"ms",d:[26,34]},enter(){TUT.c.ms=0},done(){return (TUT.c.ms||0)>=1},exit(){tutClear()}},
-  {obj:"중력탄으로 적을 모은 뒤 베기",how:"적 무리 쪽을 보고 Q를 누르면 중력탄이 날아가 주변 적을 한 점에 끌어모아요. 모이면 좌클릭으로 날려요.",keys:["Q","LMB"],hl:"wGrav",limit:50,mark:true,
+  {obj:"중력탄으로 적을 모은 뒤 베기",how:"적 무리 쪽을 보고 Q를 누르면 중력탄이 날아가 주변 적을 한 점에 끌어모아요. 모이면 좌클릭으로 날려요. 실전에서 중력탄은 떠다니는 보급 컨테이너를 부숴야만 얻을 수 있어요.",keys:["Q","LMB"],hl:"wGrav",limit:50,mark:true,
    prog:()=>`${Math.min(1,TUT.c.grav||0)} / 1`,say:[[OP,"모인 덩어리를 베어 날리면 연쇄 폭발이 크게 터져요."]],
    keep:{n:5,passive:true,d:[26,40]},enter(){TUT.c.grav=0;G.grav=Math.max(G.grav||0,2)},tick(){if(G.grav<1&&!(TUT.c.grav>0))G.grav=1},done(){return (TUT.c.grav||0)>=1&&TUT.t>4},exit(){tutClear()}},
   {obj:"옵션 장비 알아보기",how:"출격할 때는 아래 4가지 중 1개만 골라 장착해요. 지금은 시험 삼아 하나씩 전부 써 볼게요. Enter를 누르면 시작해요.",keys:["Enter"],limit:20,
