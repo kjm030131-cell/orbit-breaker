@@ -48,6 +48,11 @@ function update(rdt){
     if(d<(S.dashT.isBoss&&S.dashT.rad>20?S.dashT.rad*.66:4.2)||S.dash<=0){S.dash=0;S.vel.multiplyScalar(.2);if(S.pending){startAct(S.pending,ACT[S.pending].strike*ACT[S.pending].dur*.85);S.pending=null}}
     else S.vel.copy(to.normalize().multiplyScalar(Math.max(75,d/.12)));
   }else{S.dash=0;if(S.pending){startAct(S.pending);S.pending=null}
+    // single sabre wind-up (10/29 19:40): until the strike frame, keep closing on the target and face it, so a target that
+    // side-steps / dashes during the swing is still in reach when the blade lands (was: strike resolved where it used to be)
+    if(!VS&&S.act&&S.act.startsWith("slash")&&!S.actHit&&S.dashT&&S.dashT.alive&&S.dashT.launched<=0&&ACT[S.act]&&S.actT<ACT[S.act].strike*ACT[S.act].dur){
+      const to=S.dashT.m.position.clone().sub(S.pos),d=to.length(),stop=S.dashT.isBoss&&S.dashT.rad>20?S.dashT.rad*.66:4.4;
+      if(d<16){S.face=Math.atan2(to.x,to.z);if(d>stop)S.vel.copy(to.normalize().multiplyScalar(Math.min(48,(d-stop)/.08)))}}
     // while shooting the body squares up to the target (right shoulder slightly forward), otherwise it follows the camera
     let goal=S.yaw,rate=.002;if(S.aimT>0&&S.aimPt){const d=S.aimPt.clone().sub(S.pos);goal=Math.atan2(d.x,d.z)+.28;rate=1e-5}
     let dy=goal-S.face;dy=Math.atan2(Math.sin(dy),Math.cos(dy));S.face+=dy*(1-Math.pow(rate,dt))}

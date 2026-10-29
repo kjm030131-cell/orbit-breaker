@@ -71,7 +71,9 @@ function vsMsg(m){if(!VS)return;const v=VS;
   if(m.t==="whiff"){if(m.side===v.side){popText("헛스윙 · 빈틈");sfx("deny");S.attackCd=Math.max(S.attackCd,.3)}else{popText("빈틈! 지금 반격");sfx("lock");if(v.remote)v.remote.hitT=.3}return}
   if(m.t==="counter"){const mine=m.side===v.side;sfx("heavy");sfx("clash");vsSparks(1);if(mine){popText("COUNTER!");S.hitstop=.16;S.slow=Math.max(S.slow,.3);impactPunch(1.4);flash(.25)}else{popText("카운터 당함");S.shake=.6}return}
   if(m.t==="read"){const mine=m.side===v.side;if(mine){popText("간파! 크리티컬 반격");sfx("just");S.slow=Math.max(S.slow,.35);G.crit=1.2;impactPunch(.8);emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:20,life:.45,a:.9})}else{popText("간파당함 · 경직");G.stagger=Math.max(G.stagger,.55);S.act=null;S.vsLunge=0;sfx("deny")}return}
-  if(m.t==="dodge"){if(m.side===v.side&&m.just){G.crit=Math.max(G.crit,1.2);popText("저스트 회피 · 반격 찬스!");sfx("just");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:18,life:.45,a:.9})}return}
+  if(m.t==="dodge"){if(m.side===v.side&&m.just){G.crit=Math.max(G.crit,1.2);popText("저스트 회피 · 반격 찬스!");sfx("just");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:18,life:.45,a:.9})}
+    /* opponent dodged (10/29): thruster burst where it started + a denser, longer trail for ~0.35 s so the move reads as a dash, not a blink */
+    if(m.side!==v.side&&v.remote){v.dodgeFx=.35;const p0=v.remote.root.position.clone().add(new V3(0,1,0));emit(ADD,{pos:p0,tex:TX.ring,color:0xff9060,s0:2,s1:12,life:.3,a:.8});emit(ADD,{pos:p0,tex:TX.flare,color:0xffc090,s0:6,s1:2,life:.18,a:.9});sfx("dodge",p0)}return}
   if(m.t==="actionRejected"){
     const q=v.skillInput;if(!q||q.seq!==m.seq)return;
     if(["busy","stagger"].includes(m.reason)&&m.retryAt<q.expires){q.sent=false;q.notBefore=m.retryAt+35;return;}
@@ -94,7 +96,7 @@ function vsClashFX(at){vsSparks(1.2);sfx("clash");sfx("sizzle");S.hitstop=.12;im
 function vsGuard(on){if(!VS||VS.phase!=="fight")return;if(on){if(S.guard||G.stagger>0||S.attackCd>0)return;S.guard=true;VS.guardAt=vsNow();S.act=null;S.vsLunge=0}else{if(!S.guard)return;S.guard=false}vsSend({t:"guard",on})}
 function vsDamageFX(dir,melee,m){S.guard=false;G.iframe=melee?.7:.12;G.broke=false;G.stagger=melee?(m&&m.heavy?.9:.65):m&&m.kind==="bolt"?.3:.25;S.vel.addScaledVector(dir,melee?22:8);S.act=null;S.dash=0;S.vsLunge=0;S.dashT=null;S.pending=null;VS.shotToken=(VS.shotToken||0)+1;
   fxImpact(S.pos.clone().add(new V3(0,.8,0)),0xff4030);sfx(melee?"heavy":"hurt");S.shake=melee?.7:.3;const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");}
-function vsAttackHit(heavy,crit,at){fxSlashHit(at,crit?0x7fe0ff:0xff8a2a,heavy||crit);sfx(heavy?"heavy":"slash",at);S.dashT=null;}
+function vsAttackHit(heavy,crit,at){sfx("slash",at,heavy?2:0);S.dashT=null;} // swing sound only: contact effects wait for the server's verdict
 function vsSkill(special=false){
   if(!VS||VS.phase!=="fight"||S.ended||PAUSED){popText("전투 중에 사용할 수 있습니다");return;}
   if(!vsSkills()){popText("방장이 옵션 스킬을 꺼 두었습니다");sfx("deny");return;}
@@ -146,9 +148,9 @@ function vsTick(rdt){if(!VS)return;const v=VS;vsFlushSkill();if(v.correctTo){con
     const k=1-Math.exp(-14*rdt),H=v.hist||[],rt=vsNow()-VS_INTERP;let want=null;
     for(let i=H.length-1;i>0;i--){if(H[i-1].t<=rt){const a=H[i-1],b=H[i],u=clamp((rt-a.t)/Math.max(1,b.t-a.t),0,1);want=a.p.clone().lerp(b.p,u);break}}
     if(!want){const last=H[H.length-1];want=last?last.p.clone().addScaledVector(last.v,clamp((rt-last.t)/1000,0,.12)):new V3(s.p[0],s.p[1],s.p[2])}
-    const prev=v.rdisp?v.rdisp.clone():want.clone();v.rdisp=v.rdisp||want.clone();const err=want.clone().sub(v.rdisp);if(err.length()>30)v.rdisp.copy(want);else v.rdisp.addScaledVector(err,1-Math.exp(-20*rdt));
+    const prev=v.rdisp?v.rdisp.clone():want.clone();v.rdisp=v.rdisp||want.clone();const err=want.clone().sub(v.rdisp);v.dodgeFx=Math.max(0,(v.dodgeFx||0)-rdt);if(err.length()>30)v.rdisp.copy(want);else v.rdisp.addScaledVector(err,1-Math.exp(-(v.dodgeFx>0?12:20)*rdt));
     // afterimage streaks when the opponent dashes, so the motion is readable
-    {const sp=rdt>0?prev.distanceTo(v.rdisp)/rdt:0;if(sp>32&&rdt>0){const d=v.rdisp.clone().sub(prev).normalize();for(let j=0;j<2;j++)emit(ADD,{pos:prev.clone().lerp(v.rdisp,j/2).add(new V3(0,1,0)),tex:TX.streak,color:0xff7060,vel:d.clone().multiplyScalar(-8),s0:3.2,s1:.6,sx:3,life:.22,a:.55})}}
+    {const sp=rdt>0?prev.distanceTo(v.rdisp)/rdt:0,dz=v.dodgeFx>0;if((sp>32||dz&&sp>6)&&rdt>0){const d=v.rdisp.clone().sub(prev).normalize(),n=dz?4:2;for(let j=0;j<n;j++)emit(ADD,{pos:prev.clone().lerp(v.rdisp,j/n).add(new V3(0,1,0)),tex:TX.streak,color:0xff7060,vel:d.clone().multiplyScalar(-8),s0:dz?4:3.2,s1:.6,sx:3,life:dz?.36:.22,a:dz?.7:.55})}}
     R.root.position.set(v.rdisp.x,v.rdisp.y+Math.sin(clockT*1.6)*.12,v.rdisp.z);
     let d=s.f-R.root.rotation.y;d=Math.atan2(Math.sin(d),Math.cos(d));R.root.rotation.y+=d*k;
     let i=0;for(const key in R.SP){const b=R.J[key];if(b&&s.j.length>=i+3){b.rotation.x+=(s.j[i]-b.rotation.x)*k;b.rotation.y+=(s.j[i+1]-b.rotation.y)*k;b.rotation.z+=(s.j[i+2]-b.rotation.z)*k}i+=3}R.guard=s.g===true||(R.guard&&s.g===undefined);if(R.act){R.actT=(R.actT||0)+rdt;if(R.actT>=ACT[R.act].dur)R.act=null}clipDrive(R,R.act,R.actT||0,R.guard,rdt);if(R.sync)R.sync();

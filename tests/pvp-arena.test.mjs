@@ -100,3 +100,13 @@ test('rifle: 4 inside 14 m, 8 mid range; boosting straight at the shooter takes 
  B.iframe=0;B.stun=0;B.boosting=false;B.p=[0,0,-14];a.handle('a',{t:'shot',from:[0,.4,-24],dir:[0,0,1]},4900);a.advance(5000);assert.equal(B.hp,87-4);});
 test('melee: light 24, heavy 38',()=>{const a=start(room());const B=a.s.players.b;a.s.players.a.p=[0,0,20];B.p=[0,0,26];B.f=Math.PI;
  for(const t of [4000,4600,5200]){a.s.players.a.lock=0;B.iframe=0;B.stun=0;a.handle('a',{t:'swing'},t);a.advance(t+320);}assert.equal(B.hp,100-24-24-38);});
+const near=(a,b)=>{const B=a.s.players.b;B.p=b;B.poseAt=4000;B.ph=null;return a};
+test('v13b melee: a late side-step still gets hit where the attacker saw it; a real dodge still saves',()=>{
+ const a=near(start(room()),[0,0,-18]);a.handle('a',{t:'swing'},4000);a.handle('b',{t:'pose',p:[9,0,-19],f:Math.PI,j:[]},4150);a.advance(4180);
+ assert.ok(a.s.players.b.hp<100);assert.ok(!a.drain().some(e=>e.m.t==='whiff'));
+ const b=near(start(room()),[0,0,-18]);b.handle('a',{t:'swing'},4000);b.handle('b',{t:'dodge'},4100);b.handle('b',{t:'pose',p:[9,0,-19],f:Math.PI,j:[]},4150);b.advance(4180);
+ assert.equal(b.s.players.b.hp,100);
+ const c=near(start(room()),[0,0,-18]);c.handle('a',{t:'swing'},4000);c.handle('b',{t:'pose',p:[9,0,-19],f:Math.PI,j:[]},4020);c.advance(4180);
+ assert.equal(c.s.players.b.hp,100);}); // moved out right at the start of the wind-up: still a whiff
+test('v13b melee: swing aimed at the opponent goes at them even if the body faces away',()=>{
+ const a=near(start(room()),[6,0,-18]);a.s.players.a.f=-1;a.s.players.a.aim=[.6,0,.8];a.handle('a',{t:'swing'},4000);a.advance(4180);assert.ok(a.s.players.b.hp<100);});

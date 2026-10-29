@@ -45,7 +45,7 @@ const nearPt=(p,a,b)=>{const d=sub(b,a),t=Math.max(0,Math.min(1,dot(sub(p,a),d)/
 // drains the deflected side's guard gauge (posture); empty = guard break.
 // Heavy (3rd) swings cannot be deflected (guard, parry or dodge them); swings started within DEFLECT_SIM of each other clash instead.
 export const DEFLECT_SIM=90,DEFLECT_WIN=230,DEFLECTED_MS=300,DEFLECT_LOCK=220,DEFLECT_GP=30;
-export const ROUND_MS=75000,MELEE_CONE=.8,WHIFF_MS=300,READ_MS=550,COUNTER_K=1.3,CRIT_K=1.35,FAR_M=60,FAR_DMG=5;
+export const ROUND_MS=75000,MELEE_CONE=.7,WHIFF_MS=300,READ_MS=550,COUNTER_K=1.3,CRIT_K=1.35,FAR_M=60,FAR_DMG=5;
 // v12 melee pays off: rifle 6 (3 inside CLOSE_M, 4 beyond FAR_M), slower and hotter; melee 18 / 30; boosting straight at the shooter
 // (CHARGE_K) takes 40% less rifle damage so closing in is not a one-sided beating
 export const RIFLE_DMG=8,CLOSE_M=14,CLOSE_DMG=4,CHARGE_K=.6,MELEE_DMG=24,MELEE_HEAVY=38; // v13: +30% (HP 180 felt spongy)
@@ -54,7 +54,12 @@ const other=s=>s==='a'?'b':'a';
 // pressed on time on their screen still counts (the attacker's hit confirm comes that much later instead)
 // inputs that arrive up to INPUT_TOL before the sender's recovery ends are kept (run at the end of the recovery), not dropped
 export const INPUT_TOL=100;
-const grace=p=>p?Math.min(100,Math.max(0,(p.rtt||0)/2)):0;const f0=p=>[Math.sin(p.f),0,Math.cos(p.f)];
+const grace=p=>p?Math.min(100,Math.max(0,(p.rtt||0)/2)):0;
+// v13b melee lag compensation (10/29): the attacker sees the opponent VIEW_MS in the past (client interpolation) plus half its ping.
+// A swing also counts against where the opponent was on the attacker's screen then (pose history ph), so a hit that clearly
+// landed on screen is not lost to a late side-step. Dodge i-frames still apply (damage() checks them), so a real dodge still saves you.
+const VIEW_MS=100,REWIND_MAX=160,PH_MS=600;
+const pastPos=(q,t)=>{const h=q.ph;if(!h||!h.length)return q.p;for(let i=h.length-1;i>=0;i--)if(h[i].t<=t)return h[i].p;return h[0].p;};const f0=p=>[Math.sin(p.f),0,Math.cos(p.f)];
 const len=v=>Math.hypot(...v),sub=(a,b)=>a.map((x,i)=>x-b[i]),add=(a,b,k=1)=>a.map((x,i)=>x+b[i]*k),dot=(a,b)=>a.reduce((n,x,i)=>n+x*b[i],0);
 const norm=v=>{const l=len(v);return l>0?v.map(x=>x/l):[0,0,1]};
 const vec=v=>Array.isArray(v)&&v.length===3&&v.every(Number.isFinite);
@@ -87,7 +92,9 @@ export class Arena {
   for(const p of Object.values(s.players)){const dt=Math.max(0,Math.min(1,(now-p.at)/1000));p.at=now;const regen=34*(s.rules.passives&&p.frame==='swift'?1.1:1);p.boost=Math.max(0,Math.min(100,p.boost+(p.boosting&&now-p.poseAt<250?-22:regen)*dt));p.heat=Math.max(0,p.heat-(now<p.overUntil?30:14)*dt);if(p.overUntil&&now>=p.overUntil){p.overUntil=0;p.heat=40;}if(s.rules.skills)p.spec=Math.min(100,p.spec+5*dt);if(!p.guard&&now-p.gpHit>800)p.gp=Math.min(100,p.gp+30*dt);}
   for(const x of [...s.pending]){if(now<x.at+(x.kind==='melee'?grace(s.players[other(x.side)]):0)||s.phase!=='fight'||!s.pending.includes(x))continue;s.pending=s.pending.filter(y=>y!==x);const p=s.players[x.side],q=s.players[other(x.side)];if(!p||!q)continue;
    if(x.kind==='volley'){this.projectile(x.side,x.from,x.dir,x.dmg,x.speed,now,x.color);continue;}
-   const d=sub(q.p,p.p),dist=len(d),f=[Math.sin(p.f),0,Math.cos(p.f)];
+   let d=sub(q.p,p.p),dist=len(d);const f=[Math.sin(p.f),0,Math.cos(p.f)];
+   if(x.kind==='melee'&&!(dist<=x.range&&dot(norm(d),x.dir||f)>MELEE_CONE)){const dr=sub(pastPos(q,x.at-Math.min(REWIND_MAX,VIEW_MS+grace(p))),p.p);
+    if(len(dr)<=x.range&&dot(norm(dr),x.dir||f)>MELEE_CONE){d=dr;dist=len(dr);}}
    if(x.kind==='beam'){const dur=x.heavy?2400:600;p.beam={until:now+dur,next:now,heavy:!!x.heavy,width:x.width,range:x.range,dmg:x.dmg,gp:x.heavy?9:12,every:x.heavy?200:150};p.lock=Math.max(p.lock,now+dur+150);
     this.emit({t:'beam',side:x.side,heavy:!!x.heavy,dur});continue;}
    if(x.kind==='melee'){
@@ -143,7 +150,7 @@ export class Arena {
   }
   if(m.t==='pose'&&['count','fight'].includes(s.phase)&&vec(m.p)&&len(m.p)<=140&&Number.isFinite(m.f)&&Array.isArray(m.j)&&m.j.length<=90&&m.j.every(Number.isFinite)){
    const elapsed=Math.max(0,(now-p.poseAt)/1000),maxMove=Math.min(60,(p.moveCredit??8)+115*elapsed),travel=len(sub(m.p,p.p));
-   if(s.phase==='fight'&&travel<=maxMove){p.p=m.p;p.moveCredit=maxMove-travel;}else if(travel>maxMove){p.moveCredit=maxMove;this.emit({t:'position',p:p.p},side);}
+   if(s.phase==='fight'&&travel<=maxMove){if(!p.ph||!p.ph.length)p.ph=[{t:p.poseAt,p:p.p}];p.p=m.p;p.moveCredit=maxMove-travel;p.ph.push({t:now,p:m.p});while(p.ph.length>1&&p.ph[1].t<now-PH_MS)p.ph.shift();}else if(travel>maxMove){p.moveCredit=maxMove;this.emit({t:'position',p:p.p},side);}
    p.poseAt=now;p.f=m.f;p.v=vec(m.v)&&len(m.v)<220?m.v:[0,0,0];p.boosting=m.boosting===true&&p.boost>0;if(vec(m.a)&&len(m.a)>.9&&len(m.a)<1.1)p.aim=norm(m.a);
    this.emit({t:'pose',p:p.p,f:p.f,a:p.aim||f0(p),j:m.j,bl:Math.max(0,Math.min(1,m.bl||0)),r:m.r===.001?.001:1,g:p.guard,v:vec(m.v)&&len(m.v)<220?m.v:[0,0,0],st:now},other(side));return;
   }
@@ -177,7 +184,9 @@ export class Arena {
     if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;q.stun=now+900;this.emit({t:'guardBreak',side:other(side)});}
     this.status();return;}
    const combo=(p.lastSwing&&at0-p.lastSwing<1300)?((p.combo||0)+1)%3:0;p.combo=combo;p.lastSwing=at0;const heavy=combo===2;p.lock=at0+(heavy?950:520)*(p.parts.armR<=0?ARM_R_SLOW:1);p.heat=Math.min(100,p.heat+(heavy?12:8));if(p.heat>=100)p.overUntil=now+1600;
-   s.pending.push({side,kind:'melee',t0:at0,at:at0+(heavy?300:180),range:heavy?12.5:11.5,dmg:heavy?MELEE_HEAVY:MELEE_DMG,heavy,dir:f0(p)});this.emit({t:'swing',side,heavy,combo});return;
+   // swing direction: straight at the opponent when the attacker is aiming at them (within ~30 deg, 24 m), else the body facing
+   let sdir=f0(p);{const tq=sub(pastPos(q,now-Math.min(REWIND_MAX,VIEW_MS+grace(p))),p.p),L=len(tq);if(L>.5&&L<=24&&dot(norm([tq[0],0,tq[2]]),norm([(p.aim||sdir)[0],0,(p.aim||sdir)[2]]))>.86)sdir=norm(tq);}
+   s.pending.push({side,kind:'melee',t0:at0,at:at0+(heavy?300:180),range:heavy?12.5:11.5,dmg:heavy?MELEE_HEAVY:MELEE_DMG,heavy,dir:sdir});this.emit({t:'swing',side,heavy,combo});return;
   }
   if(m.t==='shot'&&vec(m.from)&&vec(m.dir)&&len(m.dir)>.9&&len(m.dir)<1.1&&len(sub(m.from,p.p))<8){p.lock=now+(s.rules.skills&&p.unit==='missile'?340:450)*(p.parts.armR<=0?ARM_R_SHOT:1);p.heat=Math.min(100,p.heat+7);if(p.heat>=100)p.overUntil=now+1600;this.projectile(side,m.from,m.dir,RIFLE_DMG,RIFLE_SPEED,now,0x40d8ff,true);return;}
   if(m.t==='skill'&&s.rules.skills&&vec(m.dir)&&len(m.dir)>.9&&len(m.dir)<1.1){const special=m.special===true;if(special?p.spec<100:now<p.skillAt){reject(special?'charge':'cooldown',p.skillAt);return;}const cds={mega:9000,pods:8000,missile:9000,shield:10000};if(special)p.spec=0;else p.skillAt=now+cds[p.unit];p.lock=now+400;const dir=norm(m.dir),from=add(p.p,[0,1,0]);
