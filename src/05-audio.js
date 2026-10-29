@@ -225,14 +225,17 @@ function schedStep(t,step){
 /* ---- recorded BGM (bgm/*.mp3): a track listed here replaces the generative score once it has loaded;
    until then (or if loading fails, e.g. the artifact build) the generative score keeps playing ---- */
 const BGM={cur:null,src:null,gain:null,tracks:{title:{url:"bgm/title.mp3",vol:.62,buf:null,loading:false}}};
+// the mp3 bytes are fetched as soon as the page loads (before the first click unlocks audio), so decoding is the only wait
+function bgmFetch(e){if(!e.pre)e.pre=fetch(e.url).then(r=>{if(!r.ok)throw new Error(r.status);return r.arrayBuffer()});return e.pre}
+for(const k in BGM.tracks)bgmFetch(BGM.tracks[k]).catch(()=>{});
 function bgmLoad(k){const e=BGM.tracks[k];if(!e||e.buf||e.loading)return;e.loading=true;
-  fetch(e.url).then(r=>{if(!r.ok)throw new Error(r.status);return r.arrayBuffer()}).then(b=>AC.decodeAudioData(b)).then(buf=>{e.buf=buf;if(MUS.track===k)bgmStart(k)}).catch(err=>{console.warn("bgm",k,err)})}
+  bgmFetch(e).then(b=>AC.decodeAudioData(b.slice(0))).then(buf=>{e.buf=buf;if(MUS.track===k)bgmStart(k)}).catch(err=>{e.failed=true;console.warn("bgm",k,err)})}
 function bgmStop(fade){if(!BGM.src)return;const t=AC.currentTime,g=BGM.gain,s=BGM.src,f=fade===undefined?.8:fade;
   g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+f);try{s.stop(t+f+.05)}catch(e){}BGM.src=null;BGM.gain=null;BGM.cur=null}
 function bgmStart(k){const e=BGM.tracks[k];if(!e||!e.buf||BGM.cur===k)return;bgmStop();const t=AC.currentTime,s=AC.createBufferSource(),g=AC.createGain();
   s.buffer=e.buf;s.loop=true;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(e.vol,t+1.5);s.connect(g);g.connect(MUSB);s.start(t);BGM.src=s;BGM.gain=g;BGM.cur=k}
 const bgmOn=k=>!!(BGM.tracks[k]&&BGM.tracks[k].buf);
-function musTick(){if(!AUD.ready||!MUS.track)return;const sp=60/MUS.bpm/4;
+function musTick(){if(!AUD.ready||!MUS.track)return;{const e=BGM.tracks[MUS.track];if(e&&!e.failed)return} /* a recorded track owns this scene: no generative score, not even while it loads */const sp=60/MUS.bpm/4;
   if(MUS.next<AC.currentTime-.5)MUS.next=AC.currentTime+.05;
   while(MUS.next<AC.currentTime+.15){schedStep(MUS.next,MUS.step);MUS.step++;MUS.next+=60/MUS.bpm/4}}
 function music(track){if(!AUD.ready){MUS.want=track;return}if(MUS.track===track)return;
