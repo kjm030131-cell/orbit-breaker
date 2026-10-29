@@ -11,7 +11,7 @@ async def main():
       await pg.goto('http://localhost:8765/tools/assets/preview.html?'+q);await pg.wait_for_function('window.READY',timeout=120000)
       await pg.screenshot(path=f'/tmp/s_{name}.png');return await pg.title()
     info={}
-    for m in ['u_missile','u_shield','u_mega','u_pods']:
+    for m in ['enemy_lo']:
       ims=[]
       for yaw,pit in [(0,0),(90,0),(180,0),(270,0),(30,25),(0,-30)]:
         info[m]=await shot(f'f=../../out/{m}.glb&yaw={yaw}&pitch={pit}&z=1.1',f'{m}{yaw}_{pit}');ims.append(Image.open(f'/tmp/s_{m}{yaw}_{pit}.png'))
