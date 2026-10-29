@@ -99,12 +99,16 @@ function vsCoverStep(){VSC.g.visible=inVS();if(!VSC.g.visible)return;vsCoverBuil
   for(const q of vsCoverSph()){const dx=S.pos.x-q[0],dy=S.pos.y-q[1],dz=S.pos.z-q[2],L=Math.hypot(dx,dy,dz),min=q[3]+2.2;if(L>=min)continue;const d=new V3(dx,dy,dz).divideScalar(L||1);
     S.pos.set(q[0],q[1],q[2]).addScaledVector(d,min);const vn=S.vel.dot(d);if(vn<0)S.vel.addScaledVector(d,-vn*1.2)}}
 
-// the edge of the operation area becomes visible as you get close: a faint hex wall + an "작전 구역 끝" bar on the HUD
-const FWALL={m:null};
-function fieldWall(L){const live=SCREEN==="play"&&S.started&&!S.ended&&!VS;const k=live?clamp((L-(FIELD.R-45))/45,0,1):0;
-  if(!FWALL.m){if(k<=0||typeof FXB==="undefined"||!FXB.hexshield)return;const t=FXB.hexshield.clone();t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(48,24);t.needsUpdate=true;
-    FWALL.m=new THREE.Mesh(new THREE.SphereGeometry(FIELD.R+4,64,32),new THREE.MeshBasicMaterial({map:t,color:0x6fc8ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.BackSide}));
-    FWALL.m.position.copy(FIELD.C);FWALL.m.renderOrder=-1;scene.add(FWALL.m)}
-  FWALL.m.visible=k>0;FWALL.m.material.opacity=k*.55;let el=$("edgeBar");
-  if(!el){if(k<=0)return;el=document.createElement("div");el.id="edgeBar";el.innerHTML="<b>작전 구역 끝</b><span>더 나가면 밀려나요 · 안쪽으로</span>";$("hud").appendChild(el)}
-  const on=k>.15;if(el.hidden===on)el.hidden=!on;if(on)el.style.opacity=String(Math.min(1,k*1.4))}
+// the edge of the operation area: no visible wall (it broke immersion). Closer to the edge the screen darkens from the sides;
+// past it the jamming (the reason pilots fly these machines by hand) breaks into the picture as faint static, with a small
+// "신호 약화" note by the radar. The push back inside and the operator's voice line stay as they were.
+const FEDGE={el:null,note:null};
+function fieldWall(L){const live=SCREEN==="play"&&S.started&&!S.ended&&!VS;const k=live?clamp((L-(FIELD.R-40))/40,0,1):0,out=live?clamp((L-FIELD.R)/25,0,1):0;
+  if(!FEDGE.el){if(k<=0)return;const el=document.createElement("div");el.id="edgeFx";el.innerHTML="<i></i>";
+    // static grain drawn once into a small tile; CSS steps it around so it flickers
+    const c=document.createElement("canvas");c.width=c.height=128;const g=c.getContext("2d"),im=g.createImageData(128,128);
+    for(let i=0;i<im.data.length;i+=4){const v=Math.random()*255|0;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=Math.random()<.5?110:0}g.putImageData(im,0,0);
+    el.firstChild.style.backgroundImage=`url(${c.toDataURL()})`;document.body.appendChild(el);FEDGE.el=el;
+    const n=document.createElement("div");n.id="edgeNote";n.textContent="신호 약화 · 작전 구역 이탈";n.hidden=true;$("hud").appendChild(n);FEDGE.note=n}
+  const el=FEDGE.el;el.style.opacity=k.toFixed(3);el.firstChild.style.opacity=(out*.85).toFixed(3);if(el.hidden!==(k<=0))el.hidden=k<=0;
+  const on=k>.5;if(FEDGE.note.hidden===on)FEDGE.note.hidden=!on}

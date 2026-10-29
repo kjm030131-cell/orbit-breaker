@@ -1098,8 +1098,11 @@ body.bossguide #bossBar{top:calc(128px + env(safe-area-inset-top,0px))} /* below
 .tipBox ol{margin:0;padding-left:20px;display:grid;gap:3px}.tipBox li{font:600 14px/1.4 var(--f-kdisp);color:var(--bone)}.tipBox li b,.tbT b{color:#ffd48a}
 .tbT{display:flex;align-items:center;gap:8px;font:600 14px/1.4 var(--f-kdisp);color:var(--bone);margin-top:3px}
 .tbT i{flex:none;font:800 12px var(--f-kdisp);font-style:normal;padding:1px 7px;color:#fff}.tbT i.k{background:#d8361e}.tbT i.s{background:#8a3ad0}
-#edgeBar{position:fixed;left:50%;top:calc(34% + env(safe-area-inset-top,0px));transform:translateX(-50%);text-align:center;padding:8px 22px;background:rgba(6,14,24,.82);border:1px solid #6fc8ff;box-shadow:0 0 18px rgba(111,200,255,.35);pointer-events:none;z-index:5}
-#edgeBar[hidden]{display:none}#edgeBar b{display:block;font:800 18px var(--f-kdisp);color:#bfe8ff}#edgeBar span{font:600 13px var(--f-kdisp);color:#9fc4dc}
+#edgeFx{position:fixed;inset:0;pointer-events:none;z-index:3;background:radial-gradient(ellipse at 50% 46%,rgba(0,0,0,.18) 20%,rgba(0,0,0,.7) 62%,rgba(0,0,0,.97) 100%);transition:opacity .25s}
+#edgeFx[hidden]{display:none}#edgeFx i{position:absolute;inset:0;mix-blend-mode:screen;animation:edgeStatic .18s steps(4) infinite}
+@keyframes edgeStatic{0%{background-position:0 0}25%{background-position:-37px 61px}50%{background-position:53px -29px}75%{background-position:-71px -47px}100%{background-position:19px 83px}}
+#edgeNote{position:fixed;left:50%;bottom:calc(214px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font:700 13px var(--f-kdisp);letter-spacing:.06em;color:#9fb8c8;text-shadow:0 1px 4px #000;pointer-events:none;animation:bcBlink 1.2s steps(2) infinite}
+#edgeNote[hidden]{display:none}
 </style>
 <div id="hud" hidden>
   <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="feed"></div><div id="aimPart" hidden></div><div id="postBar" hidden><i></i><span>자세</span></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="tutEquip" hidden></div><div id="tutEquipFx"></div><div id="lockWarn"><b>피격 경고</b></div>
