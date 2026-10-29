@@ -79,9 +79,9 @@ function bossAI0(b,dt,T){
      only an easy backstep (slower than your cruise speed) when you are right on top of it */
   const big=!!m.userData.anim,keep=big?95:40;if(d>keep+6)m.position.addScaledVector(to,dt*(BOSS.introT>0?26:7));else if(d<(big?45:keep-8))m.position.addScaledVector(to,-dt*(big?4.5:6));
   const side=new V3(-to.z,0,to.x);if(big){b.sstep=(b.sstep||4)-dt;if(b.sstep<=0){b.sstep=4+Math.random()*3;b.sdir=Math.random()<.5?-1:1;b.sT=1.2}if(b.sT>0)b.sT-=dt}
-  m.position.addScaledVector(side,dt*(big?(4*Math.sin(b.phase*.3)+(b.sT>0?9*b.sdir*Math.sin(Math.PI*b.sT/1.2):0)):4*Math.sin(b.phase*.35)));m.position.y+=(S.pos.y+(big?23:6)-m.position.y)*dt*(big?.25:.6);
+  m.position.addScaledVector(side,dt*(big?(4*Math.sin(b.phase*.3)+(b.sT>0?5*b.sdir*Math.sin(Math.PI*b.sT/1.2):0)):4*Math.sin(b.phase*.35)));m.position.y+=(S.pos.y+(big?23:6)-m.position.y)*dt*(big?.25:.6);
   BOSS.introT=Math.max(0,BOSS.introT-dt);
-  const want=Math.atan2(S.pos.x-m.position.x,S.pos.z-m.position.z);let dy=Math.atan2(Math.sin(want-b.yaw),Math.cos(want-b.yaw));b.yaw+=clamp(dy,-.9*dt,.9*dt);
+  const want=Math.atan2(S.pos.x-m.position.x,S.pos.z-m.position.z);let dy=Math.atan2(Math.sin(want-b.yaw),Math.cos(want-b.yaw));const yr=m.userData.anim?.22:.9;b.yaw+=clamp(dy,-yr*dt,yr*dt); /* the big hulk turns slowly: its wing-tip pods swung ~40 m/s when it snapped to face you */
   m.rotation.set(0,b.yaw,Math.sin(b.phase*.6)*.05);if(ring)ring.rotation.z+=dt*.5;
   m.userData.eye.material.opacity=.8+Math.sin(T*5)*.2;
   if(SCREEN!=="play"||S.ended||BOSS.introT>0)return;

@@ -23,7 +23,7 @@ function targetable(e){return e.alive&&e.launched<=0&&(!e.isBoss||e.down>0)}
 const _aim=new V3();
 function aimDir(){return _aim.set(0,.12,.5).unproject(camera).sub(camera.position).normalize().clone()} // through the reticle (44% from top)
 function coneTarget(cone,range,excl){let best=null,bs=-9;const cf=aimDir(),cp=camera.position;
-  for(const e of enemies){if(!targetable(e)||(excl&&excl.includes(e)))continue;const dist=e.m.position.distanceTo(S.pos);if(dist>range)continue;
+  for(const e of enemies){if(!targetable(e)||(excl&&excl.includes(e)))continue;const dist=e.m.position.distanceTo(S.pos);if(dist>(e.isWP&&!VS?range*1.6:range))continue; /* weak-point pods can be lunged at from further out */
     const c=e.m.position.clone().sub(cp).normalize().dot(cf);if(c<cone)continue;const sc=c-dist*.0012+(e.isWP?.004:0);if(sc>bs){bs=sc;best=e}}return best}
 function pickTarget(){
   if(G.focus){const f=G.focus;if(targetable(f)&&f.m.position.distanceTo(S.pos)<(VS?260:150))return f;G.focus=null;if(SCREEN==="play")sfx("unfocus")}

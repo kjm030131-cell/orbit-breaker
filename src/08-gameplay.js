@@ -3,7 +3,7 @@ const PHASES=[
   {at:0,name:"1단계 · 선발 정찰대",sub:"",count:8,gap:[2.2,3],elites:0,rams:0,ms:0,maxTele:3,fire:[3.6,6],tele:.9,bolt:94},
   {at:20,name:"2단계 · 돌격 드론 출현",sub:"",count:10,gap:[2,2.8],elites:0,rams:1,ms:1,blade:1,maxTele:3,fire:[2.7,4.3],tele:.85,bolt:101},
   {at:45,name:"3단계 · 정예 호위기",sub:"",count:10,gap:[1.9,2.6],elites:1,rams:2,ms:1,blade:1,maxTele:4,fire:[2.4,3.8],tele:.8,bolt:110},
-  {at:70,name:"최종 단계 · 지휘기 케르고그모스",sub:"",count:7,gap:[2.6,3.4],elites:1,rams:1,ms:0,blade:1,maxTele:4,fire:[2.2,3.5],tele:.75,bolt:119}];
+  {at:60,name:"최종 단계 · 지휘기 케르고그모스",sub:"",count:7,gap:[2.6,3.4],elites:1,rams:1,ms:0,blade:1,maxTele:4,fire:[2.2,3.5],tele:.75,bolt:119}];
 // clean streak: every 15s without a hit adds +0.2 to the score multiplier (max ×2.0); a hit resets it
 const CLEAN_STEP=15;
 function cleanMult(){return Math.min(2,1+Math.floor(G.clean/CLEAN_STEP)*.2)}
