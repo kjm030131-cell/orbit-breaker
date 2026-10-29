@@ -147,12 +147,12 @@ function hurt(b){
   if(G.armor>0){G.armor=0;G.iframe=1;sfx("armor");popText("반응 장갑 작동");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:3,s1:14,life:.4});fxImpact(S.pos.clone().add(new V3(0,.8,0)),0x7fe0ff);S.vel.addScaledVector(b.dir,10);S.shake=.5;return}
   if(G.dead>0)return;
   fxImpact(S.pos.clone().add(new V3(0,.8,0)),0xff4030);sparks(S.pos,b.dir,0xffb080,20,.4,24);sfx("hurt");
-  // HP system: every frame has 100 HP; a hit staggers you (no control) unless you break out with Shift
+  // HP system: armour points; a hit knocks you back and flashes, but never takes control away (10/29: stagger is 1:1 only)
   const dmg=Math.round((b.dmg||(b.ram?34:24))*(G.cfield>0?.5:1));G.hp=Math.max(0,(G.hp??HP_MAX)-dmg);G.clean=0;G.hpT=0;
   crackHit();
-  if(G.hp>0){G.stagger=Math.max(G.stagger,STAGGER);G.iframe=Math.max(G.iframe,.55);G.broke=false;S.hitstop=Math.max(S.hitstop,.06);S.shake=Math.max(S.shake,.55);
+  if(G.hp>0){G.iframe=Math.max(G.iframe,.55);S.hitstop=Math.max(S.hitstop,.06);S.shake=Math.max(S.shake,.55);
     if(b.dir){S.vel.copy(b.dir).multiplyScalar(18);S.freeT=.3}S.act=null;S.dash=0;S.dashT=null;S.pending=null;flash(.15);
-    const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");popText(`피격 −${dmg} · Shift로 경직 풀기`);return}
+    const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");popText(`피격 −${dmg}`);return}
   destroyMech(b.dir);
 }
 
@@ -165,10 +165,7 @@ function dodge(){
     G.dodgeCd=.65;S.boost-=20;G.iframe=Math.max(G.iframe,.18);const d=new V3(),f=camFwd(),r=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw));
     if(keys.KeyW)d.add(f);if(keys.KeyS)d.sub(f);if(keys.KeyA)d.add(r);if(keys.KeyD)d.sub(r);if(keys.Space)d.y+=1;if(keys.KeyC)d.y-=1;if(!d.lengthSq())d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(63));S.freeT=.3;vsSend({t:"dodge"});sfx("dodge");return;
   }
-  if(SCREEN==="play"&&!S.ended&&!PAUSED&&G.stagger>0&&G.dead<=0&&!G.broke){ // stagger break-out
-    if(S.boost<BREAK_COST){popText("부스트 부족 · 경직 풀기 불가");sfx("deny");return}
-    G.broke=true;G.stagger=0;S.boost-=BREAK_COST;G.iframe=Math.max(G.iframe,.45);G.dodgeCd=.3;S.vel.multiplyScalar(.2);sfx("just");popText("경직 풀기");
-    emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0xffd060,s0:2,s1:16,life:.4,a:.9});tutCount("break");return}
+  // (single stagger and its Shift break-out were removed 10/29: the tutorial never taught them; 1:1 keeps both, decided by the room server)
   if(SCREEN!=="play"||S.ended||PAUSED||G.dodgeCd>0||G.stagger>0||G.dead>0||S.over>0||S.boost<12)return;
   if(G.mega){if(G.mega.mode!=="r")return;megaEnd(false)} // a dodge cancels the R beam; the F burst is committed
   G.dodgeCd=.4;S.boost-=12;G.iframe=Math.max(G.iframe,.22);
@@ -249,7 +246,7 @@ function respawnMech(){
 
 /* ---- rammer drones: hunt, arm (flashing orange line), then charge in a straight line ---- */
 const RAM_SPEED=72;
-const HP_MAX=180,STAGGER=.85,BREAK_COST=40,HP_REGEN_AFTER=8,HP_REGEN=3.5; // per-frame HP, hit stagger, Shift break-out cost, slow regen when untouched
+const HP_MAX=180,HP_REGEN_AFTER=8,HP_REGEN=3.5; // armour HP, slow regen when untouched (single has no stagger since 10/29)
 function ramAI(e,dt,T){
   const em=e.m,eye=em.userData.eye,live=SCREEN==="play"&&!S.ended&&S.started;e.phase+=dt;
   if(e.rs==="hunt"){const to=S.pos.clone().sub(em.position),d=to.length();to.normalize();

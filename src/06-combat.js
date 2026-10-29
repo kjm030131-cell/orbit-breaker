@@ -101,7 +101,7 @@ function slashStrike(){ // called on the strike frame of a slash action
   if(e.blade&&bladeParry(e,at))return;
   if(e.isWP){wpDamage(e,3,at);S.hitstop=.08;S.shake=.6;flash(.18);fxSlashHit(at,0xff8a2a,true);sfx("heavy",at);addSpec(2);S.vel.multiplyScalar(.1);S.dashT=null;return}
   if(eliteBlocks(e,S.pos)){tutCount("eliteBlock");shieldFlash(e);fxImpact(at,0x48d8ff);sparks(at,null,0xbff4ff,24,.4,26);sfx("block",at);
-    S.vel.copy(S.pos.clone().sub(e.m.position).normalize().multiplyScalar(30));S.freeT=.25;G.stagger=.3;S.hitstop=.06;S.shake=.6;S.act=null;S.dashT=null;S.combo=0;
+    S.vel.copy(S.pos.clone().sub(e.m.position).normalize().multiplyScalar(30));S.freeT=.25;S.hitstop=.06;S.shake=.6;S.act=null;S.dashT=null;S.combo=0;
     popText("방어됨 · 뒤를 노려라");return}
   const crit=G.crit>0,big=heavy||crit,idx=S.act==="slash2"?1:heavy?2:0;
   const dir=launchDir(idx);
