@@ -920,33 +920,33 @@ body:not(.versus):not(.tut) #hud[hidden]~#feed{display:none}
 <!-- in-game HUD -->
 <style>
 /* ---- cockpit instrument console (10/29): radar in the middle, boost and heat as side gauges ---- */
-.hud.bc{bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(calc(-50% - 100px))} /* centred in the gap between the pilot plate and the weapon bar */
-.cockpit{display:grid;grid-template-columns:230px 168px 190px;align-items:end;gap:0;pointer-events:none}
+.hud.bc{bottom:calc(56px + env(safe-area-inset-bottom,0px));transform:translateX(calc(-50% - 100px))} /* centred in the gap between the pilot plate and the weapon bar */
+.cockpit{display:grid;grid-template-columns:260px 204px 220px;align-items:end;gap:0;pointer-events:none}
 .ckw{position:relative;padding:12px 16px 12px;background:linear-gradient(180deg,rgba(14,18,24,.82),rgba(8,10,14,.9));border-top:1px solid rgba(255,178,26,.55);margin-bottom:6px}
 .ckL{clip-path:polygon(16px 0,100% 0,100% 100%,0 100%,0 16px);border-left:1px solid rgba(255,178,26,.25)}
 .ckRt{clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%);border-right:1px solid rgba(255,178,26,.25)}
 .ckh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
-.ckh .lbl{font-size:12px;letter-spacing:.18em;color:#cfc8b8}
-.ckh b{font:600 24px var(--f-mono);color:var(--amber);line-height:1}
+.ckh .lbl{font-size:14px;letter-spacing:.18em;color:#cfc8b8}
+.ckh b{font:600 30px var(--f-mono);color:var(--amber);line-height:1}
 .cockpit #boostV,.cockpit #mult{display:inline!important}
 .cks{margin-top:6px;font-size:10.5px;letter-spacing:.06em;color:rgba(232,230,223,.5)}
 .ckL .bframe{width:100%}
-.ckRt .bar{height:12px}
-.ckHp .hpBar{height:12px;background:rgba(255,255,255,.1);overflow:hidden}.ckHp .hpBar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#5ad0ff,#bff0ff);transition:width .12s}
+.ckRt .bar{height:14px}
+.ckHp .hpBar{width:100%;height:16px;background:rgba(255,255,255,.1);overflow:hidden}.ckHp .hpBar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#5ad0ff,#bff0ff);transition:width .12s}
 .ckHp.low .hpBar i{background:linear-gradient(90deg,#ff3a30,#ff8a60)}.ckHp.low .ckh b{color:var(--red);animation:blow .5s steps(2) infinite}
 #ckHp[hidden]{display:none}.plate .hpRow{display:none} /* armour lives in the cockpit console now */
 .ckRt.hot .ckh b{color:var(--red)}
 .boostG.low .ckh b{color:var(--red);animation:blow .5s steps(2) infinite}
-.ckR{position:relative;width:168px;height:168px;border-radius:50%;background:radial-gradient(circle,rgba(10,16,22,.9) 60%,rgba(6,8,12,.95) 100%);
+.ckR{position:relative;width:204px;height:204px;border-radius:50%;background:radial-gradient(circle,rgba(10,16,22,.9) 60%,rgba(6,8,12,.95) 100%);
   box-shadow:0 0 0 2px rgba(255,178,26,.55),0 0 0 7px rgba(10,12,16,.85),0 0 0 8px rgba(255,178,26,.25),0 0 24px rgba(255,178,26,.18);z-index:1}
-.ckR .radar{width:168px;height:168px;display:block;border-radius:50%}
+.ckR .radar{width:204px;height:204px;display:block;border-radius:50%}
 .ckRl{position:absolute;left:50%;bottom:-2px;transform:translate(-50%,100%);font:600 10px var(--f-mono);letter-spacing:.3em;color:rgba(255,178,26,.75)}
 /* top right: kills / best chain, readable */
 .killTR{display:flex;gap:8px}
 .ktr{min-width:96px;padding:8px 14px 9px;background:linear-gradient(180deg,rgba(14,18,24,.8),rgba(8,10,14,.86));border-top:1px solid rgba(255,178,26,.55);clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%);text-align:right}
 .ktr .lbl{display:block;font-size:11px;letter-spacing:.16em;color:#cfc8b8;margin-bottom:2px}
 .ktr b{font:600 26px var(--f-mono);color:var(--bone);line-height:1}
-@media (max-width:1400px){.cockpit{grid-template-columns:180px 140px 150px}.ckR,.ckR .radar{width:140px;height:140px}.cks{display:none}.ckh b{font-size:20px}}
+@media (max-width:1400px){.cockpit{grid-template-columns:210px 172px 180px}.ckR,.ckR .radar{width:172px;height:172px}.cks{display:none}.ckh b{font-size:26px}.hud.bc{bottom:calc(40px + env(safe-area-inset-bottom,0px))}}
 @media (max-width:1100px){.hud.bc{transform:translateX(-50%)}}
 </style>
 <div id="hud" hidden>
