@@ -2,7 +2,7 @@
 const M_SCALE=4.8,HIP_Y=0.5;
 let P=null;
 // Ranked modes share frame performance; PvP frame passives are an optional host rule.
-const FRAMES={mk2:{name:"XR-07 Mk-II",kr:"범용 주력기",hip:.5,obj:null},swift:{name:"XR-09 스위프트",kr:"고기동 시험기",hip:.47,obj:null}};
+const FRAMES={mk2:{name:"TA-07 아크라이트",kr:"범용 주력기",hip:.5,obj:null},swift:{name:"TA-09 스위프트",kr:"고기동 시험기",hip:.47,obj:null}};
 function buildPlayer(gltf,frame,remote){
   frame=frame||"mk2";let src=null;gltf.scene.traverse(o=>{if(o.isMesh&&!src)src=o});
   let J,mesh,hipY,mix=null;

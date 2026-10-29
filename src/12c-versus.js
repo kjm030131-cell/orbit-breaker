@@ -18,7 +18,7 @@ function vsLobby(){
   $("vsPassives").disabled=$("vsSkills").disabled=!host||!lobby;
   $("vsRulesNote").textContent=host?"바꾸면 두 사람 모두 다시 준비해야 해요":"방장이 정한 규칙이에요";
   $("dUnitField").hidden=!v.rules.skills;$("vsUnitNote").textContent=v.rules.skills?VS_UNIT_TEXT[G.unit].desc:"";
-  $("vsFrameNote").textContent=v.rules.passives?"Mk-II 단단함 · 스위프트 빠름":"지금은 두 기체 성능이 같아요";
+  $("vsFrameNote").textContent=v.rules.passives?"아크라이트 단단함 · 스위프트 빠름":"지금은 두 기체 성능이 같아요";
   for(const id of ["dFrames","dUnits"])for(const b of $(id).querySelectorAll("button"))b.disabled=!lobby||(id==="dFrames"&&!FRAMES[b.dataset.df].obj);
   for(const id of ["dCreate","dJoin"])$(id).disabled=true;
   const ps=v.players||{};$("dA").textContent=ps.a?ps.a.name+" · 방장"+(ps.a.ready?" · 준비":""):"—";$("dB").textContent=ps.b?ps.b.name+(ps.b.ready?" · 준비":""):"대기 중…";
