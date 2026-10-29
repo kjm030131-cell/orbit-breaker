@@ -183,6 +183,7 @@ function finishRun(reason){
   const rate=lost?0:G.lives*.1+(G.lives===MAX_LIVES?.1:0);if(!lost){bonus=Math.round(S.score*rate);S.score+=bonus}
   G.focus=null;resultMode(false);
   if(DUEL){duelFinish(lost,bonus,rate);return}
+  if(DEV.run){devFinish(lost);return} // developer mode: nothing is recorded
   const rec=PILOT.rec||{},score=S.score,pb=score>(rec.best||0);
   if(pb){rec.best=score;rec.chain=S.best;rec.kills=S.kills||0;rec.combo=G.maxKC;rec.unit=G.unit;rec.frame=P?P.frame:"mk2"}
   rec.at=new Date().toISOString();putRec({...rec});
