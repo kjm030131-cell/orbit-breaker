@@ -90,7 +90,7 @@ function introNews(t){let n=$("inNews");const on=t>=23.2&&t<32.4;
 #inNews .bug b{background:#0d3b8c;color:#fff;font-weight:900;font-size:clamp(14px,1.5vw,22px);padding:4px 10px;letter-spacing:.02em}
 #inNews .bug i{font-style:normal;background:#e3121b;color:#fff;font-weight:800;font-size:clamp(11px,1vw,15px);padding:5px 8px;animation:nwBlink 1s steps(2) infinite}
 #inNews .clock{position:absolute;right:4.5vw;top:12vh;color:#fff;font-weight:700;font-size:clamp(13px,1.2vw,18px);text-shadow:0 1px 4px #000}
-#inNews .low{position:absolute;left:4.5vw;right:4.5vw;bottom:calc(11vh + 78px)}
+#inNews .low{position:absolute;left:4.5vw;right:4.5vw;bottom:calc(11vh + 112px)}
 #inNews .tag{display:inline-block;background:#e3121b;color:#fff;font-weight:900;font-size:clamp(13px,1.2vw,18px);padding:5px 12px}
 #inNews .hl{background:rgba(255,255,255,.96);color:#111;font-weight:800;font-size:clamp(17px,2vw,30px);padding:8px 14px;letter-spacing:-.02em;transform-origin:left;animation:nwIn .5s cubic-bezier(.2,.8,.2,1)}
 #inNews .sub{background:rgba(13,59,140,.92);color:#e8eefc;font-size:clamp(12px,1.1vw,16px);padding:5px 14px;font-weight:600}

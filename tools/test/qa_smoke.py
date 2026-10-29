@@ -23,7 +23,7 @@ async def main():
         await pg.wait_for_timeout(4000);await shot('01_title')
         await pg.evaluate('()=>{window.__T.playIntro()}')
         for tt,nm in [(5,'00a_intro_card'),(16,'00b_intro_battle'),(27,'00c_intro_news'),(36,'00d_intro_chase'),(50,'00e_intro_rain')]:
-            await pg.evaluate('(t)=>{const I=window.__T.INTRO;I.t=t-0.3}',tt-0.3 if tt!=36 else 32.2);await pg.wait_for_timeout(2500 if tt==36 else 1200);await shot(nm)
+            await pg.evaluate('(t)=>{const I=window.__T.INTRO;I.t=t-0.3}',tt-0.3 if tt!=36 else 32.35);await pg.wait_for_timeout(3500 if tt==36 else 1200);await shot(nm)
         await pg.evaluate('()=>{window.__T.INTRO.skip=true}');await pg.wait_for_timeout(600)
         await ev('mech','()=>{const P=window.__T.P,b=new THREE.Box3().setFromObject(P.root),z=b.getSize(new THREE.Vector3());return {h:+z.y.toFixed(2),w:+z.x.toFixed(2),muzzle:P.muzzle.position.toArray().map(v=>+v.toFixed(3)),bones:P.skin?0:Object.keys(P.J).length}}')
         # 1) solo 60 s, CPU cost of update()
