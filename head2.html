@@ -946,6 +946,24 @@ body.tut #tutObj{top:calc(70px + env(safe-area-inset-top,0px));max-width:min(760
 body.tut #tutObj b{font-size:24px}body.tut #tutObjHow{font-size:18px;margin-top:6px;color:#efe9dc}body.tut #tutObj .lbl{font-size:13px}body.tut #tutObj em{font-size:16px}
 body.tut #radio{top:calc(196px + env(safe-area-inset-top,0px));min-width:min(760px,92vw);min-height:152px;padding:18px 30px 18px 160px!important;border-image-width:22px 12px 22px 136px!important}
 body.tut #radioFace{width:120px;height:128px;left:12px;background-size:contain}body.tut #radioWho{font-size:13px}body.tut #radioTxt{font-size:19px;line-height:1.45}
+/* option-unit card in the tutorial (steps 15-18): slides in from the right, ticks R / F off as they are used */
+#tutEquip{position:fixed;right:22px;top:calc(364px + env(safe-area-inset-top,0px));z-index:6;width:min(310px,34vw);pointer-events:none;color:#f2efe8;font-family:var(--f-body);
+ background:linear-gradient(rgba(14,18,23,.94),rgba(8,10,13,.9));border:1px solid #2c343e;border-top:2px solid var(--c,#ffb21a);box-shadow:0 10px 30px rgba(0,0,0,.55);
+ clip-path:polygon(18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%,0 18px)}
+#tutEquip[hidden]{display:none}#tutEquip.in{animation:teIn .5s cubic-bezier(.2,.8,.2,1)}@keyframes teIn{from{transform:translateX(130%);opacity:0}to{transform:none;opacity:1}}
+#tutEquip .hd{display:flex;justify-content:space-between;padding:9px 16px;border-bottom:1px solid #2c343e;font:700 11px var(--f-body);letter-spacing:.22em;color:var(--c,#ffb21a)}
+#tutEquip .hd i{font-style:normal;color:#8b939e;letter-spacing:.1em}
+#tutEquip .top{display:flex;gap:12px;align-items:center;padding:12px 16px 10px}
+#tutEquip .top img{width:62px;height:62px;object-fit:contain;flex:none;filter:drop-shadow(0 0 10px var(--c,#ffb21a))}
+#tutEquip .top b{display:block;font:800 17px/1.25 var(--f-body)}#tutEquip .top small{display:block;font:700 11px var(--f-body);letter-spacing:.18em;color:var(--c,#ffb21a);margin:2px 0 4px}
+#tutEquip .top span{display:block;word-break:keep-all;font:500 13px/1.4 var(--f-body);color:#bdb8ad}
+#tutEquip .sk{display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:center;padding:8px 16px;border-top:1px solid #1d232a;transition:opacity .3s,background .3s}
+#tutEquip .sk img{width:36px;height:36px;object-fit:contain}#tutEquip .sk b{font:700 15px var(--f-body)}
+#tutEquip .sk em{font:700 10px var(--f-body);font-style:normal;letter-spacing:.16em;color:#8b939e;text-align:right}#tutEquip .sk em kbd{display:block;font:800 13px var(--f-body);color:#f2efe8;letter-spacing:0}
+#tutEquip .sk.cur{background:rgba(255,255,255,.06);box-shadow:inset 3px 0 0 var(--c,#ffb21a)}#tutEquip .sk.cur em kbd{color:var(--c,#ffb21a)}
+#tutEquip .sk.done{opacity:.42}#tutEquip .sk.done em{color:#7dff8a}
+#tutEquipFx{position:fixed;top:0;right:0;bottom:0;width:24vw;z-index:4;pointer-events:none;background:linear-gradient(270deg,var(--c,#ffb21a),transparent);opacity:0;transition:opacity .8s}
+#tutEquipFx.on{opacity:.2}
 /* top right: kills / best chain, readable */
 .killTR{display:flex;gap:8px}
 .ktr{min-width:96px;padding:8px 14px 9px;background:linear-gradient(180deg,rgba(14,18,24,.8),rgba(8,10,14,.86));border-top:1px solid rgba(255,178,26,.55);clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%);text-align:right}
@@ -955,7 +973,7 @@ body.tut #radioFace{width:120px;height:128px;left:12px;background-size:contain}b
 @media (max-width:1100px){.hud.bc{transform:translateX(-50%)}}
 </style>
 <div id="hud" hidden>
-  <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="feed"></div><div id="aimPart" hidden></div><div id="postBar" hidden><i></i><span>자세</span></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="lockWarn"><b>피격 경고</b></div>
+  <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="feed"></div><div id="aimPart" hidden></div><div id="postBar" hidden><i></i><span>자세</span></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="tutEquip" hidden></div><div id="tutEquipFx"></div><div id="lockWarn"><b>피격 경고</b></div>
   <div id="lock"><i></i><i></i><i></i><i></i><span id="lockTxt">록온</span></div>
   <div id="pop"></div>
   <div id="phase"><div id="phaseSub" class="lbl">단계</div><div id="phaseName">—</div></div>

@@ -40,17 +40,30 @@ function cueBolt(){const me=S.pos.clone().add(new V3(0,.4,0));let best=null;for(
 function cueRam(){const me=S.pos.clone().add(new V3(0,.4,0));let best=null;for(const e of enemies){if(!e.ram||e.rs!=="charge"||!e.alive||e.launched>0)continue;const rel=me.clone().sub(e.m.position),al=rel.dot(e.rdir);if(al<0)continue;
   if(rel.clone().addScaledVector(e.rdir,-al).length()>3.2)continue;const t=al/RAM_SPEED;if(best===null||t<best)best=t}return best}
 const cueDodge=(t,now,ready,key="Shift")=>t===null?null:t<now?{now:true,key}:t<ready?{now:false,key}:null;
+// option-unit card (steps 15-18): which unit is fitted, its R / F, and which one is still to try
+const TUT_UNITS=["mega","pods","missile","shield"];
+function tutEquipShow(k){const U=UNITS[k],el=$("tutEquip"),fx=$("tutEquipFx"),n=TUT_UNITS.indexOf(k)+1;
+  el.innerHTML=`<div class="hd"><span>${n===1?"EQUIPMENT TRIAL":"EQUIPMENT CHANGE"}</span><i>${String(n).padStart(2,"0")} / 04</i></div>
+<div class="top"><img src="ui/u_${k}.webp" alt=""><div><b>${U.name}</b><small>${U.en}</small><span>${UNIT_INFO[k]}</span></div></div>
+<div class="sk" data-s="r"><img src="ui/r_${k}.webp" alt=""><b>${U.r}</b><em><kbd>R</kbd>SKILL</em></div>
+<div class="sk" data-s="f"><img src="ui/f_${k}.webp" alt=""><b>${U.f}</b><em><kbd>F</kbd>ULTIMATE</em></div>`;
+  el.style.setProperty("--c",U.css);fx.style.setProperty("--c",U.css);el.dataset.st="";el.hidden=false;el.classList.remove("in");void el.offsetWidth;el.classList.add("in");
+  fx.classList.add("on");clearTimeout(tutEquipShow.h);tutEquipShow.h=setTimeout(()=>fx.classList.remove("on"),3500);tutEquipState(k)}
+function tutEquipState(k){const el=$("tutEquip");if(el.hidden)return;const r=(TUT.c["u_"+k]||0)>=1,f=r&&(TUT.c.spec||0)>=1,st=(r?1:0)+(f?1:0)+"";if(el.dataset.st===st)return;el.dataset.st=st;
+  for(const row of el.querySelectorAll(".sk")){const d=row.dataset.s==="r"?r:f,cur=!d&&(row.dataset.s==="r"||r);row.classList.toggle("done",d);row.classList.toggle("cur",cur);
+    row.querySelector("em").innerHTML=d?"✓ CLEAR":`<kbd>${row.dataset.s.toUpperCase()}</kbd>${row.dataset.s==="r"?"SKILL":"ULTIMATE"}`}}
+function tutEquipHide(){$("tutEquip").hidden=true;$("tutEquipFx").classList.remove("on");clearTimeout(tutEquipShow.h)}
 function unitStep(k){const T=UNIT_TXT[k],rDone=()=>(TUT.c["u_"+k]||0)>=1,fase=()=>rDone()?"f":"r";return {unit:k,limit:75,
   obj:()=>T[fase()][0],how:()=>T[fase()][1],keys:()=>rDone()?["F"]:["R"],hl:()=>rDone()?"wSpec":"wUnit",mark:true,
   prog:()=>`R ${rDone()?"✓":"…"}   F ${(TUT.c.spec||0)>=1?"✓":"…"}`,say:[[OP,T.say]],
   cue:k==="shield"?()=>rDone()?null:cueDodge(cueBolt(),.3,.75,"R"):null,
   keep:k==="shield"?{n:3,passive:false,d:[30,42]}:{n:5,passive:true,d:[30,52],line:k==="mega"},
-  enter(){tutSetUnit(k);TUT.c["u_"+k]=0;TUT.c.spec=0;TUT.fSaid=false;TUT.shortSaid=false;if(k==="mega")tutLine(5)},
-  tick(){if(rDone()&&!TUT.fSaid){TUT.fSaid=true;G.spec=100;sfx("specReady");popText("필살 게이지 가득 · F")}
+  enter(){tutSetUnit(k);TUT.c["u_"+k]=0;TUT.c.spec=0;tutEquipShow(k);TUT.fSaid=false;TUT.shortSaid=false;if(k==="mega")tutLine(5)},
+  tick(){tutEquipState(k);if(rDone()&&!TUT.fSaid){TUT.fSaid=true;G.spec=100;sfx("specReady");popText("필살 게이지 가득 · F")}
     if(k==="missile"&&(TUT.c.missileShort||0)>0&&!TUT.shortSaid){TUT.shortSaid=true;popText("너무 짧아요 · R을 누른 채로 훑어요")}
     if(k==="shield")for(const e of enemies)if(e.alive&&!e.tutPassive&&e.fireT>3)e.fireT=1+Math.random()*1.2;
     if(TUT.fSaid&&G.spec<100&&G.specT<0&&!(TUT.c.spec>0)&&!G.mega)G.spec=100},
-  done(){return rDone()&&(TUT.c.spec||0)>=1&&!G.mega&&G.specT<0&&G.cfield<=0},exit(){tutClear();radio(OP,UNIT_P[k])}}}
+  done(){return rDone()&&(TUT.c.spec||0)>=1&&!G.mega&&G.specT<0&&G.cfield<=0},exit(){tutEquipHide();tutClear();radio(OP,UNIT_P[k])}}}
 // five passive drones in a row straight ahead (for the piercing beam)
 function tutLine(n){for(let i=0;i<n;i++)tutDrone(tutAhead(26+i*9,(i%2?1:-1)*1.2,2),true)}
 const TUT_STEPS=[
@@ -177,7 +190,7 @@ function tutText(s){const a=tutVal(s,"obj")||"",b=tutVal(s,"how")||"";if($("tutO
 function tutPass(why){if(TUT.busy)return;TUT.busy=true;const s=TUT_STEPS[TUT.step];const o=$("tutObj");$("tutCue").hidden=true;
   if(why){popText(why);sfx("ui")}else{sfx("specReady");popText("목표 달성");o.classList.add("ok")}
   setTimeout(()=>{TUT.busy=false;o.classList.remove("ok");if(TUT.on&&TUT_STEPS[TUT.step]===s)tutStep(TUT.step+1)},why?900:1500)}
-function tutFrame(dt){if(!TUT.on||SCREEN!=="play"||TUT.step<0){if(!$("tutKeys").hidden&&!TUT.on&&!VST.on){tutKeysSet(null);tutHl(null);$("tutMark").hidden=$("tutCue").hidden=true}return}
+function tutFrame(dt){if(!TUT.on||SCREEN!=="play"||TUT.step<0){if(!TUT.on&&!$("tutEquip").hidden)tutEquipHide();if(!$("tutKeys").hidden&&!TUT.on&&!VST.on){tutKeysSet(null);tutHl(null);$("tutMark").hidden=$("tutCue").hidden=true}return}
   const s=TUT_STEPS[TUT.step];if(!s)return;TUT.t+=dt;TUT.dt=dt;G.unitCd=0; /* no option-unit cooldown anywhere in the tutorial */
   if(s.tick)s.tick();if(TUT.step===8&&(TUT.c.just||0)>TUT.just0){TUT.just0=TUT.c.just;if(TUT.c.just===1)tutCueVo("tut_09_success")}tutKeep(s,dt);tutText(s);tutMarkTick(s);if(!TUT.busy)tutCueTick(s);
   if(s.prog){const v=s.prog();if(v!==TUT.lastProg){TUT.lastProg=v;$("tutObjProg").textContent=v}}
