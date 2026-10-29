@@ -520,8 +520,10 @@ body{font-weight:500;letter-spacing:-.01em;font-feature-settings:"tnum" 1}
 /* weapon bar: names on one line, centred under the icon */
 .wpns .wn{font-weight:800;white-space:nowrap;text-align:center;letter-spacing:-.02em}
 .wpns .wn .num{font-weight:600;font-size:.82em;opacity:.85;margin-left:2px}
-/* briefing rules: number hugs its text */
-.rules li{grid-template-columns:28px 1fr;gap:10px}
+/* briefing rules: the number column fits "120초" (28px made it run into the text) */
+.rules li{grid-template-columns:72px 1fr;gap:12px}
+#scrBrief .rules li{grid-template-columns:58px 1fr}
+#againBtn[hidden]{display:none}
 
 #radio{min-width:0!important;width:min(620px,58vw);max-width:min(620px,58vw)}
 .hud.tl{width:230px}.hud.tl .comboBox,.hud.tl .cleanBox,.hud.tl .tbar{width:100%}
@@ -961,7 +963,7 @@ body:not(.versus):not(.tut) #hud[hidden]~#feed{display:none}
 
 <!-- first sortie: suggest the tutorial -->
 <div id="tutAsk" hidden><div class="taBox"><div class="taLbl">첫 출격 전</div><h3>튜토리얼부터 해 볼까요?</h3>
-  <p>이동·회피·사격·3연속 베기·저스트 회피까지 3분이면 익혀요.<br>튜토리얼은 출격 횟수(학번당 3회)에 포함되지 않아요.</p>
+  <p>이동·회피·사격·3연속 베기·저스트 회피까지 3분이면 익혀요.<br>실전 출격은 학번당 한 번뿐이에요. 튜토리얼은 횟수에 포함되지 않으니 먼저 익혀 보세요.</p>
   <div class="btns"><button class="btn primary" type="button" id="taTut">튜토리얼 시작 <kbd>Enter</kbd></button><button class="btn" type="button" id="taGo">바로 출격 <kbd>Esc</kbd></button></div></div></div>
 <!-- title -->
 <section class="screen" id="scrTitle">
@@ -1003,11 +1005,11 @@ body:not(.versus):not(.tut) #hud[hidden]~#feed{display:none}
       <div class="pHead"><h2>규칙</h2></div>
       <ul class="rules">
         <li><b>120초</b><span>시간 안에 최대한 많은 점수를 올리세요.</span></li>
-        <li><b>3회</b><span>학번당 3번 출격. 가장 높은 점수만 순위에 올라갑니다.</span></li>
+        <li><b>1회</b><span>학번당 <b class="hl">한 번만 출격</b>할 수 있어요. 그 점수가 그대로 순위에 올라갑니다.</span></li>
         <li><b>3기</b><span><b class="hl">한 발 맞으면 1기 손실</b>. 남은 기체가 많을수록 보너스.</span></li>
       </ul>
       <div class="pHead" style="margin:26px 0 12px"><span class="lbl">남은 출격</span><span class="lbl" id="sortieTxt">학번 입력 후 표시</span></div>
-      <div class="sortieMeter" id="sortieMeter"><i class="used"></i><i class="used"></i><i class="used"></i></div>
+      <div class="sortieMeter" id="sortieMeter"><i class="used"></i></div>
       <p class="note" id="fNote">같은 학번이면 기록이 이어집니다.</p>
     </div>
   </div>
@@ -1089,7 +1091,7 @@ body:not(.versus):not(.tut) #hud[hidden]~#feed{display:none}
   <div class="console">
     <div class="frame pane">
       <div class="pHead"><h2>작전 브리핑</h2><span class="lbl" id="briefStep">3 / 3</span></div>
-      <p class="lore">폭주한 궤도 AI <b>아르고스</b>의 드론군이 위성 잔해를 지구로 떨어뜨리려 합니다. 120초 안에 최대한 격파하세요.</p>
+      <p class="lore"><b>아르고스 연합</b>의 무인 드론 편대가 헬리오스 방위선으로 몰려옵니다. 120초 안에 최대한 격추하세요.</p>
       <div class="keys">
         <div class="kc"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></div><span>이동 <em>Space · C 상승·하강</em></span>
         <div class="kc"><kbd>Mouse</kbd></div><span>조준</span>

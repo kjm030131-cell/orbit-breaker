@@ -1,5 +1,5 @@
 /* ================= records (shared db, local fallback) ================= */
-const MAX_SORTIE=3,LS_KEY="orbitbreaker.players.v1";
+const MAX_SORTIE=1,LS_KEY="orbitbreaker.players.v1";
 let DB=null,BOARD=[];
 // SERVER: the deployed build talks to the Cloudflare ranking API (authoritative sortie count + best score)
 let SERVER=false,RUN=null,MYRANK=null,TOTAL=0;
@@ -124,7 +124,7 @@ $("pilotForm").addEventListener("submit",async e=>{
   if(!/^\d{8,10}$/.test(sid)){fSid.focus();return err("학번은 숫자 8~10자리로 입력하세요.")}
   err("");$("fGo").disabled=true;const rec=await getRec(sid);$("fGo").disabled=false;
   if(rec&&rec.name&&rec.name!==name)return err(`이 학번은 '${rec.name}' 이름으로 등록돼 있습니다. 학번을 다시 확인하세요.`);
-  if(rec&&(rec.attempts||0)>=MAX_SORTIE)return err("이 학번은 출격 3회를 모두 사용했습니다.");
+  if(rec&&(rec.attempts||0)>=MAX_SORTIE)return err("이 학번은 이미 출격했습니다. 출격은 학번당 한 번이에요.");
   Object.assign(PILOT,{name,dept,sid,rec:rec||{name,dept,sid,best:0,attempts:0,chain:0,kills:0}});
   if(rec&&rec.unit&&UNITS[rec.unit])G.unit=rec.unit;
   sfx("uiok");show("load");
@@ -191,7 +191,7 @@ function finishRun(reason){
   $("rPb").innerHTML=(pb&&score>0?'<span class="pb">개인 최고 기록 갱신</span> ':"")+(lost?'<span class="note">전 기체 손실 · 작전 조기 종료</span>':`<span class="note">생존 보너스 +${bonus.toLocaleString()} (전투 점수의 ${Math.round(rate*100)}% · 남은 기체 ${G.lives}${G.lives===MAX_LIVES?" · 무피격 클리어":""})</span>`);
   $("rDebrief").innerHTML='<span class="who">이클립스 CIC · 최지우 중위</span>'+debriefLine(lost,score);
   $("rSortie").textContent=`출격 ${rec.attempts} / ${MAX_SORTIE}`;
-  const left=MAX_SORTIE-rec.attempts,ag=$("againBtn");ag.disabled=left<=0;
+  const left=MAX_SORTIE-rec.attempts,ag=$("againBtn");ag.disabled=left<=0;ag.hidden=left<=0; /* one sortie per student id: no retry button */
   ag.firstChild.textContent=left>0?`재출격 · ${left}회 남음 `:"출격 횟수 소진 ";
   show("result");renderBoards();updateRankLine();setTimeout(()=>(left>0?ag:document.querySelector("#scrResult [data-go]")).focus(),120);
 }

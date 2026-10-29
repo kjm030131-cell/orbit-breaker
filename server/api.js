@@ -1,6 +1,6 @@
 // ORBIT BREAKER ranking API (Cloudflare Pages Functions + D1)
-// Server owns the sortie count (max 3 per student id) and the best score; the client only reports results.
-const MAX_SORTIE = 3, MAX_SCORE = 3000000;
+// Server owns the sortie count (1 per student id since 10/29 — contest rule: 3 lives in one run, no re-sortie) and the best score; the client only reports results.
+const MAX_SORTIE = 1, MAX_SCORE = 3000000;
 const J = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
 const bad = (msg, status = 400) => J({ error: msg }, status);
 const clean = (v, n) => String(v == null ? "" : v).replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, n);
@@ -49,7 +49,7 @@ export async function onRequest({ request, env, params }) {
       if (!p) { await DB.prepare("INSERT INTO players(sid,name,dept,created_at) VALUES(?,?,?,?)").bind(sid, name, dept, now).run(); p = { attempts: 0 }; }
       // atomic: only increments while attempts < MAX
       const r = await DB.prepare("UPDATE players SET attempts=attempts+1, dept=? WHERE sid=? AND attempts<?").bind(dept, sid, MAX_SORTIE).run();
-      if (!r.meta.changes) return bad("이 학번은 출격 3회를 모두 사용했습니다.", 403);
+      if (!r.meta.changes) return bad("이 학번은 이미 출격했습니다. 출격은 학번당 한 번이에요.", 403);
       const id = crypto.randomUUID();
       await DB.prepare("INSERT INTO runs(id,sid,started,unit,frame) VALUES(?,?,?,?,?)").bind(id, sid, Date.now(), clean(body.unit, 12), clean(body.frame, 12)).run();
       const q = await DB.prepare("SELECT attempts,best FROM players WHERE sid=?").bind(sid).first();
