@@ -59,7 +59,7 @@ function unitStep(k){const T=UNIT_TXT[k],rDone=()=>(TUT.c["u_"+k]||0)>=1,fase=()
   cue:k==="shield"?()=>rDone()?null:cueDodge(cueBolt(),.3,.75,"R"):null,
   keep:k==="shield"?{n:3,passive:false,d:[30,42]}:{n:5,passive:true,d:[30,52],line:k==="mega"},
   enter(){tutSetUnit(k);TUT.c["u_"+k]=0;TUT.c.spec=0;tutEquipShow(k);TUT.fSaid=false;TUT.shortSaid=false;if(k==="mega")tutLine(5)},
-  tick(){tutEquipState(k);if(rDone()&&!TUT.fSaid){TUT.fSaid=true;G.spec=100;sfx("specReady");popText("필살 게이지 가득 · F");const V=TUT_VO[TUT.step];if(V&&V.f)radio(OP,V.f,tutVoId(TUT.step,"f"))}
+  tick(){tutEquipState(k);if(rDone()&&!TUT.fSaid){TUT.fSaid=true;G.spec=100;sfx("specReady");popText("필살 게이지 가득 · F");const V=TUT_VO[TUT.step];if(V&&V.f)tutQueue(OP,V.f,tutVoId(TUT.step,"f"))}
     if(k==="missile"&&(TUT.c.missileShort||0)>0&&!TUT.shortSaid){TUT.shortSaid=true;popText("너무 짧아요 · R을 누른 채로 훑어요")}
     if(k==="shield")for(const e of enemies)if(e.alive&&!e.tutPassive&&e.fireT>3)e.fireT=1+Math.random()*1.2;
     if(TUT.fSaid&&G.spec<100&&G.specT<0&&!(TUT.c.spec>0)&&!G.mega)G.spec=100},
@@ -150,8 +150,14 @@ const tutVoId=(i,x)=>"tut_"+String(i+1).padStart(2,"0")+(x?"_"+x:"");
 const tutVoMain=i=>TUT_VO[i].id||tutVoId(i);
 function tutVoIds(){const a=[];TUT_VO.forEach((v,i)=>{a.push(tutVoMain(i));if(v.r)a.push(tutVoId(i,"retry"));if(v.f)a.push(tutVoId(i,"f"));if(v.cue)a.push(tutVoId(i,"ready"),tutVoId(i,"now"))});a.push("tut_09_success","tut_end");return a}
 const voBusy=()=>VO_A&&!VO_A.paused&&!VO_A.ended;
+// the operator never talks over herself: a step only passes once her line has finished, follow-up lines wait in a queue,
+// and the short cue lines ("준비", "지금!") are skipped while she is still explaining
+const nowS=()=>performance.now()/1000,tutTalking=()=>AUD.on&&(nowS()<(TUT.voEnd||0)||voBusy());
+function voLen(id){const a=VO_CACHE[id];return a&&isFinite(a.duration)&&a.duration>0?a.duration:8}
+function tutSpeak(who,txt,id){radio(who,txt,id);if(TUT_CUE_A)try{TUT_CUE_A.pause()}catch(_){}TUT.voEnd=nowS()+voLen(id)+.35}
+function tutQueue(who,txt,id){if(tutTalking())TUT.voQ=[who,txt,id];else tutSpeak(who,txt,id)}
 // short cue lines ("회피 준비", "지금!") play on their own channel so they never cut the step's instructions
-let TUT_CUE_A=null;function tutCueVo(id){if(!AUD.on)return;try{if(TUT_CUE_A)TUT_CUE_A.pause();const a=(VO_CACHE[id]||new Audio(voUrl(id)));try{a.currentTime=0}catch(_){}a.volume=Math.min(1,(AUD.vol??.9)*1.05);a.play().catch(()=>{});TUT_CUE_A=a}catch(_){}}
+let TUT_CUE_A=null;function tutCueVo(id){if(!AUD.on||tutTalking())return;try{if(TUT_CUE_A)TUT_CUE_A.pause();const a=(VO_CACHE[id]||new Audio(voUrl(id)));try{a.currentTime=0}catch(_){}a.volume=Math.min(1,(AUD.vol??.9)*1.05);a.play().catch(()=>{});TUT_CUE_A=a}catch(_){}}
 function tutRestoreUnit(){if(TUT.unit0&&G.unit!==TUT.unit0)tutSetUnit(TUT.unit0);G.spec=0}
 function tutAce(){const e=spawnMS(tutAhead(46,0,2),true);if(e){e.tutAce=true;e.windT=.85}}
 // top up targets: knocked / destroyed enemies are replaced in front of the player so no step can dead-end
@@ -199,8 +205,9 @@ function tutDock(on){const o=$("tutObj"),r=$("radio");if(!o._home){o._home=o.par
 function tutStep(i){if(TUT.on)tutDock(true);const prev=TUT_STEPS[TUT.step];if(prev&&prev.exit)prev.exit();TUT.step=i;TUT.t=0;TUT.respT=0;TUT.lastProg=null;TUT.hintSaid=false;const s=TUT_STEPS[i];if(!s)return;
   $("tutObj").hidden=false;tutText(s);$("tutObjProg").textContent=s.prog?s.prog():"";$("tutObjN").textContent=`${i+1} / ${TUT_STEPS.length}`;
   $("tutSkip").hidden=i>=TUT_STEPS.length-1;$("tutCue").hidden=true;
-  const o=$("tutObj");o.classList.remove("new","ok");void o.offsetWidth;o.classList.add("new");TUT.cueSt=null;TUT.aceRdy=false;TUT.just0=TUT.c.just||0;const V=TUT_VO[i];if(V){const tok=TUT.sayTok=(TUT.sayTok||0)+1,pre=V.pre&&s.say&&s.say[0][0]!==OP?s.say[0]:null;if(pre)radio(pre[0],pre[1]);
-    setTimeout(()=>{if(TUT.on&&TUT.step===i&&TUT.sayTok===tok)radio(OP,V.t,tutVoMain(i))},pre?2600:i?150:500)}else tutSay(s.say);if(s.enter)s.enter()}
+  const o=$("tutObj");o.classList.remove("new","ok");void o.offsetWidth;o.classList.add("new");TUT.cueSt=null;TUT.aceRdy=false;TUT.waitSaid=false;TUT.just0=TUT.c.just||0;const V=TUT_VO[i];if(V){const tok=TUT.sayTok=(TUT.sayTok||0)+1,pre=V.pre&&s.say&&s.say[0][0]!==OP?s.say[0]:null;if(pre)radio(pre[0],pre[1]);
+    TUT.voQ=null;if(TUT_CUE_A)try{TUT_CUE_A.pause()}catch(_){}const dl=pre?2.6:i?.15:.5;TUT.voEnd=nowS()+dl+voLen(tutVoMain(i))+.35;
+    setTimeout(()=>{if(TUT.on&&TUT.step===i&&TUT.sayTok===tok)tutSpeak(OP,V.t,tutVoMain(i))},dl*1000)}else tutSay(s.say);if(s.enter)s.enter()}
 function tutText(s){const a=tutVal(s,"obj")||"",b=tutVal(s,"how")||"";if($("tutObjTxt").textContent!==a){$("tutObjTxt").textContent=a;const o=$("tutObj");o.classList.remove("new");void o.offsetWidth;o.classList.add("new")}
   if($("tutObjHow").textContent!==b)$("tutObjHow").textContent=b;tutKeysSet(tutVal(s,"keys"));tutHl(tutVal(s,"hl"))}
 function tutPass(why){if(TUT.busy)return;TUT.busy=true;const s=TUT_STEPS[TUT.step];const o=$("tutObj");$("tutCue").hidden=true;
@@ -208,13 +215,13 @@ function tutPass(why){if(TUT.busy)return;TUT.busy=true;const s=TUT_STEPS[TUT.ste
   setTimeout(()=>{TUT.busy=false;o.classList.remove("ok");if(TUT.on&&TUT_STEPS[TUT.step]===s)tutStep(TUT.step+1)},why?900:1500)}
 function tutFrame(dt){if(!TUT.on||SCREEN!=="play"||TUT.step<0){if(!TUT.on&&!$("tutEquip").hidden)tutEquipHide();if(!$("tutKeys").hidden&&!TUT.on&&!VST.on){tutKeysSet(null);tutHl(null);$("tutMark").hidden=$("tutCue").hidden=true}return}
   const s=TUT_STEPS[TUT.step];if(!s)return;TUT.t+=dt;TUT.dt=dt;G.unitCd=0; /* no option-unit cooldown anywhere in the tutorial */
-  if(s.tick)s.tick();if(TUT.step===18&&!TUT.aceRdy&&TUT.t>12)for(const e of enemies)if(e.tutAce&&e.alive&&e.m.position.distanceTo(S.pos)<34){TUT.aceRdy=true;tutCueVo("tut_19_ready");break}
+  if(TUT.voQ&&!tutTalking()){const q=TUT.voQ;TUT.voQ=null;tutSpeak(q[0],q[1],q[2])}if(s.tick)s.tick();if(TUT.step===18&&!TUT.aceRdy&&TUT.t>12)for(const e of enemies)if(e.tutAce&&e.alive&&e.m.position.distanceTo(S.pos)<34){TUT.aceRdy=true;tutCueVo("tut_19_ready");break}
   if(TUT.step===8&&(TUT.c.just||0)>TUT.just0){TUT.just0=TUT.c.just;if(TUT.c.just===1)tutCueVo("tut_09_success")}tutKeep(s,dt);tutText(s);tutMarkTick(s);if(!TUT.busy)tutCueTick(s);
-  if(s.prog){const v=s.prog();if(v!==TUT.lastProg){TUT.lastProg=v;$("tutObjProg").textContent=v}}
+  if(s.prog&&!TUT.waitSaid){const v=s.prog();if(v!==TUT.lastProg){TUT.lastProg=v;$("tutObjProg").textContent=v}}
   if(TUT.wp&&TUT.wp.visible){TUT.wp.userData.ring.lookAt(camera.position);TUT.wp.userData.ring.scale.setScalar(1+Math.sin(TUT.t*4)*.08)}
   // stuck for a while: point at Tab; past the limit: move on so nobody is trapped in a step
-  if(s.limit&&!TUT.hintSaid&&TUT.t>s.limit*.5){TUT.hintSaid=true;{const V=TUT_VO[TUT.step];if(V&&V.r&&!voBusy())radio(OP,V.r,tutVoId(TUT.step,"retry"))}$("tutSkip").classList.remove("pulse");void $("tutSkip").offsetWidth;$("tutSkip").classList.add("pulse")}
-  if(!TUT.busy&&TUT.t>1&&(!TUT_VO[TUT.step]||TUT.t>7||!voBusy())&&s.done())tutPass();else if(!TUT.busy&&s.limit&&TUT.t>s.limit)tutPass("괜찮아요 · 실전에서 익혀요")}
+  if(s.limit&&!TUT.hintSaid&&TUT.t>s.limit*.5){TUT.hintSaid=true;{const V=TUT_VO[TUT.step];if(V&&V.r&&!tutTalking())tutSpeak(OP,V.r,tutVoId(TUT.step,"retry"))}$("tutSkip").classList.remove("pulse");void $("tutSkip").offsetWidth;$("tutSkip").classList.add("pulse")}
+  if(!TUT.busy&&TUT.t>1&&s.done()){if(!tutTalking()&&!TUT.voQ)tutPass();else if(!TUT.waitSaid){TUT.waitSaid=true;$("tutObjProg").textContent="✓ 완료 · 안내가 끝나면 다음 단계로";TUT.lastProg="__wait"}}else if(!TUT.busy&&s.limit&&TUT.t>s.limit)tutPass("괜찮아요 · 실전에서 익혀요")}
 // no game over in the tutorial: a hit only costs a flash and a shove
 function tutHurt(b){if(G.iframe>0)return;G.iframe=1.4;fxImpact(S.pos.clone().add(new V3(0,.8,0)),0xff4030);sfx("hurt");S.shake=.7;S.vel.addScaledVector(b.dir||new V3(0,0,-1),18);
   const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");popText("피격 — 실전이었다면 격추예요")}
