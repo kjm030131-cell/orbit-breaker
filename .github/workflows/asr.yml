@@ -1,0 +1,36 @@
+# speech-to-text for recorded voice lines (never deploys): push tools/asr/in/*.mp3 to an asr/* branch -> transcripts on the asr-out branch
+name: asr
+on:
+  push:
+    branches: ['asr/**']
+permissions:
+  contents: write
+jobs:
+  asr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg && pip install -q faster-whisper
+      - name: transcribe
+        run: |
+          mkdir -p /tmp/out
+          python - <<'PY'
+          import glob,os,json
+          from faster_whisper import WhisperModel
+          m=WhisperModel("medium",device="cpu",compute_type="int8")
+          res={}
+          for f in sorted(glob.glob("tools/asr/in/*.mp3")):
+              segs,_=m.transcribe(f,language="ko",beam_size=5)
+              res[os.path.basename(f)]=" ".join(s.text.strip() for s in segs)
+              print(os.path.basename(f),res[os.path.basename(f)],flush=True)
+          json.dump(res,open("/tmp/out/transcripts.json","w"),ensure_ascii=False,indent=1)
+          PY
+      - name: publish
+        if: always()
+        run: |
+          cd /tmp/out && git init -q && git checkout -q -b asr-out && git add -A
+          git -c user.name=asr-bot -c user.email=a@users.noreply.github.com commit -q -m "asr ${GITHUB_SHA::7}"
+          git push -q -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} asr-out
