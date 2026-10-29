@@ -6,9 +6,9 @@
    fire  - recoil: lurch forward + shoved back, wings snap down; volleys kick smaller
    down  - wings droop, nose dips, sinks and twitches; phase 2 - faster, bigger, hotter */
 let BOSS_GLTF=null,POD_GLTF=null;
-const BOSS_W=115,POD_S=7.5,POD_R=4,BOSS_EYE=13;
+const BOSS_W=150,POD_S=8.5,POD_R=4.6,BOSS_EYE=17;
 // pods sit just outside the wing tips and above the crown (boss-local, world units)
-const WP_OFF2=[new V3(-34,7,17),new V3(34,7,17),new V3(0,30,8)];
+const WP_OFF2=[new V3(-44,9,22),new V3(44,9,22),new V3(0,39,10)];
 function bossBuildModel(g){
   const o=THREE.SkeletonUtils.clone(BOSS_GLTF.scene);let mat=null;
   o.traverse(m=>{if(!m.isMesh)return;m.frustumCulled=false;m.material=m.material.clone();m.material.envMap=ENV;m.material.envMapIntensity=.9;

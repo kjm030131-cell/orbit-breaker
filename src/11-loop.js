@@ -42,7 +42,7 @@ function update(rdt){
   if(VS&&S.vsLunge>0){S.vsLunge=Math.max(0,S.vsLunge-dt);S.vel.copy(S.vsDir);if(!S.vsLunge)S.vel.multiplyScalar(.2)}
   else if(S.dash>0&&S.dashT&&S.dashT.alive&&S.dashT.launched<=0){
     S.dash-=dt;const to=S.dashT.m.position.clone().sub(S.pos);const d=to.length();S.face=Math.atan2(to.x,to.z);
-    if(d<(S.dashT.isBoss&&S.dashT.rad>20?20:4.2)||S.dash<=0){S.dash=0;S.vel.multiplyScalar(.2);if(S.pending){startAct(S.pending,ACT[S.pending].strike*ACT[S.pending].dur*.85);S.pending=null}}
+    if(d<(S.dashT.isBoss&&S.dashT.rad>20?S.dashT.rad*.66:4.2)||S.dash<=0){S.dash=0;S.vel.multiplyScalar(.2);if(S.pending){startAct(S.pending,ACT[S.pending].strike*ACT[S.pending].dur*.85);S.pending=null}}
     else S.vel.copy(to.normalize().multiplyScalar(Math.max(75,d/.12)));
   }else{S.dash=0;if(S.pending){startAct(S.pending);S.pending=null}
     // while shooting the body squares up to the target (right shoulder slightly forward), otherwise it follows the camera

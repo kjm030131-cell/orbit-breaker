@@ -82,7 +82,7 @@ function shoot(){
 }
 function slashStrike(){ // called on the strike frame of a slash action
   const heavy=S.act==="slash3";if(VS&&!vsCanAct())return;S.lastStrikeT=clockT;if(heavy)tutCount("combo");sfx("slash",null,S.act==="slash2"?1:heavy?2:0);{const f=new V3(Math.sin(S.face),0,Math.cos(S.face)),r=new V3(Math.cos(S.face),0,-Math.sin(S.face));fxSlashArt(S.pos.clone().addScaledVector(f,4.5).add(new V3(0,1.4,0)),S.combo===1?r.clone().negate():r,heavy,S.combo)}
-  const e=S.dashT&&S.dashT.alive&&S.dashT.launched<=0&&S.dashT.m.position.distanceTo(S.pos)<(S.dashT.isBoss&&S.dashT.rad>20?27:7.5)?S.dashT:null;
+  const e=S.dashT&&S.dashT.alive&&S.dashT.launched<=0&&S.dashT.m.position.distanceTo(S.pos)<(S.dashT.isBoss&&S.dashT.rad>20?S.dashT.rad*.9:7.5)?S.dashT:null;
   if(!e){fieldSlash(heavy);return}
   const tip=new V3();P.tipObj.getWorldPosition(tip);const at=e.m.position.clone().lerp(tip,.4);
   if(e.isRemote){vsAttackHit(heavy,G.crit>0,at);hitMark(heavy?"kill":"hit");impactPunch(heavy?.8:.45);sfx("thud",at,heavy?1:0);sfx("sizzle",at);return}
