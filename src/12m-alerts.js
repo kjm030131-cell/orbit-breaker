@@ -9,7 +9,7 @@ function bossCineStart(){if(TUT.on||VS||DUEL||SCREEN!=="play"||!BOSS.e)return fa
   Object.assign(BCINE,{on:true,t:0,fov0:camera.fov});G.iframe=Math.max(G.iframe,BCINE.dur+1.5);S.act=null;S.dashT=null;
   let el=$("bcine");if(!el){el=document.createElement("div");el.id="bcine";el.innerHTML=`<i class="bcBar t"></i><i class="bcBar b"></i>
 <div class="bcTag">WARNING · 아르고스 지휘기 접근</div><div class="bcName"><b>케르고그모스</b><span>KERGOGMOS · 보스</span></div>
-<div class="bcHow"><div class="s1"><em>1</em><span><b>붉은 약점 3곳</b>을 쏘거나 베어서 부수세요</span></div><div class="s2"><em>2</em><span>약점이 다 부서지면 보스가 멈춰요 → <b>가까이 붙어 베기!</b></span></div></div>
+<div class="bcHow"><div class="s1"><em>1</em><span><b>붉은 약점 3곳</b>을 쏘거나 베어서 부수세요</span></div><div class="s2"><em>2</em><span>다 부서지면 보스가 멈춰요 → <b>가까이 붙어 베기!</b> · 이걸 <b>3번</b></span></div></div>
 <div class="bcSkip">Space · 클릭 = 건너뛰기</div>`;document.body.appendChild(el)}
   el.className="";void el.offsetWidth;el.className="on";sfx("phase");return true}
 function bossCineEnd(){if(!BCINE.on)return;BCINE.on=false;const el=$("bcine");if(el)el.className="";camera.fov=BCINE.fov0||camera.fov;camera.updateProjectionMatrix();
