@@ -108,7 +108,7 @@ function enemyAI(e,dt,T){
         const onScreen=camFwd().dot(em.position.clone().sub(camera.position).normalize())>.3;
         if(d<50&&d>7&&onScreen&&teleCount()<ph.maxTele){e.tele=ph.tele;e.teleLock=false;sfx("tele",em.position,0)}}}}
   // aim-preview highlight
-  if(em.userData.mat&&e.flash<=0){const k=e.aim?.16+.1*Math.sin(T*14):0;em.userData.mat.emissive.setRGB(k,k*.55,0)}
+  if(em.userData.mat&&e.flash<=0){const k=e.aim?.16+.1*Math.sin(T*14):0;em.userData.mat.emissive.setRGB(.13+k,.025+k*.55,.02)} /* faint red self-glow so drones stand out from the busy backdrop */
 }
 function clearTele(e){e.tele=0;e.teleLock=false;if(e.teleMesh){scene.remove(e.teleMesh);e.teleMesh.material.dispose();e.teleMesh=null}}
 
@@ -214,7 +214,7 @@ function gameplayTick(dt,rdt,T){
   if(!VS&&G.dead<=0&&SCREEN==="play"&&S.started){G.hpT=(G.hpT||0)+dt;if(G.hpT>HP_REGEN_AFTER&&G.hp<HP_MAX)G.hp=Math.min(HP_MAX,G.hp+HP_REGEN*dt)}
   {const low=!VS&&SCREEN==="play"&&S.started&&!S.ended&&G.hp<HP_MAX*.35&&G.dead<=0; // only during a live sortie (never on menus after a run ends)
   if(low!==document.body.classList.contains("dmg"))document.body.classList.toggle("dmg",low);if(low){const t=$("dmgTxt"),x=`장갑 위험 · ${Math.ceil(G.hp)}`;if(t.textContent!==x)t.textContent=x}}
-  threatMarks();
+  threatMarks();enemyMarks();
   G.guardCd=Math.max(0,G.guardCd-dt);
   G.iframe=Math.max(0,G.iframe-dt);G.stagger=Math.max(0,G.stagger-dt);G.dodgeCd=Math.max(0,G.dodgeCd-dt);G.crit=Math.max(0,G.crit-dt);
   stepEBolts(dt);stepPops(rdt);updateAim(T);itemsTick(dt,rdt,T);unitsTick(dt,rdt,T);bossTick(dt,rdt,T);vsTick(rdt);
@@ -279,3 +279,16 @@ function threatMarks(){if(!THR.els)THR.els=[...document.querySelectorAll("#threa
     let a=Math.atan2(-v.y,v.x);if(behind&&Math.abs(v.x)<1e-3)a=Math.PI/2;const el=els[n++];
     el.style.display="block";el.style.transform=`translate(${cx+Math.cos(a)*R}px,${cy+Math.sin(a)*R}px) rotate(${a}rad)`;el.classList.toggle("lock",t.lock)}
   for(;n<els.length;n++)if(els[n].style.display!=="none")els[n].style.display="none"}
+
+/* ---- enemy markers (10/29 feedback: drones were hard to pick out against Earth / debris): a small coloured chevron above
+   every live enemy on screen within 160 m; colour = type (red drone, blue elite, orange kamikaze, violet sniper, green crate) ---- */
+const EMK={els:[],box:null,v:new V3()};
+function enemyMarks(){if(!EMK.box){const b=document.createElement("div");b.id="emarks";b.style.cssText="position:absolute;inset:0;pointer-events:none;z-index:2";
+    b.innerHTML="<style>#emarks i{position:absolute;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid var(--c);filter:drop-shadow(0 0 4px var(--c));transform:translate(-50%,-100%);opacity:.9}</style>";
+    for(let i=0;i<28;i++){const el=document.createElement("i");el.hidden=true;b.appendChild(el);EMK.els.push(el)}$("hud").appendChild(b);EMK.box=b}
+  let n=0;if(SCREEN==="play"&&!VS&&!S.ended&&camera){const W=innerWidth,H=innerHeight;
+    for(const e of enemies){if(n>=EMK.els.length)break;if(!e.alive||e.launched>0||e.isBoss||e.isWP||e.isRemote)continue;const d=e.m.position.distanceTo(S.pos);if(d>160||d<6)continue;
+      const v=EMK.v.copy(e.m.position).add(new V3(0,(e.rad||4)*.9+1.2,0)).project(camera);if(v.z>1||v.x<-1.05||v.x>1.05||v.y<-1.05||v.y>1.05)continue;
+      const el=EMK.els[n++],c=e.crate?"#7dff8a":e.kami?"#ff8a20":e.sniper?"#c070ff":e.elite?"#48c8ff":"#ff4040",sc=clamp(1.4-d/160,.6,1.25);
+      if(el.hidden)el.hidden=false;el.style.setProperty("--c",c);el.style.left=((v.x+1)/2*W)+"px";el.style.top=((1-v.y)/2*H)+"px";el.style.transform=`translate(-50%,-100%) scale(${sc.toFixed(2)})`}}
+  for(let i=n;i<EMK.els.length;i++)if(!EMK.els[i].hidden)EMK.els[i].hidden=true}
