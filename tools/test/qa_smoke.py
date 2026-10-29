@@ -43,6 +43,11 @@ async def main():
           r.spec={};for(const u of ["pods","missile","shield"]){T.G.unit=u;T.G.spec=100;T.G.specT=-1;T.G.mega=null;T.G.stagger=0;T.G.iframe=999;T.G.dead=0;for(let i=0;i<8;i++)T.spawnCrate(at(30+i*5).add(new V(i*2-8,0,0)));T.special();let max=0,cf=0;for(let i=0;i<80;i++){T.update(.05);max=Math.max(max,(T.G.proj||[]).length);if(i===40)cf=+(T.G.cfield||0).toFixed(1)}r.spec[u]={proj:max,cfieldAt2s:cf,storm:!!T.G.podStorm}}
         }catch(e){r.err=String(e).slice(0,300)}return r}''')
         await pg.evaluate('()=>window.__T.setPaused(false)');await pg.wait_for_timeout(800);await shot('02d_foes')
+        try: await pg.wait_for_function('Object.keys(window.__T.UNIT_GLTF).length>=4',timeout=60000)
+        except Exception as e: errs.append('unit models not loaded: '+str(e)[:100])
+        for u in ['mega','missile','pods','shield']:
+            await ev('unit_'+u,'''()=>{const T=window.__T;T.setPaused(true);T.restart();T.show("play");T.S.started=true;T.S.demo=false;T.G.iframe=999;for(const e of T.enemies)e.alive=false;T.G.unit="%s";T.buildBits("%s");for(let i=0;i<20;i++)T.update(.05);return Object.keys(T.UNIT_GLTF)}'''%(u,u))
+            await pg.evaluate('()=>window.__T.setPaused(false)');await pg.wait_for_timeout(900);await pg.evaluate('()=>window.__T.setPaused(true)');await shot('02e_unit_'+u)
         # 1b) a decent player for the full 120 s: dodges ~60% of shots / rams in time, breaks staggers, kills a drone every 1.5 s, chips the pods and slashes the stalled boss
         await ev('solo_skilled','''()=>{const T=window.__T;T.setPaused(true);T.G.unit="mega";T.restart();T.show("play");T.S.started=true;T.S.ended=false;T.S.demo=false;
           let lost=0,hits=0,minHp=100,dodges=0,bossT=null,last=100;
