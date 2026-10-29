@@ -95,6 +95,20 @@ async def main():
         await ev('tutorial','''()=>{const T=window.__T;T.setPaused(true);document.body.classList.add("tut");T.TUT.on=true;T.TUT.c={};const out=[];for(let i=0;i<T.TUT_STEPS.length-1;i++){T.TUT.busy=false;T.tutStep(i);for(let k=0;k<6;k++)T.update(.05);out.push(document.getElementById("tutObjTxt").textContent.slice(0,14))}
           T.TUT.busy=false;T.tutStep(8);for(let k=0;k<4;k++)T.update(.05);return out}''')
         await pg.evaluate('()=>window.__T.setPaused(false)');await pg.wait_for_timeout(600);await shot('05_tutorial')
+        # tutorial layout: anything visible that overlaps the docked dialogue frame or the option-unit card (several window sizes)
+        ovl='''()=>{const vis=e=>{const c=getComputedStyle(e);if(c.display==="none"||c.visibility==="hidden"||+c.opacity<.05)return false;const r=e.getBoundingClientRect();return r.width>2&&r.height>2};
+          const res={};for(const id of ["radio","tutEquip","tutKeys","tutCue"]){const a=document.getElementById(id);if(!a||!vis(a))continue;const A=a.getBoundingClientRect();const hit=[];
+          for(const e of document.querySelectorAll("body *")){if(e===a||a.contains(e)||e.contains(a)||!vis(e))continue;if(e.children.length&&![...e.childNodes].some(n=>n.nodeType===3&&n.textContent.trim()))continue;
+            const r=e.getBoundingClientRect();const ox=Math.min(A.right,r.right)-Math.max(A.left,r.left),oy=Math.min(A.bottom,r.bottom)-Math.max(A.top,r.top);
+            if(ox>4&&oy>4)hit.push((e.id||e.className||e.tagName)+":"+(e.textContent||"").trim().slice(0,16))}res[id]={r:[A.left|0,A.top|0,A.right|0,A.bottom|0],hit:hit.slice(0,25)}}return res}'''
+        for vw,vh in ((1280,720),(1600,900),(1920,1080)):
+            await pg.set_viewport_size({'width':vw,'height':vh});await pg.wait_for_timeout(300)
+            await ev(f'tut_overlap_{vw}',ovl)
+        await pg.evaluate('()=>{const T=window.__T;T.TUT.busy=false;T.tutStep(15);for(let k=0;k<6;k++)T.update(.05)}');await pg.wait_for_timeout(700)
+        for vw,vh in ((1280,720),(1920,1080)):
+            await pg.set_viewport_size({'width':vw,'height':vh});await pg.wait_for_timeout(300)
+            await ev(f'tut_overlap_unit_{vw}',ovl);await shot(f'05c_tut_unit_{vw}')
+        await pg.set_viewport_size({'width':1280,'height':720});await pg.wait_for_timeout(200)
         await pg.evaluate('()=>{const T=window.__T;["경직 풀기","팔 절단 · 사격 불능","자세 붕괴! 지금 베어라","자세 붕괴! 지금 베어라","피격 −24 · Shift로 경직 풀기","콤보 ×2"].forEach(t=>T.popText(t))}');await pg.wait_for_timeout(500);await shot('05b_feed')
         await ev('feed','()=>[...document.querySelectorAll("#feed div")].map(d=>d.textContent)')
         await pg.evaluate('()=>{const T=window.__T;T.TUT.on=false;T.TUT.step=-1;document.body.classList.remove("tut");T.restart();T.show("duel")}')

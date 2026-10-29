@@ -944,7 +944,7 @@ body:not(.versus):not(.tut) #hud[hidden]~#feed{display:none}
 /* tutorial (10/29): one panel only - the objective box docks inside the dialogue frame next to the operator portrait.
    ui/radio_tut.webp (2163x596, portrait window 495x528 = the photo's 15:16) is drawn at a uniform 220/596 scale so the window keeps
    its shape and the photo fills it exactly; only the text panel's middle stretches sideways. */
-body.tutdock #radio{top:calc(110px + env(safe-area-inset-top,0px));opacity:1;transform:translate(-50%,0);width:min(960px,94vw);max-width:none!important;min-width:0!important;height:220px;min-height:0;box-sizing:border-box;
+body.tutdock #radio{top:calc(10px + env(safe-area-inset-top,0px));opacity:1;transform:translate(-50%,0);width:min(960px,94vw);max-width:none!important;min-width:0!important;height:220px;min-height:0;box-sizing:border-box;
  padding:34px 56px 30px 238px!important;border-image:url(ui/radio_tut.webp) 60 90 60 620 fill / 22.15px 33.2px 22.15px 228.9px stretch!important;justify-content:flex-start;gap:0}
 body.tutdock #radioWho{display:none}body.tutdock #radioFace::after{display:none}
 body.tutdock #radioFace{left:13.3px;top:12.9px;width:182.7px;height:194.9px;transform:none;background-color:transparent;background-size:100% 100%;border-radius:0}
