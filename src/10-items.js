@@ -11,7 +11,7 @@ function addSpec(n){if(SCREEN!=="play"||G.specT>=0)return;const was=G.spec;G.spe
 /* ---- special: ORBIT BREAK ---- */
 function special(){
   if(VS){vsSkill(true);return}if(SCREEN!=="play"||S.ended||G.spec<100||G.specT>=0||G.stagger>0)return;
-  tutCount("spec");G.spec=0;G.specT=0;G.iframe=2;S.act=null;S.dash=0;S.dashT=null;S.pending=null;startAct("special");S.slow=.6;flash(.3);S.shake=Math.max(S.shake,.7);impactPunch(1);if(P&&P.J)fxCharge(P.J.torso);
+  tutCount("spec");G.spec=0;G.specT=0;G.iframe=Math.max(G.iframe,2);S.act=null;S.dash=0;S.dashT=null;S.pending=null;startAct("special");S.slow=.6;flash(.3);S.shake=Math.max(S.shake,.7);impactPunch(1);if(P&&P.J)fxCharge(P.J.torso);
   unitSpecial();sfx("specCharge");
 }
 function specialBurst(){
