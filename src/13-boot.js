@@ -33,3 +33,6 @@ addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;$("in
 addEventListener("appinstalled",()=>{installEvt=null;$("installBtn").hidden=true});
 $("installBtn").addEventListener("click",async()=>{if(!installEvt)return;sfx("uiok");installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;$("installBtn").hidden=true});
 if("serviceWorker" in navigator&&location.protocol==="https:"&&!/claude\.ai|claudeusercontent/.test(location.host))navigator.serviceWorker.register("sw.js").catch(()=>{});
+
+// one frame per sortie: the lives row is meaningless, the armour bar carries it
+{const L=$("lives");if(L&&MAX_LIVES<=1)L.style.display="none"}

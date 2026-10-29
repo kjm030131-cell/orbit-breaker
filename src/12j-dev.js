@@ -46,4 +46,4 @@ if(DEV.on){
     else if(d==="tut"&&!live()){startTutorial()}
     sync();if(live())lock()});
   addEventListener("keydown",e=>{if(e.code==="F9"){e.preventDefault();p.hidden=!p.hidden}});
-  setInterval(()=>{if(SCREEN!=="play")return;if(DEV.god){G.iframe=Math.max(G.iframe,.5);if(G.hp<100)G.hp=100}if(DEV.nocd)G.unitCd=0},100);sync()}
+  setInterval(()=>{if(SCREEN!=="play")return;if(DEV.god){G.iframe=Math.max(G.iframe,.5);if(G.hp<HP_MAX)G.hp=HP_MAX}if(DEV.nocd)G.unitCd=0},100);sync()}

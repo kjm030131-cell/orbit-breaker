@@ -8,7 +8,7 @@ const PHASES=[
 const CLEAN_STEP=15;
 function cleanMult(){return Math.min(2,1+Math.floor(G.clean/CLEAN_STEP)*.2)}
 const G={phase:0,kc:0,kcT:0,maxKC:0,crit:0,iframe:0,stagger:0,dodgeCd:0,ebolts:[],aimN:0,focus:null,lives:3,dead:0,clean:0,guardCd:0,unit:"mega",spawnT:0,bigT:0};
-const MAX_LIVES=3;
+const MAX_LIVES=1; // 10/29: one frame per sortie (3 sorties per student id), with a bigger armour pool instead
 const KC_WINDOW=3.5;
 function comboMult(){const k=G.kc;return k>=35?3:k>=20?2.5:k>=10?2:k>=5?1.5:1}
 function mult(){return comboMult()*cleanMult()*(G.phase>=3?2:1)}
@@ -212,7 +212,7 @@ function gameplayTick(dt,rdt,T){
   if(G.dead>0){G.dead-=rdt;if(G.dead<=0)respawnMech()}
   else if(SCREEN==="play"&&S.started&&!S.ended){const was=cleanMult();G.clean+=dt;const now=cleanMult();if(now>was){popText(`무피격 ×${now.toFixed(1)}`);sfx("chain",null,2)}}
   if(!VS&&G.dead<=0&&SCREEN==="play"&&S.started){G.hpT=(G.hpT||0)+dt;if(G.hpT>HP_REGEN_AFTER&&G.hp<HP_MAX)G.hp=Math.min(HP_MAX,G.hp+HP_REGEN*dt)}
-  {const low=!VS&&SCREEN==="play"&&S.started&&!S.ended&&G.hp<35&&G.dead<=0; // only during a live sortie (never on menus after a run ends)
+  {const low=!VS&&SCREEN==="play"&&S.started&&!S.ended&&G.hp<HP_MAX*.35&&G.dead<=0; // only during a live sortie (never on menus after a run ends)
   if(low!==document.body.classList.contains("dmg"))document.body.classList.toggle("dmg",low);if(low){const t=$("dmgTxt"),x=`장갑 위험 · ${Math.ceil(G.hp)}`;if(t.textContent!==x)t.textContent=x}}
   threatMarks();
   G.guardCd=Math.max(0,G.guardCd-dt);
@@ -233,7 +233,7 @@ function destroyMech(dir){
   const c=S.pos.clone();fxExplosion(c,2.2);fxExplosion(c.clone().add(new V3(1.5,1,0)),1.3);sfx("destroyed");S.shake=1.6;S.slow=.9;flash(.55);
   if(P)P.root.visible=false;S.vel.multiplyScalar(.15);
   const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");
-  popText(G.lives>0?`피격 · 기체 대파 — 남은 기체 ${G.lives}`:"전 기체 손실");
+  popText(G.lives>0?`피격 · 기체 대파 — 남은 기체 ${G.lives}`:"기체 대파 · 출격 종료");
 }
 function respawnMech(){
   if(G.lives<=0){finishRun("lost");return}
@@ -244,7 +244,7 @@ function respawnMech(){
 
 /* ---- rammer drones: hunt, arm (flashing orange line), then charge in a straight line ---- */
 const RAM_SPEED=72;
-const HP_MAX=100,STAGGER=.85,BREAK_COST=40,HP_REGEN_AFTER=8,HP_REGEN=2.5; // per-frame HP, hit stagger, Shift break-out cost, slow regen when untouched
+const HP_MAX=180,STAGGER=.85,BREAK_COST=40,HP_REGEN_AFTER=8,HP_REGEN=3.5; // per-frame HP, hit stagger, Shift break-out cost, slow regen when untouched
 function ramAI(e,dt,T){
   const em=e.m,eye=em.userData.eye,live=SCREEN==="play"&&!S.ended&&S.started;e.phase+=dt;
   if(e.rs==="hunt"){const to=S.pos.clone().sub(em.position),d=to.length();to.normalize();
