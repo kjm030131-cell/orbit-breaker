@@ -1,0 +1,16 @@
+# One-off check: list the latest Cloudflare Pages deployments (who/what was deployed when) — read only.
+name: pages-status
+on:
+  workflow_dispatch:
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: list deployments
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCT: 336dcf3cc4d108f284f3b5c358959508
+        run: |
+          r=$(curl -s -H "Authorization: Bearer $CF_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$ACCT/pages/projects/arclight-game/deployments?per_page=8")
+          echo "$r" | jq -r '.result[] | "\(.created_on) \(.environment) \(.deployment_trigger.type) \(.deployment_trigger.metadata.commit_hash // "-")[0:7] \(.deployment_trigger.metadata.commit_message // "-" | .[0:40]) \(.latest_stage.status)"' | while read -r l; do echo "::notice title=deploy::$l"; done
+          echo "$r" | jq -c '.errors' 
