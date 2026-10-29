@@ -954,6 +954,10 @@ body.tutdock #tutObj .lbl{font-size:12px;margin-bottom:4px}body.tutdock #tutObj 
 body.tutdock #tutObjHow{font-size:16px;margin-top:4px;color:#efe9dc}
 body.tutdock #tutObj em{position:absolute;right:52px;bottom:32px;margin:0;font-size:15px;min-height:0}
 body.tutdock #radioTxt{font-size:14px;line-height:1.45;color:#bdb8ad;padding-right:96px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+/* nothing else at the top while the frame is docked (score / time / kills / phase / boss bar mean nothing in training); keycaps sit right
+   under the frame instead of on the radar */
+body.tutdock .hud.tl,body.tutdock .hud.tr.killTR,body.tutdock #phase,body.tutdock #bossBar{display:none!important}
+body.tutdock #tutKeys{top:calc(242px + env(safe-area-inset-top,0px));bottom:auto}
 /* option-unit card in the tutorial (steps 15-18): slides in from the right, ticks R / F off as they are used */
 #tutEquip{position:fixed;right:22px;top:calc(364px + env(safe-area-inset-top,0px));z-index:6;width:min(310px,34vw);pointer-events:none;color:#f2efe8;font-family:var(--f-body);
  background:linear-gradient(rgba(14,18,23,.94),rgba(8,10,13,.9));border:1px solid #2c343e;border-top:2px solid var(--c,#ffb21a);box-shadow:0 10px 30px rgba(0,0,0,.55);
