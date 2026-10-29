@@ -19,16 +19,16 @@ function introMeteor(pos,vel,big){INTRO.meteors.push({p:pos.clone(),v:vel.clone(
 function introProp(pos,vel){if(!EN_MESH)return null;const m=new THREE.Mesh(EN_MESH.geometry,EN_MESH.material.clone());m.scale.setScalar(E_SCALE);m.position.copy(pos);
   m.rotation.y=Math.atan2(vel.x,vel.z);scene.add(m);const o={m,v:vel.clone(),hp:1};INTRO.props.push(o);return o}
 function playIntro(){return new Promise(res=>{
-  voPreload(INTRO_LINES.map(L=>L.vo));
+  voPreload(INTRO_LINES.map(L=>L.vo));introBars(true);
   if(!SHIP)buildShip();SHIP.g.position.set(0,0,0);SHIP.g.rotation.set(0,0,0);SHIP.retreat=-1;
-  Object.assign(INTRO,{on:true,t:0,skip:false,done:res,nextBoom:10.2,nextMet:30,cue:{}});
+  Object.assign(INTRO,{on:true,t:0,skip:false,done:res,nextBoom:10.2,nextMet:30,cue:{},chase:null});
   for(const e of enemies)e.m.visible=false;if(P)P.root.visible=false;
   for(let i=0;i<7;i++)introProp(new V3(-60+Math.random()*120,-4+Math.random()*26,60+Math.random()*70),new V3((Math.random()-.5)*14,(Math.random()-.5)*3,-6-Math.random()*8));
   for(const id of ["inLine","inSub","inMsgA"]){const el=$(id);el.style.whiteSpace="pre-line";if(id==="inLine")el.style.lineHeight="1.65"}
   const o=$("intro");o.hidden=false;o.className="on black";$("inCard").textContent="";$("inSub").textContent="";$("inLine").textContent="";$("inMsg").className="";$("inMsgA").textContent="";$("inMsgB").textContent="";$("inTitle").className="";
 })}
 function introClear(){for(const m of INTRO.meteors)fxMeteorFree(m.spr);for(const o of INTRO.props){scene.remove(o.m);o.m.material.dispose()}INTRO.props.length=0;INTRO.meteors.length=0}
-function endIntro(){INTRO.on=false;introClear();$("intro").hidden=true;if(P)P.root.visible=true;const r=INTRO.done;INTRO.done=null;if(r)r()}
+function endIntro(){introBars(false);INTRO.on=false;introClear();introNews(-1);if(INTRO.chase){scene.remove(INTRO.chase.m);INTRO.chase.m.material.dispose();INTRO.chase=null}$("intro").hidden=true;if(P)P.root.visible=true;const r=INTRO.done;INTRO.done=null;if(r)r()}
 function introType(el,txt,t0,cps){const n=Math.max(0,Math.min(txt.length,((INTRO.t-t0)*(cps||26))|0)),v=txt.slice(0,n);if(el.textContent!==v)el.textContent=v}
 function introUpdate(rdt){
   rdt=Math.min(rdt,.1);const t0=INTRO.t;INTRO.t+=rdt;const t=INTRO.t,cross=a=>t0<a&&t>=a,o=$("intro");
@@ -47,9 +47,15 @@ function introUpdate(rdt){
   if(cross(64.4))sfx("ui");
   if(t>64.8)introType($("inMsgB"),"응... 금방 갈게",64.8,8);
   if(cross(74.6))sfx("phase");
+  introNews(t);
+  if(cross(32.4))introChaseStart();
+  if(INTRO.chase){const c=INTRO.chase;c.v.y-=rdt*3;c.m.position.addScaledVector(c.v,rdt);c.m.rotation.x+=rdt*1.1;c.m.rotation.z+=rdt*.7;const heat=clamp((t-33)/6,0,1);
+    if(rdt>0){emit(ADD,{pos:c.m.position.clone(),color:0xffa040,s0:3+heat*7,s1:.5,life:.5+heat*.4,a:.9});emit(ADD,{pos:c.m.position.clone().addScaledVector(c.v,-.02),color:0xfff0c0,s0:1.5+heat*3,s1:.2,life:.12,a:1});
+      if(Math.random()<.6)emit(NORM,{pos:c.m.position.clone(),tex:TX.smoke,color:0x4a4640,vel:c.v.clone().multiplyScalar(-.15),s0:2,s1:8+heat*6,life:1.6,a:.25,drag:1})}
+    if(t>44){scene.remove(c.m);c.m.material.dispose();INTRO.chase=null}}
   // battle: wrecks blow up and start falling, burning
   for(const p of INTRO.props){p.m.position.addScaledVector(p.v,rdt);p.m.rotation.z+=rdt*.3}
-  if(t>10&&t<44&&t>=INTRO.nextBoom&&INTRO.props.length){INTRO.nextBoom=t+.9+Math.random()*1.2;const i=(Math.random()*INTRO.props.length)|0,p=INTRO.props[i];
+  if(t>10&&t<32&&t>=INTRO.nextBoom&&INTRO.props.length){INTRO.nextBoom=t+.9+Math.random()*1.2;const i=(Math.random()*INTRO.props.length)|0,p=INTRO.props[i];
     fxExplosion(p.m.position,1.3);sfx("boom",p.m.position);fireBolt(p.m.position.clone().add(new V3(-30,8,-40)),p.m.position.clone(),null);
     introMeteor(p.m.position,new V3((Math.random()-.5)*6,-18,8),true);scene.remove(p.m);p.m.material.dispose();INTRO.props.splice(i,1);
     introProp(new V3(-60+Math.random()*120,-4+Math.random()*26,90+Math.random()*60),new V3((Math.random()-.5)*14,(Math.random()-.5)*3,-6-Math.random()*8))}
@@ -61,7 +67,41 @@ function introUpdate(rdt){
     if(m.life<=0){fxMeteorFree(m.spr);INTRO.meteors.splice(i,1)}}
 }
 function introCamera(rdt){const t=INTRO.t,pos=new V3(),lk=new V3();let fov=50;
-  if(t<44){const k=clamp((t-9.3)/34.7,0,1),e=k*k*(3-2*k);pos.set(lerp(-44,-20,e),lerp(24,14,e),lerp(8,36,e));lk.set(lerp(-6,8,e),lerp(2,-4,e),115);fov=lerp(46,52,e)}
+  if(t<23){const k=clamp((t-9.3)/13.7,0,1),e=k*k*(3-2*k);pos.set(lerp(-44,-24,e),lerp(24,15,e),lerp(8,30,e));lk.set(lerp(-6,6,e),lerp(2,-3,e),115);fov=lerp(46,51,e)}
+  else if(t<32.4){const k=(t-23)/9.4;/* news long lens: far away, narrow, slow pan with a little hand-held wobble */pos.set(lerp(-150,-135,k)+Math.sin(t*1.7)*.6,40+Math.sin(t*2.3)*.4,lerp(-30,-10,k));lk.set(lerp(-8,8,k),4+Math.sin(t*1.1)*.5,118);fov=17}
+  else if(t<44&&INTRO.chase){const c=INTRO.chase,k=clamp((t-41)/3,0,1),e=k*k*(3-2*k);/* chase cam on one burning wreck, pulling up and away at the end */
+    pos.copy(c.m.position).add(new V3(lerp(-11,-40,e),lerp(5,48,e),lerp(-13,-30,e)));lk.copy(c.m.position).addScaledVector(c.v,.25);fov=lerp(46,62,e)}
   else if(t<59){const k=(t-44)/15;pos.set(lerp(-10,10,k),lerp(70,62,k),lerp(10,30,k));lk.set(0,-60,220);fov=58}
   else{const k=clamp((t-59)/9,0,1),e=k*k*(3-2*k);pos.set(lerp(84,66,e),lerp(20,13,e),lerp(70,40,e));lk.set(0,lerp(8,3,e),lerp(-40,-75,e));fov=44}
   camera.position.copy(pos);camera.lookAt(lk);if(Math.abs(camera.fov-fov)>.01){camera.fov=fov;camera.updateProjectionMatrix()}return true}
+
+/* ---- cinematic extras (10/29): letterbox bars, a TV news segment, a chase shot on one falling wreck ---- */
+function introChaseStart(){if(!EN_MESH)return;const m=new THREE.Mesh(EN_MESH.geometry,EN_MESH.material.clone());m.scale.setScalar(E_SCALE*1.2);m.position.set(10,14,150);scene.add(m);
+  m.material.emissive=new THREE.Color(0x401000);INTRO.chase={m,v:new V3(5,-20,12)};fxExplosion(m.position,1.6);sfx("boom",m.position,2)}
+// news overlay: a fictional channel's breaking-news graphics drawn in HTML over the 3D battle (no generated images)
+function introNews(t){let n=$("inNews");const on=t>=23.2&&t<32.4;
+  if(!n){if(!on)return;n=document.createElement("div");n.id="inNews";
+    n.innerHTML=`<style>
+#inNews{position:absolute;inset:0;pointer-events:none;font-family:Pretendard,"Noto Sans CJK KR",sans-serif;opacity:0;transition:opacity .25s}
+#inNews.on{opacity:1}
+#inNews .scan{position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 2px,transparent 2px 4px);mix-blend-mode:multiply}
+#inNews .tint{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55));}
+#inNews .bug{position:absolute;left:4.5vw;top:12vh;display:flex;gap:8px;align-items:center}
+#inNews .bug b{background:#0d3b8c;color:#fff;font-weight:900;font-size:clamp(14px,1.5vw,22px);padding:4px 10px;letter-spacing:.02em}
+#inNews .bug i{font-style:normal;background:#e3121b;color:#fff;font-weight:800;font-size:clamp(11px,1vw,15px);padding:5px 8px;animation:nwBlink 1s steps(2) infinite}
+#inNews .clock{position:absolute;right:4.5vw;top:12vh;color:#fff;font-weight:700;font-size:clamp(13px,1.2vw,18px);text-shadow:0 1px 4px #000}
+#inNews .low{position:absolute;left:4.5vw;right:4.5vw;bottom:calc(11vh + 78px)}
+#inNews .tag{display:inline-block;background:#e3121b;color:#fff;font-weight:900;font-size:clamp(13px,1.2vw,18px);padding:5px 12px}
+#inNews .hl{background:rgba(255,255,255,.96);color:#111;font-weight:800;font-size:clamp(17px,2vw,30px);padding:8px 14px;letter-spacing:-.02em;transform-origin:left;animation:nwIn .5s cubic-bezier(.2,.8,.2,1)}
+#inNews .sub{background:rgba(13,59,140,.92);color:#e8eefc;font-size:clamp(12px,1.1vw,16px);padding:5px 14px;font-weight:600}
+#inNews .tick{position:absolute;left:0;right:0;bottom:9vh;height:30px;background:#111;color:#ffd24a;font-size:15px;font-weight:700;line-height:30px;overflow:hidden;white-space:nowrap;border-top:2px solid #e3121b}
+#inNews .tick span{display:inline-block;padding-left:100%;animation:nwTick 16s linear infinite}
+@keyframes nwBlink{50%{opacity:.35}}@keyframes nwIn{from{transform:scaleX(0)}to{transform:none}}@keyframes nwTick{to{transform:translateX(-100%)}}
+</style><div class="scan"></div><div class="tint"></div><div class="bug"><b>T24 뉴스</b><i>● LIVE 속보</i></div><div class="clock">21:40</div>
+<div class="low"><span class="tag">속보</span><div class="hl">궤도 교전 사흘째… 정부 “무인기끼리의 교전, 인명 피해 없어”</div><div class="sub">국방부 정례 브리핑 · 헬리오스 방위선 상공</div></div>
+<div class="tick"><span>오늘 밤 수도권 유성우 예보 · 관측 최적 시간 21시~23시 &nbsp;&nbsp;|&nbsp;&nbsp; 헬리오스 송전 복구율 71% · 일부 지역 순환 정전 계속 &nbsp;&nbsp;|&nbsp;&nbsp; 국방부 “궤도 교전에 유인 기체 투입 없다” &nbsp;&nbsp;|&nbsp;&nbsp; 기상청 “낙하 잔해 대부분 대기권에서 소멸”</span></div>`;
+    $("intro").appendChild(n)}
+  if(n.classList.contains("on")!==on){n.classList.toggle("on",on);renderer.domElement.style.filter=on?"saturate(.7) contrast(1.15) brightness(1.05)":"";if(on)sfx("ui")}}
+// letterbox bars for the whole opening (cinematic framing)
+function introBars(on){let b=$("inBars");if(!b){b=document.createElement("div");b.id="inBars";b.innerHTML='<i style="top:0"></i><i style="bottom:0"></i><style>#inBars i{position:absolute;left:0;right:0;height:0;background:#000;transition:height 1.2s cubic-bezier(.2,.8,.2,1);z-index:1}#inBars.on i{height:8.5vh}</style>';b.style.cssText="position:absolute;inset:0;pointer-events:none";$("intro").appendChild(b)}
+  requestAnimationFrame(()=>b.classList.toggle("on",on))}
