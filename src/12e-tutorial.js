@@ -181,7 +181,10 @@ function tutMarkTick(s){const mk=$("tutMark"),want=s.mark;let best=null,bd=1e9;
 function tutCueTick(s){const c=s.cue?s.cue():null,el=$("tutCue");if(!c){if(!el.hidden)el.hidden=true;TUT.cueSt=null;return}
   S.slow=Math.max(S.slow||0,.06);el.hidden=false;el.classList.toggle("now",!!c.now);const t=c.now?`지금! ${KEYLBL[c.key]||c.key}`:"준비…";if(el.textContent!==t){el.textContent=t;if(c.now)sfx("lock")}
   const V=TUT_VO[TUT.step],st=c.now?"now":"ready";if(V&&V.cue&&TUT.cueSt!==st&&(st==="now"||!(TUT.cueT>clockT))){TUT.cueSt=st;if(st==="ready")TUT.cueT=clockT+4;tutCueVo(tutVoId(TUT.step,st))}}
-function tutStep(i){const prev=TUT_STEPS[TUT.step];if(prev&&prev.exit)prev.exit();TUT.step=i;TUT.t=0;TUT.respT=0;TUT.lastProg=null;TUT.hintSaid=false;const s=TUT_STEPS[i];if(!s)return;
+// the objective box lives inside the dialogue frame for the whole tutorial (moved back on exit; the 1:1 tutorial keeps its own layout)
+function tutDock(on){const o=$("tutObj"),r=$("radio");if(!o._home){o._home=o.parentNode;o._next=o.nextSibling}
+  if(on&&o.parentNode!==r)r.insertBefore(o,$("radioTxt"));if(!on&&o.parentNode===r)o._home.insertBefore(o,o._next);document.body.classList.toggle("tutdock",!!on)}
+function tutStep(i){if(TUT.on)tutDock(true);const prev=TUT_STEPS[TUT.step];if(prev&&prev.exit)prev.exit();TUT.step=i;TUT.t=0;TUT.respT=0;TUT.lastProg=null;TUT.hintSaid=false;const s=TUT_STEPS[i];if(!s)return;
   $("tutObj").hidden=false;tutText(s);$("tutObjProg").textContent=s.prog?s.prog():"";$("tutObjN").textContent=`${i+1} / ${TUT_STEPS.length}`;
   $("tutSkip").hidden=i>=TUT_STEPS.length-1;$("tutCue").hidden=true;
   const o=$("tutObj");o.classList.remove("new","ok");void o.offsetWidth;o.classList.add("new");TUT.cueSt=null;TUT.just0=TUT.c.just||0;const V=TUT_VO[i];if(V){TUT.sayTok=(TUT.sayTok||0)+1;setTimeout(()=>{if(TUT.on&&TUT.step===i)radio(OP,V.t,tutVoId(i))},i?150:500)}else tutSay(s.say);if(s.enter)s.enter()}
@@ -211,7 +214,7 @@ async function startTutorial(){if(TUT.on||!P)return;sfx("uiok");lock();
 function tutEnding(){if(!TUT.on)return;const n=Math.max(1,(S.kills||0)+(TUT.c.kill||0)*0);$("tutObj").hidden=true;if(document.pointerLockElement)document.exitPointerLock();
   const e=$("tutEnd");$("tutEndA").textContent=`그날 밤, 서울 하늘에는 유성 ${n}개가 내렸다.`;$("tutEndB").textContent="동생은 그중 하나에 소원을 빌었다.";e.hidden=false;e.classList.remove("on");void e.offsetWidth;e.classList.add("on");sfx("phase");
   setTimeout(()=>$("tutGo").focus(),2600)}
-function tutExit(to){tutKeysSet(null);tutHl(null);tutUnitsCard(false);$("tutMark").hidden=$("tutCue").hidden=true;if(TUT.unit0&&UNITS[TUT.unit0]){G.unit=TUT.unit0;buildBits(G.unit)}TUT.on=false;TUT.step=-1;tutWaypoint(null);$("tutObj").hidden=true;$("tutEnd").hidden=true;document.body.classList.remove("tut");
+function tutExit(to){tutDock(false);tutEquipHide();tutKeysSet(null);tutHl(null);tutUnitsCard(false);$("tutMark").hidden=$("tutCue").hidden=true;if(TUT.unit0&&UNITS[TUT.unit0]){G.unit=TUT.unit0;buildBits(G.unit)}TUT.on=false;TUT.step=-1;tutWaypoint(null);$("tutObj").hidden=true;$("tutEnd").hidden=true;document.body.classList.remove("tut");
   if(INTRO.on){INTRO.done=null;INTRO.on=false;introClear();$("intro").hidden=true;if(P)P.root.visible=true}
   if(CINE.on){CINE.done=null;endCine()}if(document.pointerLockElement)document.exitPointerLock();restart();show(to||"title");tutHintRefresh()}
 $("tutGo").addEventListener("click",()=>{sfx("uiok");tutExit("form")});
