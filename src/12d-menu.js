@@ -1,5 +1,5 @@
 /* ================= settings modal + pause menu ================= */
-var SHAKE_K=.6;try{SHAKE_K=+(localStorage.getItem("ob.shake")??.6)}catch(e){}
+var SHAKE_K=.25;try{SHAKE_K=+(localStorage.getItem("ob.shake2")??.25)}catch(e){} /* 10/29: gentler default (new key so old saved .6 resets) */
 let setFromPause=false;
 function segOn(id,v){document.querySelectorAll("#"+id+" button").forEach(b=>b.classList.toggle("on",(b.dataset.q||b.dataset.v)===String(v)))}
 function setFps(on){try{localStorage.setItem("ob.fps",on?"1":"0")}catch(e){}
@@ -12,7 +12,7 @@ document.addEventListener("click",e=>{if(e.target.closest("[data-settings]"))ope
 $("setClose").addEventListener("click",closeSettings);
 $("settings").addEventListener("click",e=>{if(e.target.id==="settings")closeSettings()});
 $("setQ").addEventListener("click",e=>{const b=e.target.closest("[data-q]");if(!b)return;setQuality(b.dataset.q);segOn("setQ",QUALITY);sfx("ui")});
-$("setShake").addEventListener("click",e=>{const b=e.target.closest("[data-v]");if(!b)return;SHAKE_K=+b.dataset.v;try{localStorage.setItem("ob.shake",SHAKE_K)}catch(e){}segOn("setShake",SHAKE_K);sfx("ui")});
+$("setShake").addEventListener("click",e=>{const b=e.target.closest("[data-v]");if(!b)return;SHAKE_K=+b.dataset.v;try{localStorage.setItem("ob.shake2",SHAKE_K)}catch(e){}segOn("setShake",SHAKE_K);sfx("ui")});
 $("setFps").addEventListener("click",e=>{const b=e.target.closest("[data-v]");if(!b)return;setFps(b.dataset.v==="1");sfx("ui")});
 $("volIn").addEventListener("input",()=>{AUD.vol=+$("volIn").value;$("volV").textContent=Math.round(AUD.vol*100);try{localStorage.setItem("ob.vol",AUD.vol)}catch(e){}
   if(AUD.ready&&AUD.on)MASTER.gain.setTargetAtTime(AUD.vol,AC.currentTime,.05)});

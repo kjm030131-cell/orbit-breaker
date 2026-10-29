@@ -7,8 +7,8 @@ const clock=new THREE.Clock();
 function focusCamera(rdt){const d=G.focus.m.position.clone().sub(S.pos),hz=Math.hypot(d.x,d.z),dt=Math.min(rdt,.05);
   const near=clamp((hz-5)/7,0,1);if(near<=0)return; // inside ~5 m: hold; 5-12 m: fade in
   const dy=Math.atan2(Math.sin(Math.atan2(d.x,d.z)-S.yaw),Math.cos(Math.atan2(d.x,d.z)-S.yaw));
-  if(Math.abs(dy)>.02){const cap=(S.dash>0||S.vsLunge>0?.9:2.4)*near*dt;S.yaw+=clamp(dy*(1-Math.exp(-7*dt)),-cap,cap)}
-  const pt=clamp(Math.atan2(d.y-1.5,hz)*.8-.06,-.6,.45);S.pitch+=clamp((pt-S.pitch)*(1-Math.exp(-5*dt)),-1.6*dt,1.6*dt)}
+  if(Math.abs(dy)>.02){const cap=(S.dash>0||S.vsLunge>0?.6:1.3)*near*dt;S.yaw+=clamp(dy*(1-Math.exp(-4*dt)),-cap,cap)} /* 10/29 motion sickness: slower, softer lock-on turn */
+  const pt=clamp(Math.atan2(d.y-1.5,hz)*.8-.06,-.6,.45);S.pitch+=clamp((pt-S.pitch)*(1-Math.exp(-3*dt)),-.9*dt,.9*dt)}
 function update(rdt){
   let dt=Math.min(rdt,.05);
   if(VS){S.hitstop=Math.min(S.hitstop,.12);S.slow=Math.min(S.slow,.4)}
@@ -23,7 +23,8 @@ function update(rdt){
 
   /* movement */
   const f=fwd(),right=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw)),acc=new V3();
-  if(SCREEN==="play"&&!S.ended&&S.over<=0&&G.stagger<=0&&(!VS||vsCanAct())){if(keys.KeyW)acc.add(f);if(keys.KeyS)acc.sub(f);if(keys.KeyA)acc.add(right);if(keys.KeyD)acc.sub(right);if(keys.Space)acc.y+=1;if(keys.KeyC)acc.y-=1}
+  const shiftHeld=(keys.ShiftLeft||keys.ShiftRight)&&S.boost>0,fw=shiftHeld?camFwd():f; /* boosting with W/S follows the camera's pitch: look up + boost = climb */
+  if(SCREEN==="play"&&!S.ended&&S.over<=0&&G.stagger<=0&&(!VS||vsCanAct())){if(keys.KeyW)acc.add(fw);if(keys.KeyS)acc.sub(fw);if(keys.KeyA)acc.add(right);if(keys.KeyD)acc.sub(right);if(keys.Space)acc.y+=1;if(keys.KeyC)acc.y-=1}
   const boosting=(keys.ShiftLeft||keys.ShiftRight)&&S.boost>0&&acc.lengthSq()>0&&SCREEN==="play";
   // responsive handling: same top speeds as before (≈15 m/s cruise, ≈36 m/s boost) but reached in ~0.3 s, and the frame
   // brakes hard when the keys are released. Dodges / knockbacks set S.freeT so they keep their old, longer glide.
@@ -134,7 +135,7 @@ function update(rdt){
   const cf=camFwd(),dist=S.demo?12:VS?12.4:8.6; // 1:1 mechs are drawn VS_MS bigger: pull the camera back to match
   const want=S.pos.clone().addScaledVector(cf,-dist).add(new V3(0,VS?3.5:2.4,0));
   // HM-1 beam: swing the camera out over the left shoulder so a beam fired down the reticle line is seen side-on, not end-on
-  S.megaCam=(S.megaCam||0)+((((G.mega&&!VS)||G.vsBeam)?1:0)-(S.megaCam||0))*(1-Math.exp(-7*rdt));if(S.megaCam>.002)want.add(new V3(Math.cos(S.yaw)*4.2*S.megaCam,1.1*S.megaCam,-Math.sin(S.yaw)*4.2*S.megaCam));
+  S.megaCam=(S.megaCam||0)+((((G.mega&&!VS)||G.vsBeam)?1:0)-(S.megaCam||0))*(1-Math.exp(-3*rdt));if(S.megaCam>.002)want.add(new V3(Math.cos(S.yaw)*4.2*S.megaCam,1.1*S.megaCam,-Math.sin(S.yaw)*4.2*S.megaCam));
   if(S.demo){const pv=SCREEN==="load",a=S.demoT*(pv?.35:.25),r=pv?10.5:11;want.copy(S.pos).add(new V3(Math.sin(a+2.6)*r,(pv?.6:2.2)+Math.sin(a*.7)*(pv?.3:1),Math.cos(a+2.6)*r))}
   if(VS&&VS.fp&&P&&!S.demo)camera.position.copy(vsCockpitPos()); // head lost: pilot's eye, no lag
   else camera.position.lerp(want,1-Math.pow(VS?.012:.0005,rdt));
@@ -145,8 +146,8 @@ function update(rdt){
     camera.lookAt(S.pos.clone().add(new V3(0,SCREEN==="load"?.2:.9,0)).addScaledVector(R,-(innerWidth>820?(SCREEN==="load"?4.6:4.5):0)))}
   else if(VS)camera.lookAt(camera.position.clone().addScaledVector(cf,18));
   else camera.lookAt(S.pos.clone().addScaledVector(cf,8).add(new V3(0,1.4,0)));
-  const fovT=VS?(VS.fp?74:66):boosting||S.dash>0?66:61;S.fovB=S.fovB||fovT;S.fovB+=(fovT-S.fovB)*(1-Math.exp(-8*rdt));if(!(S.hitstop>0))S.punch=Math.max(0,(S.punch||0)-rdt*4.5);
-  const fv=S.fovB-(S.punch||0)*4.5;if(Math.abs(fv-camera.fov)>.01){camera.fov=fv;camera.updateProjectionMatrix();}}
+  const fovT=VS?(VS.fp?74:66):boosting||S.dash>0?64:61;S.fovB=S.fovB||fovT;S.fovB+=(fovT-S.fovB)*(1-Math.exp(-3.5*rdt));if(!(S.hitstop>0))S.punch=Math.max(0,(S.punch||0)-rdt*4.5);
+  const fv=S.fovB-(S.punch||0)*2.5;if(Math.abs(fv-camera.fov)>.01){camera.fov=fv;camera.updateProjectionMatrix();}}
   if(typeof vsCockpitTick==="function")vsCockpitTick(rdt);
   if(typeof bladeUiTick==="function")bladeUiTick();
   if(typeof bossGuideTick==="function")bossGuideTick();
