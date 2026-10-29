@@ -1091,10 +1091,11 @@ body:has(#bcine.on) #hud{opacity:.15;transition:opacity .3s}
 @keyframes dbIn{from{transform:translateX(-50%) scale(1.3);opacity:0}}
 body.bossguide #bossBar{top:calc(128px + env(safe-area-inset-top,0px))} /* below the boss guide objective box (they overlapped) */
 /* registration tip box (glows a few times when the screen opens) + operation-area edge bar */
-.tipBox{margin-top:16px;padding:12px 16px 12px 16px;border:1px solid rgba(255,178,26,.45);background:rgba(255,178,26,.06);position:relative}
-.tipBox.glow{animation:tbGlow .9s ease-in-out 3}
-@keyframes tbGlow{50%{border-color:#ffd48a;box-shadow:0 0 22px rgba(255,178,26,.55),inset 0 0 14px rgba(255,178,26,.18)}}
-.tbH{font:800 15px var(--f-kdisp);color:#ffd48a;margin-bottom:6px}.tbH.t2{margin-top:10px;color:#ff8a60}
+.tipBox{margin-top:14px;padding:12px 18px 12px 26px;background:var(--panel);position:relative;isolation:isolate}
+.tipBox::before{content:"";position:absolute;inset:-7px -8px;border-style:solid;border-width:9px 17px 9px 21px;border-image:url(ui/plate.webp) 30 60 30 70 / 9px 17px 9px 21px stretch;pointer-events:none;z-index:2}
+.tipBox.glow::before{animation:tbGlow 1s ease-in-out 3}
+@keyframes tbGlow{50%{filter:brightness(1.8) drop-shadow(0 0 8px rgba(255,178,26,.8))}}
+.tbH{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}.tbH .lbl{color:var(--amber)}.tbH em{font:600 12px var(--f-kdisp);font-style:normal;color:var(--muted)}.tbH.t2{margin-top:10px}.tbH.t2 .lbl{color:#ff8a60}
 .tipBox ol{margin:0;padding-left:20px;display:grid;gap:3px}.tipBox li{font:600 14px/1.4 var(--f-kdisp);color:var(--bone)}.tipBox li b,.tbT b{color:#ffd48a}
 .tbT{display:flex;align-items:center;gap:8px;font:600 14px/1.4 var(--f-kdisp);color:var(--bone);margin-top:3px}
 .tbT i{flex:none;font:800 12px var(--f-kdisp);font-style:normal;padding:1px 7px;color:#fff}.tbT i.k{background:#d8361e}.tbT i.s{background:#8a3ad0}
@@ -1103,6 +1104,7 @@ body.bossguide #bossBar{top:calc(128px + env(safe-area-inset-top,0px))} /* below
 @keyframes edgeStatic{0%{background-position:0 0}25%{background-position:-37px 61px}50%{background-position:53px -29px}75%{background-position:-71px -47px}100%{background-position:19px 83px}}
 #edgeNote{position:fixed;left:50%;bottom:calc(214px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font:700 13px var(--f-kdisp);letter-spacing:.06em;color:#9fb8c8;text-shadow:0 1px 4px #000;pointer-events:none;animation:bcBlink 1.2s steps(2) infinite}
 #edgeNote[hidden]{display:none}
+@media (max-height:800px){#scrForm #fNote{display:none}#scrForm .pane>.pHead[style]{margin:14px 0 8px!important}.tipBox li,.tbT{font-size:13.5px}}
 </style>
 <div id="hud" hidden>
   <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="feed"></div><div id="aimPart" hidden></div><div id="postBar" hidden><i></i><span>자세</span></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="tutEquip" hidden></div><div id="tutEquipFx"></div><div id="lockWarn"><b>피격 경고</b></div>
@@ -1204,11 +1206,11 @@ body.bossguide #bossBar{top:calc(128px + env(safe-area-inset-top,0px))} /* below
       <div class="sortieMeter" id="sortieMeter"><i class="used"></i><i class="used"></i><i class="used"></i></div>
       <p class="note" id="fNote">같은 학번이면 기록이 이어집니다.</p>
       <div class="tipBox" id="tipBox">
-        <div class="tbH">고득점 요령</div>
-        <ol><li>베어 날린 적을 다른 적에게 부딪혀 <b>연쇄 폭발</b></li><li>계속 잡고, 안 맞을수록 <b>점수 배율 UP</b></li><li><b>마지막 단계는 점수 2배</b> · 끝까지 버티세요</li></ol>
-        <div class="tbH t2">특수 위협</div>
-        <div class="tbT"><i class="k">자폭</i><span>붉게 깜빡이며 돌진 → <b>붙기 전에 쏴서</b> 터뜨리기</span></div>
-        <div class="tbT"><i class="s">저격</i><span>보라색 조준선 → <b>보이면 바로 회피</b></span></div>
+        <div class="tbH"><span class="lbl">ECLIPSE CIC · 전술 메모</span><em>최지우 중위</em></div>
+        <ol><li>베어 날린 적이 부딪히면 <b>유폭</b>이 번져요</li><li>연속 격추 · 무피격이면 <b>전과가 불어나요</b></li><li>지휘기 출현 뒤엔 <b>전과 2배</b></li></ol>
+        <div class="tbH t2"><span class="lbl">특수 위협 · 아르고스 신형</span></div>
+        <div class="tbT"><i class="k">자폭</i><span>붉게 깜빡이며 돌진 → <b>붙기 전에 사격</b></span></div>
+        <div class="tbT"><i class="s">저격</i><span>보라색 조준선 → <b>보이는 즉시 회피</b></span></div>
       </div>
     </div>
   </div>
