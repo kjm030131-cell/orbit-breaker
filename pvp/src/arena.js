@@ -30,7 +30,7 @@ const COVER_B=VS_COVER.map(c=>{const o=[c[1],c[2],c[3]];let r=0;for(const q of c
 const coverHit=(a,b,list)=>{if(!list.length)return null;for(const c of COVER_B){if(segment(c.o,a,b)>c.r)continue;for(const q of c.s){const o=[q[0],q[1],q[2]];if(segment(o,a,b)<q[3])return o}}return null};
 // distance along a ray to the first cover sphere (Infinity when clear)
 const coverRay=(from,dir,range,list)=>{let best=Infinity;if(!list.length)return best;for(const c of COVER_B){if(segment(c.o,from,add(from,dir,range))>c.r)continue;for(const q of c.s){const o=[q[0],q[1],q[2]],t=dot(sub(o,from),dir);if(t<=0||t>range)continue;const d=len(sub(o,add(from,dir,t)));if(d<q[3])best=Math.min(best,t-Math.sqrt(q[3]*q[3]-d*d))}}return best};
-export const RIFLE_SPEED=230,VS_HP=180,BREAK_COST=30,BOLT_STUN=150,JUST_BOLT_S=.25,JUST_MISS=3.2,READ_WIN=260,READ_DIST=11;
+export const RIFLE_SPEED=230,VS_HP=180,BREAK_COST=30,BOLT_STUN=220,JUST_BOLT_S=.25,JUST_MISS=3.2,READ_WIN=260,READ_DIST=11;
 // parts (v9): each mech has a head and two arms with their own armour on top of the shared HP.
 // right arm = weapon arm (saber + rifle move to the left hand, attacks slow down), left arm = guard arm (guard gauge drains faster),
 // head = main camera (the pilot fights on from the opened cockpit in first person). The last remaining arm cannot be torn off.
@@ -55,6 +55,8 @@ const SKILL_KINDS=['pulse','beam','volley'];
 // pressed on time on their screen still counts (the attacker's hit confirm comes that much later instead)
 // inputs that arrive up to INPUT_TOL before the sender's recovery ends are kept (run at the end of the recovery), not dropped
 export const INPUT_TOL=100;
+// v13c stagger (10/29 20:00): about 30% longer so it is a real opening; the damage event now carries the stagger length (stun ms)
+export const STUN_MELEE=850,STUN_HEAVY=1150,STUN_SKILL=320,STUN_SKILL_HEAVY=1050,STUN_SKILLSHOT=260,STUN_PARRY=950,STUN_GB=1150;
 const grace=p=>p?Math.min(100,Math.max(0,(p.rtt||0)/2)):0;
 // v13b melee lag compensation (10/29): the attacker sees the opponent VIEW_MS in the past (client interpolation) plus half its ping.
 // A swing also counts against where the opponent was on the attacker's screen then (pose history ph), so a hit that clearly
@@ -82,11 +84,11 @@ export class Arena {
  end(w,why,now){const s=this.s;if(!['fight','count'].includes(s.phase))return;if(w!==null)s.wins[w==='a'?0:1]++;s.phase='roundEnd';s.nextAt=now+2800;s.shots=[];s.pending=[];const done=s.wins.some(n=>n>=2);this.emit({t:'roundEnd',winner:w,why,wins:s.wins,done,now});s.replay=w===null;if(done)s.phase='end';}
  damage(side,d,dir,kind,now,source,heavy=false,part=null){const s=this.s,p=s.players[side];if(!p||p.hp<=0||now<p.iframe)return false;
   if(p.armor){p.armor=false;this.emit({t:'block',side,kind:'armor'});return false;}
-  if(now<p.barrier)d=Math.max(1,Math.round(d*.4));p.hp=Math.max(0,p.hp-d);if(kind==='chip'){p.stun=Math.max(p.stun,now+140);}else{if(kind!=='skillshot')p.iframe=now+(kind==='melee'?(heavy?800:60):120);p.stun=now+(kind==='melee'?(heavy?900:650):kind==='bolt'?BOLT_STUN:kind==='skillshot'?200:heavy?800:250);p.guard=false;p.broke=false;}p.spec=Math.min(100,p.spec+d*.3);
+  if(now<p.barrier)d=Math.max(1,Math.round(d*.4));p.hp=Math.max(0,p.hp-d);if(kind==='chip'){p.stun=Math.max(p.stun,now+140);}else{if(kind!=='skillshot')p.iframe=now+(kind==='melee'?(heavy?800:60):120);p.stun=now+(kind==='melee'?(heavy?STUN_HEAVY:STUN_MELEE):kind==='bolt'?BOLT_STUN:kind==='skillshot'?STUN_SKILLSHOT:heavy?STUN_SKILL_HEAVY:STUN_SKILL);p.guard=false;p.broke=false;}p.spec=Math.min(100,p.spec+d*.3);
   if(source&&s.players[source])s.players[source].spec=Math.min(100,s.players[source].spec+d*.6);
   // v14: a skill already fired (beam charge, volley, pulse) still goes out when its owner is hit; only swings are cancelled.
   // A heavy melee hit or a guard break (stun>=900) still stops a running beam.
-  s.pending=s.pending.filter(x=>x.side!==side||SKILL_KINDS.includes(x.kind));if(p.beam&&kind==='melee'&&heavy)p.beam=null;if(kind==='chip')part=null;this.emit({t:'damage',side,d,dir,kind,hp:p.hp,heavy,part});this.hurtPart(side,part,d);this.status();if(p.hp<=0)this.end(other(side),'ko',now);return true;
+  s.pending=s.pending.filter(x=>x.side!==side||SKILL_KINDS.includes(x.kind));if(p.beam&&kind==='melee'&&heavy)p.beam=null;if(kind==='chip')part=null;this.emit({t:'damage',side,d,dir,kind,hp:p.hp,heavy,part,stun:Math.max(0,p.stun-now)});this.hurtPart(side,part,d);this.status();if(p.hp<=0)this.end(other(side),'ko',now);return true;
  }
  hurtPart(side,part,d){const p=this.s.players[side];if(this.s.noParts||!part||!p||!p.parts||p.hp<=0||p.parts[part]<=0)return;const pt=p.parts;
   const last=part!=='head'&&pt[part==='armL'?'armR':'armL']<=0; // the last arm holds on at 1
@@ -107,9 +109,9 @@ export class Arena {
     const facing=dot([Math.sin(q.f),0,Math.cos(q.f)],norm(sub(p.p,q.p)))>.2;
     if(dist<=x.range&&dot(norm(d),x.dir||f)>0&&q.guard&&facing){
      if(x.at-q.guardOn<=180){ // parry: guard raised right before the hit (or within the latency grace after it)
-      s.pending=s.pending.filter(z=>z.side!==x.side);p.stun=now+750;p.lock=now+750;p.combo=0;q.crit=now+1200;q.lock=0;this.emit({t:'parry',side:other(x.side)});this.status();continue;}
+      s.pending=s.pending.filter(z=>z.side!==x.side);p.stun=now+STUN_PARRY;p.lock=now+STUN_PARRY;p.combo=0;q.crit=now+1200;q.lock=0;this.emit({t:'parry',side:other(x.side)});this.status();continue;}
      q.gp-=(x.heavy?50:24)*(q.parts.armL<=0?ARM_L_GUARD:1);q.gpHit=now;p.lock=Math.max(p.lock,now+(x.heavy?260:160));const chip=Math.max(1,Math.round(x.dmg*.12));
-     if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;this.emit({t:'guardBreak',side:other(x.side)});this.damage(other(x.side),chip,norm(d),'chip',now,x.side);q.stun=now+900;}
+     if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;this.emit({t:'guardBreak',side:other(x.side)});this.damage(other(x.side),chip,norm(d),'chip',now,x.side);q.stun=now+STUN_GB;}
      else{this.emit({t:'block',side:other(x.side),kind:'guard',gp:Math.round(q.gp),heavy:!!x.heavy});this.damage(other(x.side),chip,norm(d),'chip',now,x.side);}
      continue;}
    }
@@ -126,14 +128,14 @@ export class Arena {
   for(const [side,p] of Object.entries(s.players)){const bm=p.beam;if(!bm)continue;if(now>bm.until||p.hp<=0){p.beam=null;continue;}
    while(bm.next<=now&&bm.next<bm.until){bm.next+=bm.every;const q=s.players[other(side)];if(!q)break;const from=add(p.p,[0,1,0]),dir=p.aim||f0(p);const reach=Math.min(bm.range,coverRay(from,dir,bm.range,s.noCover?[]:VS_COVER));
     if(segment(add(q.p,[0,.4,0]),from,add(from,dir,reach))<bm.width){
-     if(q.guard&&dot([Math.sin(q.f),0,Math.cos(q.f)],dir.map(v=>-v))>.3){q.gp-=bm.gp*(q.parts.armL<=0?ARM_L_GUARD:1);q.gpHit=now;if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;q.stun=now+900;this.emit({t:'guardBreak',side:other(side)});}else this.emit({t:'block',side:other(side),kind:'guardShot',gp:Math.round(q.gp),at:q.p});this.damage(other(side),1,dir,'chip',now,side);}
+     if(q.guard&&dot([Math.sin(q.f),0,Math.cos(q.f)],dir.map(v=>-v))>.3){q.gp-=bm.gp*(q.parts.armL<=0?ARM_L_GUARD:1);q.gpHit=now;if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;q.stun=now+STUN_GB;this.emit({t:'guardBreak',side:other(side)});}else this.emit({t:'block',side:other(side),kind:'guardShot',gp:Math.round(q.gp),at:q.p});this.damage(other(side),1,dir,'chip',now,side);}
      else this.damage(other(side),bm.dmg,dir,'skill',now,side,bm.heavy,partAt(q,nearPt(add(q.p,[0,.4,0]),from,add(from,dir,reach))));}}}
   for(const b of [...s.shots]){if(s.phase!=='fight')break;const q=s.players[other(b.side)];if(!q)continue;const elapsed=Math.min(2.4,(now-b.at)/1000),end=add(b.from,b.dir,elapsed*b.speed),start=b.last||b.from;b.last=end;
    const cv=coverHit(start,end,s.noCover?[]:VS_COVER);if(cv&&!(segment(add(q.p,[0,.4,0]),start,end)<BOLT_R&&len(sub(q.p,start))<len(sub(cv,start)))){s.shots=s.shots.filter(x=>x!==b);continue;}
    if(segment(add(q.p,[0,.4,0]),start,end)<BOLT_R){s.shots=s.shots.filter(x=>x!==b);
     if(s.rules.skills&&now<q.reflect){this.emit({t:'block',side:other(b.side),kind:'reflect'});this.projectile(other(b.side),end,b.dir.map(x=>-x),b.dmg,b.speed,now,0x8dff7a,false,true);continue;}
     if(s.rules.skills&&q.unit==='pods'&&now>=q.podAt){q.podAt=now+20000;this.emit({t:'block',side:other(b.side),kind:'pod'});continue;}
-    if(q.guard&&dot([Math.sin(q.f),0,Math.cos(q.f)],b.dir.map(v=>-v))>.3){q.gp-=12*(q.parts.armL<=0?ARM_L_GUARD:1);q.gpHit=now;if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;q.stun=now+900;this.emit({t:'guardBreak',side:other(b.side)});}else this.emit({t:'block',side:other(b.side),kind:'guardShot',gp:Math.round(q.gp),at:end});this.status();continue;}
+    if(q.guard&&dot([Math.sin(q.f),0,Math.cos(q.f)],b.dir.map(v=>-v))>.3){q.gp-=12*(q.parts.armL<=0?ARM_L_GUARD:1);q.gpHit=now;if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;q.stun=now+STUN_GB;this.emit({t:'guardBreak',side:other(b.side)});}else this.emit({t:'block',side:other(b.side),kind:'guardShot',gp:Math.round(q.gp),at:end});this.status();continue;}
     const dist=len(sub(q.p,b.from)),far=b.rifle&&dist>FAR_M,close=b.rifle&&dist<CLOSE_M;
     const charging=b.rifle&&q.boosting&&now-q.poseAt<250&&q.v&&len(q.v)>20&&dot(norm(q.v),norm(sub(b.from,q.p)))>.6;
     if(this.damage(other(b.side),Math.max(1,Math.round((close?Math.min(b.dmg,CLOSE_DMG):far?Math.min(b.dmg,FAR_DMG):b.dmg)*(charging?CHARGE_K:1))),b.dir,b.skill?'skillshot':'bolt',now,b.side,false,partAt(q,nearPt(add(q.p,[0,.4,0]),start,end)))&&s.rules.skills&&b.rifle&&s.players[b.side]&&s.players[b.side].unit==='mega'){const sh=s.players[b.side];sh.spec=Math.min(100,sh.spec+6);}
@@ -184,7 +186,7 @@ export class Arena {
     q.gp-=DEFLECT_GP*(q.parts.armL<=0?ARM_L_GUARD:1);q.gpHit=now;
     p.lock=now+DEFLECT_LOCK;p.lastSwing=now;p.heat=Math.min(100,p.heat+6);
     this.emit({t:'deflect',side,heavy:!!inc.heavy});
-    if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;q.stun=now+900;this.emit({t:'guardBreak',side:other(side)});}
+    if(q.gp<=0){q.gp=0;q.guard=false;q.gbUntil=now+1600;q.stun=now+STUN_GB;this.emit({t:'guardBreak',side:other(side)});}
     this.status();return;}
    const combo=(p.lastSwing&&at0-p.lastSwing<1300)?((p.combo||0)+1)%3:0;p.combo=combo;p.lastSwing=at0;const heavy=combo===2;p.lock=at0+(heavy?950:520)*(p.parts.armR<=0?ARM_R_SLOW:1);p.heat=Math.min(100,p.heat+(heavy?12:8));if(p.heat>=100)p.overUntil=now+1600;
    // swing direction: straight at the opponent when the attacker is aiming at them (within ~30 deg, 24 m), else the body facing
