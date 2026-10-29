@@ -4,7 +4,7 @@
 // puff: soft smoke with alpha (missile trails). Anything that fails to load keeps the older procedural look.
 const FXB={},FXBOK={};
 (function(){const L=new THREE.TextureLoader();
-  for(const k of ["meteor","bigexpl","shockwave","puff"]){const t=L.load("ui/fx_"+k+".webp",()=>{FXBOK[k]=true},undefined,()=>{});t.encoding=THREE.sRGBEncoding;FXB[k]=t}})();
+  for(const k of ["meteor","bigexpl","shockwave","puff","missileexpl","podhit","hexwave","hexshield"]){const t=L.load("ui/fx_"+k+".webp",()=>{FXBOK[k]=true},undefined,()=>{});t.encoding=THREE.sRGBEncoding;FXB[k]=t}})();
 
 // ---- meteors ----
 const METEOR_AR=155/1024; // texture height / width
@@ -20,17 +20,28 @@ function fxMeteorFree(m){if(!m)return;m.used=false;m.sp.visible=false}
 
 // ---- huge explosion: flipbook + shockwave rings ----
 const BIGF=[],SHOCK=[];
-for(let i=0;i<3;i++){const t=FXB.bigexpl.clone();t.repeat.set(.25,.25);t.needsUpdate=true;
+for(let i=0;i<4;i++){const t=FXB.bigexpl.clone();t.repeat.set(.25,.25);t.needsUpdate=true;
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false,blending:THREE.NormalBlending}));sp.visible=false;sp.frustumCulled=false;scene.add(sp);BIGF.push({sp,t,on:false})}
-for(let i=0;i<6;i++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:FXB.shockwave,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
+for(let i=0;i<16;i++){const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:FXB.shockwave,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
   sp.visible=false;sp.frustumCulled=false;scene.add(sp);SHOCK.push({sp,on:false})}
-function fxShockwave(pos,size,life,delay){const s=SHOCK.find(x=>!x.on);if(!s||!FXBOK.shockwave)return;Object.assign(s,{on:true,k:-(delay||0)/(life||.8),life:life||.8,size});
+function fxShockwave(pos,size,life,delay,tex){const key=tex&&FXBOK[tex]?tex:"shockwave";const s=SHOCK.find(x=>!x.on);if(!s||!FXBOK[key])return;Object.assign(s,{on:true,k:-(delay||0)/(life||.8),life:life||.8,size});
+  if(s.sp.material.map!==FXB[key]){s.sp.material.map=FXB[key];s.sp.material.needsUpdate=true}
   s.sp.position.copy(pos);s.sp.material.rotation=Math.random()*6.28;s.sp.visible=false}
 function fxBigExplosion(pos,size){size=size||40;
   if(FXBOK.bigexpl){const f=BIGF.find(x=>!x.on)||BIGF[0];Object.assign(f,{on:true,k:0,life:1.9});f.sp.position.copy(pos);f.sp.scale.setScalar(size);
     f.sp.material.rotation=(Math.random()-.5)*.6;f.sp.visible=true}
   fxShockwave(pos,size*1.6,.75,0);fxShockwave(pos,size*2.4,1.1,.18)}
+// skill flipbooks (4x4): missile explosion (alpha, normal blend) and pod hit (additive electric burst)
+const FLIPK={missileexpl:{n:14,blend:THREE.NormalBlending},podhit:{n:10,blend:THREE.AdditiveBlending}};
+for(const k in FLIPK){const d=FLIPK[k];d.pool=[];for(let i=0;i<d.n;i++){const t=FXB[k].clone();t.repeat.set(.25,.25);t.needsUpdate=true;
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthWrite:false,blending:d.blend}));sp.visible=false;sp.frustumCulled=false;scene.add(sp);d.pool.push({sp,t,on:false,k:0,life:1})}}
+// returns false when the texture is missing so callers can fall back to the procedural look
+function fxFlipK(key,pos,size,life){const d=FLIPK[key];if(!d||!FXBOK[key])return false;
+  let f=d.pool.find(x=>!x.on);if(!f){f=d.pool.reduce((a,b)=>a.k>b.k?a:b)}
+  Object.assign(f,{on:true,k:0,life:life||1});f.sp.position.copy(pos);f.sp.scale.setScalar(size);f.sp.material.rotation=Math.random()*6.28;f.sp.visible=true;return true}
 function stepFxBig(dt){
+  for(const key in FLIPK)for(const f of FLIPK[key].pool){if(!f.on)continue;f.k+=dt/f.life;if(f.k>=1){f.on=false;f.sp.visible=false;continue}
+    const n=Math.min(15,Math.floor(f.k*16));f.t.offset.set((n%4)*.25,.75-Math.floor(n/4)*.25);f.sp.material.opacity=f.k<.85?1:(1-f.k)/.15}
   for(const f of BIGF){if(!f.on)continue;f.k+=dt/f.life;if(f.k>=1){f.on=false;f.sp.visible=false;continue}
     const n=Math.min(15,Math.floor(Math.pow(f.k,.85)*16));f.t.offset.set((n%4)*.25,.75-Math.floor(n/4)*.25);f.sp.material.opacity=f.k<.82?1:(1-f.k)/.18}
   for(const s of SHOCK){if(!s.on)continue;s.k+=dt/s.life;if(s.k<0)continue;if(s.k>=1){s.on=false;s.sp.visible=false;continue}

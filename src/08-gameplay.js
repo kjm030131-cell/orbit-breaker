@@ -131,12 +131,16 @@ function stepEBolts(dt){
     if(dt>0&&(!b.vsVisual||b.trailT<=0)){b.trailT=1/30;emit(ADD,{pos:b.g.position.clone().addScaledVector(b.dir,-1.6),color:b.color,s0:1.2,s1:.1,life:.16,a:b.dead?.25:.7});}
     if(b.vsVisual){}
     else if(!b.dead&&!b.refl&&SCREEN==="play"&&boltDefense(b)){}
-    else if(b.refl){if(b.home&&b.home.alive&&b.home.launched<=0){const to=b.home.m.position.clone().sub(b.g.position).normalize();b.dir.lerp(to,Math.min(1,dt*8)).normalize();b.g.lookAt(b.g.position.clone().add(b.dir))}for(const e of enemies){if(!targetable(e)||e.isBoss)continue;if(e.m.position.distanceTo(b.g.position)<3.2){if(e.isWP)wpDamage(e,2,b.g.position.clone());else{knock(e,b.dir,32,1.8);hitFlash(e);addScore(220,e.m.position.clone(),"cyan")}fxImpact(b.g.position,0x8dff7a);b.life=0;b.dead=true;break}}}
+    else if(b.refl){if(b.home&&b.home.alive&&b.home.launched<=0){const to=b.home.m.position.clone().sub(b.g.position).normalize();b.dir.lerp(to,Math.min(1,dt*8)).normalize();b.g.lookAt(b.g.position.clone().add(b.dir))}for(const e of enemies){if(!targetable(e)||e.isBoss)continue;if(e.m.position.distanceTo(b.g.position)<3.2){if(e.isWP)wpDamage(e,2,b.g.position.clone());else{knock(e,b.dir,32,1.8);hitFlash(e);addScore(220,e.m.position.clone(),"cyan")}fxImpact(b.g.position,0x8dff7a);skillBlast(b.g.position.clone(),9,"shield",e);b.life=0;b.dead=true;break}}}
     else if(!b.dead&&SCREEN==="play"){const c=S.pos.clone().add(new V3(0,.4,0));const seg=b.g.position.clone().sub(p0),L=seg.length()||1e-6;
       const tt=clamp(c.clone().sub(p0).dot(seg)/(L*L),0,1);const dd=p0.clone().addScaledVector(seg,tt).distanceTo(c);
       if(dd<2.3){if(G.iframe>0){b.dead=true}else{hurt(b);b.life=0}}}
     if(b.life<=0){if(!b.dead)fxImpact(b.g.position,b.color);scene.remove(b.g);b.g.children.forEach(c=>c.material.dispose());G.ebolts.splice(i,1)}}
 }
+// cockpit glass cracks on a hit (ui/fx_crack.webp, screen-blended); stronger the lower the armour, a faint crack stays while armour is critical
+function crackHit(){let el=$("crack");if(!el){el=document.createElement("div");el.id="crack";el.style.cssText="position:fixed;inset:0;pointer-events:none;z-index:6;background:url(ui/fx_crack.webp) center/100% 100% no-repeat;mix-blend-mode:screen;opacity:0;transition:opacity 1.4s ease-out";$("hurt").after(el)}
+  const low=1-(G.hp??HP_MAX)/HP_MAX;el.style.transition="none";el.style.opacity=String(.45+.5*low);void el.offsetWidth;el.style.transition="opacity 1.4s ease-out";el.style.opacity=String(G.hp<HP_MAX*.35&&G.hp>0?.3:0)}
+function crackClear(){const el=$("crack");if(el)el.style.opacity="0"}
 function hurt(b){
   if(VS)return; // PvP HP is updated only by the room server.
   if(TUT.on){tutHurt(b);return}
@@ -144,7 +148,8 @@ function hurt(b){
   if(G.dead>0)return;
   fxImpact(S.pos.clone().add(new V3(0,.8,0)),0xff4030);sparks(S.pos,b.dir,0xffb080,20,.4,24);sfx("hurt");
   // HP system: every frame has 100 HP; a hit staggers you (no control) unless you break out with Shift
-  const dmg=Math.round(b.dmg||(b.ram?34:24));G.hp=Math.max(0,(G.hp??HP_MAX)-dmg);G.clean=0;G.hpT=0;
+  const dmg=Math.round((b.dmg||(b.ram?34:24))*(G.cfield>0?.5:1));G.hp=Math.max(0,(G.hp??HP_MAX)-dmg);G.clean=0;G.hpT=0;
+  crackHit();
   if(G.hp>0){G.stagger=Math.max(G.stagger,STAGGER);G.iframe=Math.max(G.iframe,.55);G.broke=false;S.hitstop=Math.max(S.hitstop,.06);S.shake=Math.max(S.shake,.55);
     if(b.dir){S.vel.copy(b.dir).multiplyScalar(18);S.freeT=.3}S.act=null;S.dash=0;S.dashT=null;S.pending=null;flash(.15);
     const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");popText(`피격 −${dmg} · Shift로 경직 풀기`);return}
@@ -213,7 +218,7 @@ function gameplayTick(dt,rdt,T){
   else if(SCREEN==="play"&&S.started&&!S.ended){const was=cleanMult();G.clean+=dt;const now=cleanMult();if(now>was){popText(`무피격 ×${now.toFixed(1)}`);sfx("chain",null,2)}}
   if(!VS&&G.dead<=0&&SCREEN==="play"&&S.started){G.hpT=(G.hpT||0)+dt;if(G.hpT>HP_REGEN_AFTER&&G.hp<HP_MAX)G.hp=Math.min(HP_MAX,G.hp+HP_REGEN*dt)}
   {const low=!VS&&SCREEN==="play"&&S.started&&!S.ended&&G.hp<HP_MAX*.35&&G.dead<=0; // only during a live sortie (never on menus after a run ends)
-  if(low!==document.body.classList.contains("dmg"))document.body.classList.toggle("dmg",low);if(low){const t=$("dmgTxt"),x=`장갑 위험 · ${Math.ceil(G.hp)}`;if(t.textContent!==x)t.textContent=x}}
+  if(low!==document.body.classList.contains("dmg")){document.body.classList.toggle("dmg",low);if(!low)crackClear()}if(low){const t=$("dmgTxt"),x=`장갑 위험 · ${Math.ceil(G.hp)}`;if(t.textContent!==x)t.textContent=x}}
   threatMarks();enemyMarks();
   G.guardCd=Math.max(0,G.guardCd-dt);
   G.iframe=Math.max(0,G.iframe-dt);G.stagger=Math.max(0,G.stagger-dt);G.dodgeCd=Math.max(0,G.dodgeCd-dt);G.crit=Math.max(0,G.crit-dt);
