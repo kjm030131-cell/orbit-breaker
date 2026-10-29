@@ -1,0 +1,443 @@
+{
+ "mech": {
+  "h": 11.2,
+  "w": 8.64,
+  "muzzle": [
+   -0.008,
+   -0.232,
+   -0.391
+  ],
+  "bones": 12
+ },
+ "solo": {
+  "msPerUpdate": 0.23,
+  "kills": 28,
+  "minHp": 0,
+  "deadFrames": 44,
+  "livesLost": 1,
+  "lives": 0,
+  "phase": 1,
+  "time": 92.8,
+  "enemies": 2
+ },
+ "shoot": "shoot",
+ "slash": "slash1",
+ "foes": {
+  "kami": {
+   "alive": false
+  },
+  "sniper": {
+   "alive": true,
+   "tele": 0
+  },
+  "form": "true,true,true,true,true",
+  "crate": {
+   "alive": false,
+   "spec": [
+    0,
+    34
+   ]
+  },
+  "chain": 1,
+  "spec": {
+   "pods": {
+    "proj": 3,
+    "cfieldAt2s": 0,
+    "storm": true
+   },
+   "missile": {
+    "proj": 4,
+    "cfieldAt2s": 0,
+    "storm": false
+   },
+   "shield": {
+    "proj": 0,
+    "cfieldAt2s": 4.6,
+    "storm": false
+   }
+  }
+ },
+ "unit_mega": [
+  "mega",
+  "missile",
+  "pods",
+  "shield"
+ ],
+ "marks_mega": {
+  "n": 0,
+  "shown": 0,
+  "screen": "play",
+  "ended": false,
+  "vs": false,
+  "list": []
+ },
+ "unit_missile": [
+  "mega",
+  "missile",
+  "pods",
+  "shield"
+ ],
+ "marks_missile": {
+  "n": 0,
+  "shown": 0,
+  "screen": "play",
+  "ended": false,
+  "vs": false,
+  "list": []
+ },
+ "unit_pods": [
+  "mega",
+  "missile",
+  "pods",
+  "shield"
+ ],
+ "marks_pods": {
+  "n": 0,
+  "shown": 0,
+  "screen": "play",
+  "ended": false,
+  "vs": false,
+  "list": []
+ },
+ "unit_shield": [
+  "mega",
+  "missile",
+  "pods",
+  "shield"
+ ],
+ "marks_shield": {
+  "n": 0,
+  "shown": 0,
+  "screen": "play",
+  "ended": false,
+  "vs": false,
+  "list": []
+ },
+ "solo_skilled": {
+  "livesLost": 1,
+  "hitsTaken": 8,
+  "dodges": 7,
+  "minHp": 0,
+  "bossAt": null,
+  "bossDead": false,
+  "phase2": false,
+  "ended": true,
+  "timeLeft": 98.4,
+  "score": 0
+ },
+ "boss_pre": {
+  "e": false,
+  "dead": false,
+  "screen": "result",
+  "ended": true
+ },
+ "boss": {
+  "spawn": {
+   "e": true,
+   "alive": true,
+   "down": 0,
+   "p2": false,
+   "dead": false,
+   "wps": 3,
+   "ended": false,
+   "lives": 3,
+   "guide": "① 붉은 약점 포드 부수기"
+  },
+  "podsDown1": {
+   "e": true,
+   "alive": true,
+   "down": 5,
+   "p2": false,
+   "dead": false,
+   "wps": 0,
+   "ended": false,
+   "lives": 3,
+   "guide": "① 붉은 약점 포드 부수기"
+  },
+  "tick1": {
+   "e": true,
+   "alive": true,
+   "down": 5,
+   "p2": false,
+   "dead": false,
+   "wps": 0,
+   "ended": false,
+   "lives": 3,
+   "guide": "② 지금! 케르고그모스를 베세"
+  },
+  "slash1": {
+   "e": true,
+   "alive": true,
+   "down": 0,
+   "p2": true,
+   "dead": false,
+   "wps": 3,
+   "ended": false,
+   "lives": 3,
+   "guide": "② 지금! 케르고그모스를 베세"
+  },
+  "recover": {
+   "e": true,
+   "alive": true,
+   "down": 0,
+   "p2": true,
+   "dead": false,
+   "wps": 3,
+   "ended": false,
+   "lives": 3,
+   "guide": "① 붉은 약점 포드 부수기"
+  },
+  "podsDown2": {
+   "e": true,
+   "alive": true,
+   "down": 5,
+   "p2": true,
+   "dead": false,
+   "wps": 0,
+   "ended": false,
+   "lives": 3,
+   "guide": "① 붉은 약점 포드 부수기"
+  },
+  "slash2": {
+   "e": true,
+   "alive": true,
+   "down": 0,
+   "p2": true,
+   "dead": false,
+   "wps": 0,
+   "ended": false,
+   "lives": 3,
+   "guide": "① 붉은 약점 포드 부수기"
+  },
+  "end": {
+   "e": false,
+   "alive": false,
+   "down": null,
+   "p2": true,
+   "dead": true,
+   "wps": 0,
+   "ended": false,
+   "lives": 3,
+   "guide": "① 붉은 약점 포드 부수기"
+  }
+ },
+ "boss_model": {
+  "model": true,
+  "bones": 20,
+  "pods": [
+   true,
+   true,
+   true
+  ],
+  "rad": 39,
+  "calls": 1
+ },
+ "boss_tele": {
+  "lean": -0.05,
+  "spread": 0.1,
+  "rec": 0
+ },
+ "boss_down": {
+  "down": 4,
+  "lean": 0.37,
+  "spread": -0.37
+ },
+ "duelist": {
+  "hp": 2,
+  "seq": "20 40 80 100B 100BK",
+  "cut": true,
+  "cutSide": [
+   "armR"
+  ]
+ },
+ "tutorial": [
+  "화면을 클릭해서 마우스 고",
+  "마우스로 주변 둘러보기",
+  "노란 고리까지 이동",
+  "위아래로 움직이기",
+  "부스트로 빠르게 이동",
+  "회피 2번",
+  "빔 라이플로 정찰기 3기 ",
+  "빔 사벨 3연속 베기",
+  "적탄을 아슬아슬하게 피하기",
+  "돌격 드론의 돌진 피하기",
+  "정예기를 옆이나 뒤에서 베",
+  "이족보행 MS 격파",
+  "중력탄으로 적을 모은 뒤 ",
+  "옵션 장비 알아보기",
+  "R · 메가 빔으로 줄 선",
+  "R · 포드 강습",
+  "R 꾹 → 적 3기 이상 ",
+  "R · 반사 장벽으로 적탄",
+  "적 에이스 · 칼을 치켜드"
+ ],
+ "tut_overlap_1280": {
+  "radio": {
+   "r": [
+    160,
+    10,
+    1120,
+    230
+   ],
+   "hit": [
+    "CANVAS:",
+    "I:",
+    "I:",
+    "I:"
+   ]
+  },
+  "tutKeys": {
+   "r": [
+    1132,
+    24,
+    1268,
+    75
+   ],
+   "hit": [
+    "CANVAS:"
+   ]
+  }
+ },
+ "tut_overlap_1600": {
+  "radio": {
+   "r": [
+    320,
+    10,
+    1280,
+    230
+   ],
+   "hit": [
+    "CANVAS:"
+   ]
+  },
+  "tutKeys": {
+   "r": [
+    1292,
+    24,
+    1588,
+    75
+   ],
+   "hit": [
+    "CANVAS:"
+   ]
+  }
+ },
+ "tut_overlap_1920": {
+  "radio": {
+   "r": [
+    480,
+    10,
+    1440,
+    230
+   ],
+   "hit": [
+    "CANVAS:"
+   ]
+  },
+  "tutKeys": {
+   "r": [
+    1452,
+    24,
+    1908,
+    75
+   ],
+   "hit": [
+    "CANVAS:"
+   ]
+  }
+ },
+ "tut_overlap_unit_1280": {
+  "radio": {
+   "r": [
+    160,
+    10,
+    1120,
+    230
+   ],
+   "hit": [
+    "CANVAS:"
+   ]
+  },
+  "tutKeys": {
+   "r": [
+    1132,
+    24,
+    1268,
+    75
+   ],
+   "hit": [
+    "CANVAS:"
+   ]
+  }
+ },
+ "tut_overlap_unit_1920": {
+  "radio": {
+   "r": [
+    480,
+    10,
+    1440,
+    230
+   ],
+   "hit": [
+    "CANVAS:"
+   ]
+  },
+  "tutEquip": {
+   "r": [
+    1586,
+    256,
+    1898,
+    481
+   ],
+   "hit": [
+    "CANVAS:"
+   ]
+  },
+  "tutKeys": {
+   "r": [
+    1452,
+    24,
+    1908,
+    75
+   ],
+   "hit": [
+    "CANVAS:"
+   ]
+  }
+ },
+ "feed": [
+  "팔 절단 · 사격 불능",
+  "자세 붕괴! 지금 베어라 ×2",
+  "피격 −24 · Shift로 경직 풀기"
+ ],
+ "vst_start": true,
+ "vst": {
+  "screen": "play",
+  "phase": "count",
+  "step": 0,
+  "obj": "교관에게 붙어서 베기 3번"
+ },
+ "vst_enemies": [
+  "remote"
+ ],
+ "vst_counts": {},
+ "parts": {
+  "oppBroken": [
+   "armR",
+   "head"
+  ],
+  "mine": [
+   "armL"
+  ]
+ },
+ "cockpit": {
+  "fp": true
+ },
+ "render": {
+  "calls": 441,
+  "tris": 1466081,
+  "geo": 204,
+  "tex": 95,
+  "progs": 59
+ }
+}

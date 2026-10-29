@@ -1,0 +1,16 @@
+HTTP 404 http://localhost:8765/api/board
+error: Failed to load resource: the server responded with a status of 404 (File not found)
+warning: [.WebGL-0x13fc001c4a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+warning: [.WebGL-0x13fc001c4a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+warning: [.WebGL-0x13fc001c4a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+warning: [.WebGL-0x13fc001c4a00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)
+HTTP 404 http://localhost:8765/ui/face_cap.webp?v=1793278505
+error: Failed to load resource: the server responded with a status of 404 (File not found)
+HTTP 404 http://localhost:8765/ui/face_cap.webp?v=1793278505
+error: Failed to load resource: the server responded with a status of 404 (File not found)
+HTTP 404 http://localhost:8765/ui/face_cap.webp?v=1793278505
+error: Failed to load resource: the server responded with a status of 404 (File not found)
+HTTP 404 http://localhost:8765/ui/face_cap.webp?v=1793278505
+error: Failed to load resource: the server responded with a status of 404 (File not found)
+HTTP 404 http://localhost:8765/ui/face_ace.webp?v=1793278505
+error: Failed to load resource: the server responded with a status of 404 (File not found)
