@@ -96,16 +96,21 @@ function bossAI0(b,dt,T){
 function bossFire(b){
   const from=b.m.userData.anim?b.m.userData.eye.getWorldPosition(new V3()):b.m.position.clone().add(new V3(0,1.5,0)),base=S.pos.clone().sub(from).normalize();
   const up=new V3(0,1,0),side=new V3().crossVectors(base,up).normalize();
-  const p2=BOSS.phase2,m3=BOSS.mode%3;
+  const p2=BOSS.phase2,m3=BOSS.mode%5;
   if(m3===0){ // wide aimed fan: dodge sideways or vertically
     const n=p2?5:4;for(let i=-n;i<=n;i++){const dir=base.clone().applyAxisAngle(up,i*.1);fireEnemyBolt(from,dir,false,b,36)}}
   else if(m3===1){ // tight staggered volleys aimed at where you'll be
     for(let k=0;k<(p2?5:4);k++)setTimeout(()=>{if(!b.alive||b.down>0||S.ended)return;const lead=S.pos.clone().addScaledVector(S.vel,.35).sub(from).normalize();
       for(let j=-1;j<=1;j+=2)fireEnemyBolt(from.clone().addScaledVector(side,j*3),lead,true,b,34);bossKick(b,.55)},k*(p2?170:230))}
+  else if(m3===3){ // homing salvo from the wings: launched outward, then they turn and chase you for ~2 s — boost / dodge late
+    const n=p2?8:6;for(let i=0;i<n;i++)setTimeout(()=>{if(!b.alive||b.down>0||S.ended)return;const sd=i%2?1:-1,f2=from.clone().addScaledVector(side,sd*(18+Math.random()*10)).add(new V3(0,(Math.random()-.3)*10,0));
+      const out=side.clone().multiplyScalar(sd).addScaledVector(base,.4).add(new V3(0,.3,0)).normalize();fireEnemyBolt(f2,out,false,b,30);const nb=G.ebolts[G.ebolts.length-1];if(nb){nb.speed=58;nb.life=3.4;nb.homing=2.2;nb.turn=p2?2.6:2.1;nb.color=0xff9030}},i*110);bossKick(b,.8)}
+  else if(m3===4){ // sweeping curtain: a wall of bolts swept left to right through your height — go over or under it
+    const n=p2?22:18,span=.62,yOff=(Math.random()<.5?-1:1)*.04;for(let i=0;i<n;i++)setTimeout(()=>{if(!b.alive||b.down>0||S.ended)return;const a=-span+2*span*i/(n-1),dir=base.clone().applyAxisAngle(up,a);dir.y+=yOff;fireEnemyBolt(from,dir.normalize(),false,b,34);if(i%4===0)bossKick(b,.35)},i*(p2?38:48))}
   else{ // ring cage: a circle of bolts around your position + one dead centre: commit to a big dodge
     const ring=p2?12:10,vv=new V3().crossVectors(side,base).normalize();fireEnemyBolt(from,base,false,b,30);
     for(let i=0;i<ring;i++){const a=i/ring*Math.PI*2,dir=base.clone().addScaledVector(side,Math.cos(a)*.16).addScaledVector(vv,Math.sin(a)*.16).normalize();fireEnemyBolt(from,dir,false,b,30)}}
-  bossKick(b,1);BOSS.mode++;BOSS.atkT=(p2?.9:1.25)+Math.random()*.45;b.m.userData.eye.scale.setScalar(b.m.userData.anim?BOSS_EYE:3);S.shake=Math.max(S.shake,.3);
+  bossKick(b,1);BOSS.mode++;BOSS.atkT=(p2?.85:1.15)+Math.random()*.4;b.m.userData.eye.scale.setScalar(b.m.userData.anim?BOSS_EYE:3);S.shake=Math.max(S.shake,.3);
 }
 // weak-point pods shoot back on their own (each on its own clock), so you cannot park next to one
 function bossPods(b,dt){if(BOSS.tele>0)return;for(const w of BOSS.wps){if(!w.alive)continue;w.fireT=(w.fireT>20?2+w.phase*1.3:w.fireT)-dt;

@@ -3,7 +3,7 @@ const PHASES=[
   {at:0,name:"1단계 · 선발 정찰대",sub:"",count:8,gap:[2.2,3],elites:0,rams:0,ms:0,maxTele:3,fire:[3.6,6],tele:.9,bolt:94},
   {at:20,name:"2단계 · 돌격 드론 출현",sub:"",count:10,gap:[2,2.8],elites:0,rams:1,ms:1,blade:1,maxTele:3,fire:[2.7,4.3],tele:.85,bolt:101},
   {at:45,name:"3단계 · 정예 호위기",sub:"",count:10,gap:[1.9,2.6],elites:1,rams:2,ms:1,blade:1,maxTele:4,fire:[2.4,3.8],tele:.8,bolt:110},
-  {at:60,name:"최종 단계 · 지휘기 케르고그모스",sub:"",count:7,gap:[2.6,3.4],elites:1,rams:1,ms:0,blade:1,maxTele:4,fire:[2.2,3.5],tele:.75,bolt:119}];
+  {at:60,name:"최종 단계 · 지휘기 케르고그모스",sub:"",count:4,gap:[2.6,3.4],elites:1,rams:1,ms:0,blade:1,maxTele:4,fire:[2.2,3.5],tele:.75,bolt:119}];
 // clean streak: every 15s without a hit adds +0.2 to the score multiplier (max ×2.0); a hit resets it
 const CLEAN_STEP=15;
 function cleanMult(){return Math.min(2,1+Math.floor(G.clean/CLEAN_STEP)*.2)}
@@ -104,7 +104,7 @@ function enemyAI(e,dt,T){
   }else{
     if(eye){eye.material.opacity=.75+Math.sin(T*6+e.phase)*.25;eye.scale.setScalar(e.elite?1.6:1.1)}
     if(live){e.fireT-=dt;
-      if(e.fireT<=0){e.fireT=ph.fire[0]+Math.random()*(ph.fire[1]-ph.fire[0]);
+      if(e.fireT<=0){e.fireT=(ph.fire[0]+Math.random()*(ph.fire[1]-ph.fire[0]))*(BOSS.e&&BOSS.e.alive?1.8:1); /* while the boss is up the small fry fire less: the boss is the threat */
         const onScreen=camFwd().dot(em.position.clone().sub(camera.position).normalize())>.3;
         if(d<50&&d>7&&onScreen&&teleCount()<ph.maxTele){e.tele=ph.tele;e.teleLock=false;sfx("tele",em.position,0)}}}}
   // aim-preview highlight
@@ -126,6 +126,7 @@ function fireEnemyBolt(from,dir,elite,owner,dmg){
 }
 function stepEBolts(dt){
   for(let i=G.ebolts.length-1;i>=0;i--){const b=G.ebolts[i];const p0=b.g.position.clone();b.g.position.addScaledVector(b.dir,b.speed*dt);b.life-=dt;if(!b.vsVisual&&!b.refl&&fieldBlock(b.g.position)){b.life=0;b.dead=false}else if(b.vsVisual&&vsCoverAt(b.g.position,.2)){b.life=0;b.dead=false}
+    if(b.homing>0&&!b.refl&&!b.dead){b.homing-=dt;const to=S.pos.clone().add(new V3(0,.4,0)).sub(b.g.position).normalize();b.dir.lerp(to,Math.min(1,dt*(b.turn||2))).normalize();b.g.lookAt(b.g.position.clone().add(b.dir))}
     b.trailT=(b.trailT||0)-dt;
     if(dt>0&&(!b.vsVisual||b.trailT<=0)){b.trailT=1/30;emit(ADD,{pos:b.g.position.clone().addScaledVector(b.dir,-1.6),color:b.color,s0:1.2,s1:.1,life:.16,a:b.dead?.25:.7});}
     if(b.vsVisual){}

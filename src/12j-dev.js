@@ -1,7 +1,7 @@
 /* ================= developer mode (10/29) =================
    Open the game with ?dev in the address (e.g. https://…/?dev). Never records anything: no server run, no sortie used,
    no local record — so a player who finds it gains nothing for the ranking. F9 shows / hides the panel. */
-const DEV={on:/[?&]dev\b/.test(location.search),run:false,god:false,nocd:false};
+const DEV={on:/[?&]dev\b/.test(location.search),run:false,god:false,nocd:false,notime:false};
 function devUnitUI(){const U=UNITS[G.unit];document.documentElement.style.setProperty("--uc",U.css);$("unitName").textContent=U.r;$("specName").textContent=U.f;
   $("uIconR").src=`ui/r_${G.unit}.webp`;$("uIconF").src=`ui/f_${G.unit}.webp`;buildBits(G.unit)}
 async function devLaunch(cine){if(!P||TUT.on||VS)return;DEV.run=true;lock();restart();S.yaw=S.face;S.pitch=-.08;devUnitUI();
@@ -23,12 +23,12 @@ if(DEV.on){
 <small>장비</small><div class="row"><button data-u="mega">메가</button><button data-u="pods">포드</button><button data-u="missile">미사일</button><button data-u="shield">실드</button></div>
 <small>전투 중</small>
 <button data-d="boss">보스 단계로 (남은 60초)</button><button data-d="t30">남은 시간 30초로</button>
-<button data-d="god">무적</button><button data-d="nocd">R 쿨타임 없음</button>
+<button data-d="notime">제한시간 무제한</button><button data-d="god">무적</button><button data-d="nocd">R 쿨타임 없음</button>
 <button data-d="spec">필살 게이지 가득</button><button data-d="grav">중력탄 3개</button>
 <button data-d="kill">주변 적 전멸</button><button data-d="foes">새 적 4종 소환</button>
 <small>연출</small><button data-d="intro">오프닝 보기</button><button data-d="tut">튜토리얼</button>`;
   document.body.appendChild(p);const badge=document.createElement("div");badge.id="devBadge";badge.textContent="DEV · 기록 안 됨";document.body.appendChild(badge);
-  const sync=()=>{p.querySelectorAll("[data-u]").forEach(b=>b.classList.toggle("on",b.dataset.u===G.unit));p.querySelector('[data-d="god"]').classList.toggle("on",DEV.god);p.querySelector('[data-d="nocd"]').classList.toggle("on",DEV.nocd)};
+  const sync=()=>{p.querySelectorAll("[data-u]").forEach(b=>b.classList.toggle("on",b.dataset.u===G.unit));p.querySelector('[data-d="god"]').classList.toggle("on",DEV.god);p.querySelector('[data-d="nocd"]').classList.toggle("on",DEV.nocd);p.querySelector('[data-d="notime"]').classList.toggle("on",DEV.notime)};
   const live=()=>SCREEN==="play"&&S.started&&!S.ended;
   p.addEventListener("pointerdown",e=>e.stopPropagation());
   p.addEventListener("click",e=>{e.stopPropagation();const b=e.target.closest("button");if(!b)return;sfx("ui");
@@ -37,7 +37,7 @@ if(DEV.on){
     if(d==="go")devLaunch(false);else if(d==="goc")devLaunch(true);
     else if(d==="boss"&&live()){S.time=Math.min(S.time,60.2)}
     else if(d==="t30"&&live())S.time=30.2;
-    else if(d==="god")DEV.god=!DEV.god;else if(d==="nocd")DEV.nocd=!DEV.nocd;
+    else if(d==="notime")DEV.notime=!DEV.notime;else if(d==="god")DEV.god=!DEV.god;else if(d==="nocd")DEV.nocd=!DEV.nocd;
     else if(d==="spec"&&live()){G.specT=-1;G.spec=99;addSpec(1)}
     else if(d==="grav")G.grav=3;
     else if(d==="kill"&&live()){for(const e2 of enemies)if(e2.alive&&!e2.isBoss&&!e2.isWP&&!e2.isRemote){e2.alive=false;disposeEnemy(e2)}}

@@ -4,7 +4,7 @@
    sniper  - hangs back at ~80 m, paints you with a thin violet line for 1.8 s (locks 0.45 s before), then one fast heavy shot
    form    - every 30 s five drones form a V far ahead, warn for 1.2 s, then rush straight through: line them up for the mega beam
    crate   - supply container drifting nearby: break it for a gravity bomb (the only source), +30 special gauge and full boost */
-const FOE_LIMIT=[{kami:0,sniper:0},{kami:1,sniper:1},{kami:2,sniper:1},{kami:2,sniper:1}];
+const FOE_LIMIT=[{kami:0,sniper:0},{kami:1,sniper:1},{kami:2,sniper:1},{kami:1,sniper:0}]; /* final phase: the boss is the main threat */
 function foesReset(){G.nf={kamiT:6,snipeT:4,formT:15,crateT:9}}
 function foesTick(dt){if(TUT.on||VS)return;if(!G.nf)foesReset();const n=G.nf,el=120-S.time,lim=FOE_LIMIT[G.phase]||FOE_LIMIT[3];
   let k=0,sn=0,cr=0;for(const e of enemies){if(!e.alive)continue;if(e.kami)k++;if(e.sniper)sn++;if(e.crate)cr++}
