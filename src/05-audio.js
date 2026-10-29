@@ -81,6 +81,9 @@ function sfx(k,pos,arg){const a=AC;if(!a||!AUD.ready||a.state!=="running")return
      osc(a,o,"triangle",2100,1500,t2,.06,.24,.001);osc(a,o,"sine",3100,2600,t2,.045,.09,.001);
      nzf(a,o,"bandpass",5200,6800,t2,.09,.22,3,.002);osc(a,d,"sine",150,60,t2,.09,.4,.002);duck(.75,.15)}
    break}
+ case "killmark":{if(a.currentTime-(AUD.kmT||0)<.06)break;AUD.kmT=a.currentTime; // kill confirm: crisp tick + bright two-step chime
+   const o=bus(null,.8,.08);nzf(a,o,"highpass",5200,4200,t,.012,.4,.7,.001);osc(a,o,"triangle",1320,1320,t,.07,.22,.001);osc(a,o,"triangle",1980,1980,t+.055,.12,.2,.002);
+   osc(a,o,"sine",2640,2640,t+.055,.1,.07,.002);break}
  case "hit":case "heavy":{const H=k==="heavy",o=bus(pos,1,H?.45:.3),d=shaper(a);d.connect(o);
    nzf(a,o,"highpass",6000,3000,t,.025,.6);
    osc(a,d,"sine",H?120:170,H?30:42,t,H?.55:.32,H?.95:.8);
@@ -93,7 +96,7 @@ function sfx(k,pos,arg){const a=AC;if(!a||!AUD.ready||a.state!=="running")return
    m.connect(mg);mg.connect(c.frequency);c.connect(g);g.connect(o);c.start(t);m.start(t);c.stop(t+.25);m.stop(t+.25);
    nzf(a,o,"highpass",8000,2500,t,.09,.22);osc(a,o,"sine",140,50,t,.14,.35);
    osc(a,o,"sine",95,32,t,.3,.7);nzf(a,o,"lowpass",3200,160,t,.24,.55,.8,.004);osc(a,o,"sawtooth",620,180,t+.01,.18,.06);duck(.7,.18);break}
- case "impact":{const o=bus(pos,.7,.2);nzf(a,o,"bandpass",3000,800,t,.16,.35,2);osc(a,o,"square",1800,300,t,.08,.04);osc(a,o,"sine",200,60,t,.15,.25);break}
+ case "impact":{const o=bus(pos,.6,.15);nzf(a,o,"bandpass",1400,500,t,.1,.3,1.4);osc(a,o,"sine",180,55,t,.12,.3);break}
  case "boom":{const n=arg||0,o=bus(pos,1,.55),lp=a.createBiquadFilter(),d=shaper(a);lp.type="lowpass";
    const dist=pos?pos.distanceTo(camera.position):20;lp.frequency.value=clamp(9000-dist*90,700,9000);lp.connect(o);d.connect(lp);
    osc(a,d,"sine",70,24,t,1.1,1);nzf(a,lp,"lowpass",2400,120,t,1.3,.85,.7,.006);nzf(a,lp,"bandpass",900,200,t+.04,.8,.4,.8,.02);

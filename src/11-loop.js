@@ -71,7 +71,7 @@ function update(rdt){
   {let on=false;if(SCREEN==="play"&&camera){const ad=aimDir(),cp=camera.position;for(const e of enemies){if(!e.alive||e.launched>0||e.isRemote&&!VS)continue;const v=e.m.position.clone().sub(cp),L=v.length();if(L<170&&v.dot(ad)/L>Math.cos(.044+Math.atan((e.rad||3)/L))){on=true;break}}}
    if(on!==RET_ON){RET_ON=on;const rt=RET_EL||(RET_EL=document.querySelector(".reticle"));if(rt)rt.classList.toggle("on",on)}}
   {let lk=false;if(SCREEN==="play"&&!VS)for(const e of enemies)if(e.alive&&e.teleLock&&e.launched<=0){lk=true;break}if(lk!==LW_ON){LW_ON=lk;const w=$("lockWarn");if(w)w.classList.toggle("on",lk)}}
-  if(SCREEN==="play"&&target&&target!==prevT&&clockT-(S.lockT||0)>.3){S.lockT=clockT;sfx("lock")}
+  if(SCREEN==="play"&&target&&target!==prevT&&clockT-(S.lockT||0)>.3){S.lockT=clockT}
   gameplayTick(dt,rdt,T);
 
   /* mech */

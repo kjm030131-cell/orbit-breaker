@@ -61,9 +61,9 @@ function fieldCrash(e){ // launched drone hits an object: crushed, bonus
   if(e.isBoss){const nrm=e.m.position.clone().sub(o.center).normalize();e.v.reflect(nrm).multiplyScalar(.5);S.shake=Math.max(S.shake,.8);sfx("heavy",e.m.position);fieldDamage(o,3,e.m.position);return}
   e.launched=0;fieldDamage(o,2,e.m.position);addScore(250+e.chain*120,e.m.position.clone(),"big");popText(e.chain?`충돌 격파 · 연쇄 ×${e.chain}`:"충돌 격파");S.hitstop=Math.max(S.hitstop,.05)}
 function fieldBolt(b){ // player beam vs object: cover blocks it, breakables take damage
-  if(inVS()){if(!vsCoverAt(b.g.position,.2))return false;fxImpact(b.g.position,0x40e8ff);b.target=null;b.life=0;return true}
+  if(inVS()){if(!vsCoverAt(b.g.position,.2))return false;fxImpact(b.g.position,0x40e8ff);b.target=null;b.cover=true;b.life=0;return true}
   if(!FIELD.ready)return false;const o=fieldHitAt(b.g.position,.4);if(!o)return false;
-  fieldDamage(o,1,b.g.position.clone());b.target=null;b.life=0;return true}
+  fieldDamage(o,1,b.g.position.clone());b.target=null;b.cover=true;b.life=0;return true}
 function fieldBlock(p){return FIELD.ready&&!inVS()&&!!fieldHitAt(p,.3)}
 function fieldSlash(heavy){if(!FIELD.ready||inVS())return false;const at=S.pos.clone().addScaledVector(new V3(Math.sin(S.face),0,Math.cos(S.face)),3.5);
   const o=fieldHitAt(at,4);if(!o)return false;fieldDamage(o,heavy?3:2,at);sfx("hit",at);S.hitstop=Math.max(S.hitstop,.04);return true}
