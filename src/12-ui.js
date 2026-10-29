@@ -165,10 +165,12 @@ async function launch(){
   setTimeout(()=>{if(SCREEN==="play"&&!S.ended&&!TUT.on)cutin(`기체 1기 · 장갑 ${HP_MAX}`,"장갑이 0이 되면 이번 출격 종료")},2600);
 }
 function debriefLine(lost,score){const n=S.kills||0;
-  if(lost)return `우리엘 1, 기체 반응 소실… 회수정 보냈어요. 오늘 밤 서울 하늘엔 유성이 ${n}개. 다음엔 조준선 깜빡임을 놓치지 마세요.`;
-  if(BOSS.dead)return `케르고그모스 격파 확인. 추진제 소진 전 귀환, 유성 ${n}개. …지상에선 역대급 유성우라고 난리예요.`;
-  if(score>=60000)return `방위선 사수 완료. 오늘 밤 유성 ${n}개. 훌륭해요, 우리엘 1.`;
-  if(score>=25000)return `방위선 사수 완료. 유성 ${n}개. 지휘기는 아직 남아 있어요. 다음엔 놈을 노려봐요.`;
+  /* 10/29: the voiced closing lines (vo_op19/20/21, played from 10f-vo.js) open the debrief word for word */
+  if(lost)return `우리엘 1, 기체 반응 소실… 회수정 보냈습니다. 오늘 밤 유성 ${n}개. 다음엔 조준선 깜빡임을 놓치지 마세요.`;
+  if(BOSS.dead)return `작전 종료입니다. 귀환하세요, 우리엘 1. …지상은 오늘 역대급 유성우랍니다. 유성 ${n}개.`;
+  if(S.time<=0&&score<25000)return `방위선 사수 완료. 수고하셨습니다, 우리엘 1. 귀환하세요. 오늘 밤 유성 ${n}개. 연쇄 폭발을 노려봐요.`;
+  if(score>=60000)return `방위선 사수 완료. 수고하셨습니다, 우리엘 1. 귀환하세요. 오늘 밤 유성 ${n}개.`;
+  if(score>=25000)return `방위선 사수 완료. 수고하셨습니다, 우리엘 1. 귀환하세요. 지휘기는 아직 남아 있어요. 유성 ${n}개.`;
   return `추진제 소진, 귀환하세요. 오늘 밤 유성은 ${n}개. 연쇄 폭발을 노려봐요.`;
 }
 

@@ -22,7 +22,7 @@ function spawnBoss(){
   enemies.push(e);BOSS.e=e;BOSS.atkT=4;BOSS.mode=0;BOSS.down=0;BOSS.introT=3.2;
   buildWPs();
   sfx("radio");setTimeout(()=>{if(!S.ended){sfx("phase");cutin("케르고그모스 출현","아르고스 지휘기")}},400);
-  radio("CIC","지휘기 케르고그모스 출현! 붉게 빛나는 약점 포드 3개를 먼저 부숴요!") /* vo_op04 says the old boss name: re-record, then add "vo_op04" back */;
+  radio("이클립스 CIC · 최지우 중위","지휘기 케르고그모스 출현입니다! 우리엘 1, 붉은 약점 포드부터 노리세요.","vo_op04");
 }
 function buildWPs(){
   const pod=!!(POD_GLTF&&BOSS.e&&BOSS.e.m.userData.anim);
@@ -52,7 +52,7 @@ function wpDamage(w,n,at){
 }
 function bossDown(){const b=BOSS.e;if(!b)return;b.down=5;BOSS.downs++;BOSS.tele=0;clearTele(b);
   S.slow=.6;flash(.35);sfx("specReady");cutin("기능 정지","지금 베어서 날려라");
-  radio("CIC","지금이에요! 놈을 베어 날리면 주변 드론까지 한꺼번에 쓸어버릴 수 있어요!");
+  radio("이클립스 CIC · 최지우 중위","적 지휘기 정지했습니다! 지금 붙어서 끝내세요!","vo_op06");
   for(let i=0;i<5;i++)setTimeout(()=>{if(BOSS.e&&b.alive){const p=b.m.position.clone().add(new V3().randomDirection().multiplyScalar(6));fxImpact(p,0xff8040);sparks(p,null,0xffc080,30,.5,20)}},i*260);
 }
 function bossDie(b,chainN){
@@ -62,7 +62,7 @@ function bossDie(b,chainN){
   addScore(12000,p,"big");if(SCREEN==="play")S.kills=(S.kills||0)+1;onKill(b);
   for(const w of BOSS.wps)if(w.alive){w.alive=false;disposeEnemy(w)}
   setTimeout(()=>{scene.remove(b.m);b.m.traverse(o=>{if(o.material)o.material.dispose()})},50);clearTele(b);
-  cutin("지휘기 격파","+12,000");radio("CIC","케르고그모스 격파 확인! 우리엘 1, 최고예요!");
+  cutin("지휘기 격파","+12,000");radio("이클립스 CIC · 최지우 중위","케르고그모스 격파 확인. 수고하셨습니다, 우리엘 1.","vo_op07");
   BOSS.e=null;
 }
 function bossAI(b,dt,T){bossAI0(b,dt,T);bossAnim(b,dt,T)}
@@ -118,7 +118,7 @@ function bossPods(b,dt){if(BOSS.tele>0)return;for(const w of BOSS.wps){if(!w.ali
 function bossTick(dt,rdt,T){placeWPs(T)}
 function resetBoss(){
   if(BOSS.e){disposeEnemy(BOSS.e)}for(const w of BOSS.wps)if(w.alive)disposeEnemy(w);
-  Object.assign(BOSS,{e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0,phase2:false,escT:3,guide:BOSS.guide});
+  Object.assign(BOSS,{e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0,phase2:false,escT:3,guide:BOSS.guide,saidClang:false});
 }
 // radio chatter overlay (reuses the cutscene subtitle style, but small, top-centre)
 // portraits: ui/face_op.webp (CIC), face_ace.webp (enemy), face_cap.webp (captain) when present
@@ -157,4 +157,4 @@ function bossPhase2(b){if(BOSS.phase2||!(b.down>0))return false;BOSS.phase2=true
 
 // body hit while it is still armoured (weak points up): sparks and a clang, no knockback, a hint now and then
 function bossClang(b){const p=b.m.position.clone().lerp(S.pos,.35);sparks(p,null,0xffe0a0,24,.35,14);fxImpact(p,0xffc080);sfx("block",p);S.vel.multiplyScalar(.3);
-  const now=performance.now();if(now-(BOSS.clangT||0)>4000){BOSS.clangT=now;popText("본체 장갑이 단단해요 · 약점 포드부터")}}
+  const now=performance.now();if(now-(BOSS.clangT||0)>4000){BOSS.clangT=now;popText("본체 장갑이 단단해요 · 약점 포드부터");if(!BOSS.saidClang&&!TUT.on){BOSS.saidClang=true;radio("이클립스 CIC · 최지우 중위","본체는 안 통합니다. 약점 포드부터 처리하세요.","vo_op17")}}}
