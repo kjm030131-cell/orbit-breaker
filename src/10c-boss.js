@@ -2,7 +2,7 @@
 // Three weak-point pods guard it. Destroy all three (slash, rifle, reflected fire, launched drones)
 // and it goes dark for a few seconds: slash it then, and the whole hulk becomes a chain projectile.
 const BOSS={e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0,phase2:false};
-const BOSS_TELE=.85,WP_HP=9,WP_OFF=[new V3(-1.15,.28,.25),new V3(1.15,.28,.25),new V3(0,.95,-.6)];
+const BOSS_TELE=.75,WP_HP=14,WP_OFF=[new V3(-1.15,.28,.25),new V3(1.15,.28,.25),new V3(0,.95,-.6)];
 const wpGeo=new THREE.IcosahedronGeometry(1.3,0),wpArmor=new THREE.OctahedronGeometry(2,0);
 function spawnBoss(){
   if(!EN_MESH||BOSS.e||BOSS.dead||SCREEN!=="play")return;
@@ -86,6 +86,9 @@ function bossAI0(b,dt,T){
   m.userData.eye.material.opacity=.8+Math.sin(T*5)*.2;
   if(SCREEN!=="play"||S.ended||BOSS.introT>0)return;
   bossPods(b,dt);const es=big?BOSS_EYE:3;
+  if(BOSS.phase2&&b.down<=0&&typeof spawnKami==="function"){BOSS.escT=(BOSS.escT===undefined?3:BOSS.escT)-dt;
+    if(BOSS.escT<=0){BOSS.escT=8;let k=0;for(const e of enemies)if(e.alive&&e.kami)k++;
+      for(let i=0;i<Math.min(2,4-k);i++)spawnKami(m.position.clone().add(new V3((Math.random()-.5)*40,-6+Math.random()*12,(Math.random()-.5)*40)))}}
   if(BOSS.tele>0){BOSS.tele-=dt;const k=1-BOSS.tele/BOSS_TELE;m.userData.eye.scale.setScalar(es*(1+k*1.7)+Math.sin(T*40)*es*.4);
     if(BOSS.tele<=0)bossFire(b)}
   else{BOSS.atkT-=dt;if(BOSS.atkT<=0&&d<(big?190:70)){BOSS.tele=BOSS_TELE;sfx("tele",m.position,1);sfx("tele",m.position,0)}}
@@ -95,22 +98,22 @@ function bossFire(b){
   const up=new V3(0,1,0),side=new V3().crossVectors(base,up).normalize();
   const p2=BOSS.phase2,m3=BOSS.mode%3;
   if(m3===0){ // wide aimed fan: dodge sideways or vertically
-    const n=p2?4:3;for(let i=-n;i<=n;i++){const dir=base.clone().applyAxisAngle(up,i*.1);fireEnemyBolt(from,dir,false,b,36)}}
+    const n=p2?5:4;for(let i=-n;i<=n;i++){const dir=base.clone().applyAxisAngle(up,i*.1);fireEnemyBolt(from,dir,false,b,36)}}
   else if(m3===1){ // tight staggered volleys aimed at where you'll be
-    for(let k=0;k<(p2?4:3);k++)setTimeout(()=>{if(!b.alive||b.down>0||S.ended)return;const lead=S.pos.clone().addScaledVector(S.vel,.35).sub(from).normalize();
+    for(let k=0;k<(p2?5:4);k++)setTimeout(()=>{if(!b.alive||b.down>0||S.ended)return;const lead=S.pos.clone().addScaledVector(S.vel,.35).sub(from).normalize();
       for(let j=-1;j<=1;j+=2)fireEnemyBolt(from.clone().addScaledVector(side,j*3),lead,true,b,34);bossKick(b,.55)},k*(p2?170:230))}
   else{ // ring cage: a circle of bolts around your position + one dead centre: commit to a big dodge
-    const ring=p2?10:8,vv=new V3().crossVectors(side,base).normalize();fireEnemyBolt(from,base,false,b,30);
+    const ring=p2?12:10,vv=new V3().crossVectors(side,base).normalize();fireEnemyBolt(from,base,false,b,30);
     for(let i=0;i<ring;i++){const a=i/ring*Math.PI*2,dir=base.clone().addScaledVector(side,Math.cos(a)*.16).addScaledVector(vv,Math.sin(a)*.16).normalize();fireEnemyBolt(from,dir,false,b,30)}}
-  bossKick(b,1);BOSS.mode++;BOSS.atkT=(p2?1.15:1.6)+Math.random()*.5;b.m.userData.eye.scale.setScalar(b.m.userData.anim?BOSS_EYE:3);S.shake=Math.max(S.shake,.3);
+  bossKick(b,1);BOSS.mode++;BOSS.atkT=(p2?.9:1.25)+Math.random()*.45;b.m.userData.eye.scale.setScalar(b.m.userData.anim?BOSS_EYE:3);S.shake=Math.max(S.shake,.3);
 }
 // weak-point pods shoot back on their own (each on its own clock), so you cannot park next to one
 function bossPods(b,dt){if(BOSS.tele>0)return;for(const w of BOSS.wps){if(!w.alive)continue;w.fireT=(w.fireT>20?2+w.phase*1.3:w.fireT)-dt;
-  if(w.fireT<=0){w.fireT=(BOSS.phase2?2.4:3.4)+Math.random();const f=w.m.position.clone(),dir=S.pos.clone().addScaledVector(S.vel,.25).sub(f).normalize();fireEnemyBolt(f,dir,false,w,20);w.flash=.4}}}
+  if(w.fireT<=0){w.fireT=(BOSS.phase2?1.8:2.6)+Math.random();const f=w.m.position.clone(),dir=S.pos.clone().addScaledVector(S.vel,.25).sub(f).normalize();fireEnemyBolt(f,dir,false,w,20);w.flash=.4}}}
 function bossTick(dt,rdt,T){placeWPs(T)}
 function resetBoss(){
   if(BOSS.e){disposeEnemy(BOSS.e)}for(const w of BOSS.wps)if(w.alive)disposeEnemy(w);
-  Object.assign(BOSS,{e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0,phase2:false,guide:BOSS.guide});
+  Object.assign(BOSS,{e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0,phase2:false,escT:3,guide:BOSS.guide});
 }
 // radio chatter overlay (reuses the cutscene subtitle style, but small, top-centre)
 // portraits: ui/face_op.webp (CIC), face_ace.webp (enemy), face_cap.webp (captain) when present
