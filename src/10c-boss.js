@@ -131,7 +131,7 @@ const VO_CACHE={};function voPreload(ids){for(const id of ids)if(id&&!VO_CACHE[i
 let VO_A=null;function voPlay(id,onDur){if(VO_A){try{VO_A.pause()}catch(_){}VO_A=null}if(!id||!AUD.on)return;try{const c=VO_CACHE[id];if(c)try{c.currentTime=0}catch(_){}const a=c||new Audio(voUrl(id));a.volume=Math.min(1,(AUD.vol??.9)*1.05);
   if(onDur)a.addEventListener("loadedmetadata",()=>onDur(a.duration));a.play().catch(()=>{setTimeout(()=>{if(VO_A===a)a.play().catch(()=>{})},250)});VO_A=a}catch(_){}}
 function radio(who,txt,vo){const r=$("radio");if(!r)return;$("radioWho").textContent=who;const k=Object.keys(FACES).find(n=>who.includes(n)),f=$("radioFace");
-  f.style.backgroundImage=k?`url(ui/${FACES[k]}.webp)`:"";f.textContent="";if(k){const im=new Image();im.onerror=()=>{f.style.backgroundImage=""};im.src=`ui/${FACES[k]}.webp`}$("radioTxt").textContent=txt;r.classList.remove("on");void r.offsetWidth;r.classList.add("on");
+  f.style.backgroundImage=k?`url(ui/${FACES[k]}.webp)`:"";f.classList.toggle("has",!!k);f.textContent="";if(k){const im=new Image();im.onerror=()=>{f.style.backgroundImage="";f.classList.remove("has")};im.src=`ui/${FACES[k]}.webp`}$("radioTxt").textContent=txt;r.classList.remove("on");void r.offsetWidth;r.classList.add("on");
   sfx("radio");clearTimeout(radio.h);radio.h=setTimeout(()=>r.classList.remove("on"),4600);if(vo)voPlay(vo,d=>{if(d>3.9){clearTimeout(radio.h);radio.h=setTimeout(()=>r.classList.remove("on"),d*1000+700)}})}
 /* ---- boss guide (single, 10/28): many players did not know how to kill Kerberos. While it is up, the objective box says what to do
    right now and an arrow points at the next weak point (or at the stalled hulk while it is down). ---- */

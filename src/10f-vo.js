@@ -55,11 +55,4 @@ function soloTick(){
   const sp=(G.spec||0)>=100&&!(G.specT>=0);if(!sp)SOLO.once.op15=false;else soloSay("op15",{exp:4,cd:30,once:true});
   if(typeof G.hp==="number"){const r=G.hp/HP_MAX;if(r>.6)SOLO.once.op16=false;else if(r<=.35&&r>0)soloSay("op16",{exp:1.5,cd:15,once:true})}}
 setInterval(()=>{try{soloTick()}catch(_){}},150);
-// bigger dialogue frame with the operator portrait during live single sorties: the tutorial's ui/radio.webp frame at a uniform 0.7 scale
-// (slice 40 40 40 185 -> 28 28 28 130 px) so the photo sits exactly in the portrait slot, like body.tutdock in head2.html
-{const st=document.createElement("style"),R="body:not(.tut):not(.versus) ";st.textContent=
-  R+"#radio{width:min(720px,76vw)!important;max-width:none!important;min-width:0!important;height:134px;min-height:0;box-sizing:border-box;padding:24px 36px 16px 142px!important;border-image:url(ui/radio.webp) 40 40 40 185 fill / 28px 28px 28px 130px stretch!important;justify-content:center}"+
-  R+"#radioFace{left:14px;top:16px;width:100px;height:107px;transform:none;background-size:100% 100%;border-radius:0}"+
-  R+"#radioWho{font-size:13px}"+R+"#radioTxt{font-size:18px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}"+
-  "body.bossguide:not(.tut):not(.versus) #radio{top:calc(196px + env(safe-area-inset-top,0px))}"; /* below the boss bar */
-  document.head.appendChild(st)}
+// live single sorties: the dialogue box is docked small on the left edge (ui/radio_side.webp, see the last <style> in head2.html)
