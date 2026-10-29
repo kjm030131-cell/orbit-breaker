@@ -14,3 +14,8 @@ jobs:
           r=$(curl -s -H "Authorization: Bearer $CF_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$ACCT/pages/projects/arclight-game/deployments?per_page=8")
           echo "$r" | jq -r '.result[] | "\(.created_on) \(.environment) \(.deployment_trigger.type) \(.deployment_trigger.metadata.commit_hash // "-")[0:7] \(.deployment_trigger.metadata.commit_message // "-" | .[0:40]) \(.latest_stage.status)"' | while read -r l; do echo "::notice title=deploy::$l"; done
           echo "$r" | jq -c '.errors' 
+      - name: probe api
+        run: |
+          for u in https://arclight-game.pages.dev/api/board https://arclight-game.pages.dev/ https://arcligh.site/api/board; do
+            code=$(curl -s -o /tmp/b -w "%{http_code}" "$u"); echo "::notice title=$u::HTTP $code $(head -c 300 /tmp/b | tr '\n' ' ')"
+          done
