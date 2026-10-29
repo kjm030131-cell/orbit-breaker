@@ -941,17 +941,18 @@ body:not(.versus):not(.tut) #hud[hidden]~#feed{display:none}
   box-shadow:0 0 0 2px rgba(255,178,26,.55),0 0 0 7px rgba(10,12,16,.85),0 0 0 8px rgba(255,178,26,.25),0 0 24px rgba(255,178,26,.18);z-index:1}
 .ckR .radar{width:204px;height:204px;display:block;border-radius:50%}
 .ckRl{position:absolute;left:50%;bottom:-2px;transform:translate(-50%,100%);font:600 10px var(--f-mono);letter-spacing:.3em;color:rgba(255,178,26,.75)}
-/* tutorial (10/29): one panel only - the objective box docks inside the dialogue frame (ui/radio.webp) next to the operator portrait.
-   The frame is drawn at a uniform 1.125x of the asset (216 px tall) so the portrait slot keeps its shape; the photo fills that slot. */
-body.tutdock #radio{top:calc(110px + env(safe-area-inset-top,0px));opacity:1;transform:translate(-50%,0);width:min(900px,94vw);max-width:none!important;min-width:0!important;height:216px;min-height:0;box-sizing:border-box;
- padding:42px 56px 28px 228px!important;border-image:url(ui/radio.webp) 40 40 40 185 fill / 45px 45px 45px 208px stretch!important;justify-content:flex-start;gap:0}
+/* tutorial (10/29): one panel only - the objective box docks inside the dialogue frame next to the operator portrait.
+   ui/radio_tut.webp (2163x596, portrait window 495x528 = the photo's 15:16) is drawn at a uniform 220/596 scale so the window keeps
+   its shape and the photo fills it exactly; only the text panel's middle stretches sideways. */
+body.tutdock #radio{top:calc(110px + env(safe-area-inset-top,0px));opacity:1;transform:translate(-50%,0);width:min(960px,94vw);max-width:none!important;min-width:0!important;height:220px;min-height:0;box-sizing:border-box;
+ padding:34px 56px 30px 238px!important;border-image:url(ui/radio_tut.webp) 60 90 60 620 fill / 22.15px 33.2px 22.15px 228.9px stretch!important;justify-content:flex-start;gap:0}
 body.tutdock #radioWho{display:none}body.tutdock #radioFace::after{display:none}
-body.tutdock #radioFace{left:23px;top:25px;width:161px;height:172px;transform:none;background-size:100% 100%;border-radius:0}
+body.tutdock #radioFace{left:13.3px;top:12.9px;width:182.7px;height:194.9px;transform:none;background-color:transparent;background-size:100% 100%;border-radius:0}
 body.tutdock #tutObj{position:static;transform:none;max-width:none;width:100%;padding:0;margin:0 0 8px;background:none;border:0;animation:none}
 body.tutdock #tutObj.new{animation:tdn .45s ease-out}@keyframes tdn{0%{opacity:0;transform:translateY(-6px)}}
 body.tutdock #tutObj .lbl{font-size:12px;margin-bottom:4px}body.tutdock #tutObj b{font-size:22px;line-height:1.3}
 body.tutdock #tutObjHow{font-size:16px;margin-top:4px;color:#efe9dc}
-body.tutdock #tutObj em{position:absolute;right:58px;bottom:32px;margin:0;font-size:15px;min-height:0}
+body.tutdock #tutObj em{position:absolute;right:52px;bottom:32px;margin:0;font-size:15px;min-height:0}
 body.tutdock #radioTxt{font-size:14px;line-height:1.45;color:#bdb8ad;padding-right:96px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 /* option-unit card in the tutorial (steps 15-18): slides in from the right, ticks R / F off as they are used */
 #tutEquip{position:fixed;right:22px;top:calc(364px + env(safe-area-inset-top,0px));z-index:6;width:min(310px,34vw);pointer-events:none;color:#f2efe8;font-family:var(--f-body);

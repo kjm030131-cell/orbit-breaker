@@ -29,7 +29,7 @@ const UNIT_TXT={
     say:"하이퍼 메가 런처예요. 빔 한 줄로 줄 선 적을 전부 꿰뚫어요."},
   pods:{r:["R · 포드 강습","조준선을 적 위에 올리고 R. 포드 3기가 날아가 그 적을 때려요."],f:["F · 올 레인지 (필살기)","F를 누르면 포드가 주변 적을 한곳에 모아 터뜨려요."],
     say:"원격 포드예요. 내가 조준한 적을 포드가 대신 때려 줘요."},
-  missile:{r:["R → 훑어서 록온 → R 한 번 더 = 발사","R을 한 번 누르고 조준선을 적 3기 이상 위로 훑어 표적을 잡은 뒤, R을 한 번 더 누르면 일제 발사."],f:["F · 풀 버스트 (필살기)","F를 누르면 주변 적 전체에 미사일 일제 사격."],
+  missile:{r:["R 꾹 → 적 3기 이상 훑기 → 떼면 발사","R을 누른 채 조준선으로 적들을 훑고 떼면 일제 발사 (R 톡 → 훑기 → R 톡도 돼요)"],f:["F · 풀 버스트 (필살기)","F를 누르면 주변 적 전체에 미사일 일제 사격."],
     say:"다탄두 미사일이에요. R을 짧게 누르면 안 돼요. 꾹 누른 채로 적들을 훑어요."},
   shield:{r:["R · 반사 장벽으로 적탄 되돌리기","적이 쏘기 직전에 R. 장벽에 맞은 탄이 쏜 적에게 그대로 돌아가요."],f:["F · 카운터 필드 (필살기)","F를 누르면 4초 동안 무적, 날아오는 적탄을 전부 튕겨 내요."],
     say:"마지막은 실드 비트. 적탄을 튕겨서 되돌려 주는 방어형이에요."}};
@@ -59,11 +59,11 @@ function unitStep(k){const T=UNIT_TXT[k],rDone=()=>(TUT.c["u_"+k]||0)>=1,fase=()
   cue:k==="shield"?()=>rDone()?null:cueDodge(cueBolt(),.3,.75,"R"):null,
   keep:k==="shield"?{n:3,passive:false,d:[30,42]}:{n:5,passive:true,d:[30,52],line:k==="mega"},
   enter(){tutSetUnit(k);TUT.c["u_"+k]=0;TUT.c.spec=0;tutEquipShow(k);TUT.fSaid=false;TUT.shortSaid=false;if(k==="mega")tutLine(5)},
-  tick(){tutEquipState(k);if(rDone()&&!TUT.fSaid){TUT.fSaid=true;G.spec=100;sfx("specReady");popText("필살 게이지 가득 · F")}
+  tick(){tutEquipState(k);if(rDone()&&!TUT.fSaid){TUT.fSaid=true;G.spec=100;sfx("specReady");popText("필살 게이지 가득 · F");const V=TUT_VO[TUT.step];if(V&&V.f)radio(OP,V.f,tutVoId(TUT.step,"f"))}
     if(k==="missile"&&(TUT.c.missileShort||0)>0&&!TUT.shortSaid){TUT.shortSaid=true;popText("너무 짧아요 · R을 누른 채로 훑어요")}
     if(k==="shield")for(const e of enemies)if(e.alive&&!e.tutPassive&&e.fireT>3)e.fireT=1+Math.random()*1.2;
     if(TUT.fSaid&&G.spec<100&&G.specT<0&&!(TUT.c.spec>0)&&!G.mega)G.spec=100},
-  done(){return rDone()&&(TUT.c.spec||0)>=1&&!G.mega&&G.specT<0&&G.cfield<=0},exit(){tutEquipHide();tutClear();radio(OP,UNIT_P[k])}}}
+  done(){return rDone()&&(TUT.c.spec||0)>=1&&!G.mega&&G.specT<0&&G.cfield<=0},exit(){tutEquipHide();tutClear()}}}
 // five passive drones in a row straight ahead (for the piercing beam)
 function tutLine(n){for(let i=0;i<n;i++)tutDrone(tutAhead(26+i*9,(i%2?1:-1)*1.2,2),true)}
 const TUT_STEPS=[
@@ -108,7 +108,7 @@ const TUT_STEPS=[
   {obj:"중력탄으로 적을 모은 뒤 베기",how:"Q로 적을 모으고 좌클릭 · 중력탄은 실전에서 보급 컨테이너에서만",keys:["Q","LMB"],hl:"wGrav",limit:50,mark:true,
    prog:()=>`${Math.min(1,TUT.c.grav||0)} / 1`,say:[[OP,"모인 덩어리를 베어 날리면 연쇄 폭발이 크게 터져요."]],
    keep:{n:5,passive:true,d:[26,40]},enter(){TUT.c.grav=0;G.grav=Math.max(G.grav||0,2)},tick(){if(G.grav<1&&!(TUT.c.grav>0))G.grav=1},done(){return (TUT.c.grav||0)>=1&&TUT.t>4},exit(){tutClear()}},
-  {obj:"옵션 장비 알아보기",how:"출격할 때는 아래 4가지 중 1개만 골라 장착해요. 지금은 시험 삼아 하나씩 전부 써 볼게요. Enter를 누르면 시작해요.",keys:["Enter"],limit:20,
+  {obj:"옵션 장비 알아보기",how:"R = 장비 기능 · F = 필살기 · 실전엔 1개만 장착 · Enter로 시작",keys:["Enter"],limit:20,
    say:[[OP,"이번엔 옵션 장비예요. 실전에서는 하나만 들고 나가요. 뭐가 맞는지 여기서 골라 봐요."]],
    enter(){TUT.c.next=0;tutUnitsCard(true)},done(){return (TUT.c.next||0)>0},exit(){tutUnitsCard(false)}},
   unitStep("mega"),unitStep("pods"),unitStep("missile"),unitStep("shield"),
@@ -134,9 +134,21 @@ const TUT_VO=[
  {t:"주황색 드론이 몸으로 돌진합니다. 드론을 바라보고 A나 D 키를 누른 채 대기하세요. '지금' 신호에 Shift 키를 짧게 눌렀다 떼어 옆으로 피하세요.",cue:1},
  {t:"파란 실드는 정면 공격을 막습니다. Shift 키와 A 또는 D 키를 길게 눌러 옆이나 뒤로 돌아가세요. 적을 조준하고 마우스 왼쪽 버튼으로 베세요.",r:"정면은 막힙니다. 옆이나 뒤에서 베세요."},
  {t:"적을 조준하고 마우스 왼쪽 버튼으로 베세요. 첫 공격은 장갑이 막습니다. 적이 비틀거리면 왼쪽 버튼을 다시 눌러 한 번 더 베세요. 연사 예고가 뜨면 Shift 키로 먼저 회피하세요."},
- {t:"적 무리를 바라보고 Q 키를 한 번 누르세요. 중력탄이 적을 한곳에 모읍니다. 모인 적을 조준하고 마우스 왼쪽 버튼으로 베어 날려 연쇄 폭발을 일으키세요.",r:"Q 키로 적을 모은 뒤 왼쪽 버튼으로 베세요."}];
+ {t:"적 무리를 바라보고 Q 키를 한 번 누르세요. 중력탄이 적을 한곳에 모읍니다. 모인 적을 조준하고 마우스 왼쪽 버튼으로 베어 날려 연쇄 폭발을 일으키세요.",r:"Q 키로 적을 모은 뒤 왼쪽 버튼으로 베세요."},
+ {t:"실전에서는 옵션 장비 하나를 선택합니다. R 키는 장비 기능, F 키는 필살기입니다. 지금은 네 종류를 차례로 시험합니다. Enter 키를 누르세요."},
+ {id:"tut_15_r",t:"하이퍼 메가 런처입니다. 일렬로 모인 적을 향해 조준하고 R 키를 한 번 누르세요. 잠시 뒤 빔이 발사되어 앞에 있는 적들을 한 번에 뚫고 지나갑니다.",
+  f:"필살 게이지 충전 완료! F 키를 눌러 하이퍼 빔을 발사하세요. 발사 중 마우스로 조준 방향을 바꿔 적들을 쓸어버리세요."},
+ {id:"tut_16_r",t:"원격 포드입니다. 적에게 조준선을 맞추고 R 키를 한 번 누르세요. 포드 3기가 조준한 적에게 날아가 공격합니다.",
+  f:"필살 게이지 충전 완료! F 키를 누르세요. 포드가 주변 적을 한곳으로 모아 터뜨립니다."},
+ {id:"tut_17_r",t:"다탄두 미사일입니다. R 키를 계속 누른 채 마우스로 조준선을 적 3기 이상에 차례로 맞추세요. 표적을 잡았으면 R 키에서 손을 떼세요. 미사일이 일제히 발사됩니다.",
+  r:"R 키를 누른 채 적 3기 이상을 훑으세요. 표적을 잡은 뒤 손을 떼세요.",f:"필살 게이지 충전 완료. F 키를 누르세요. 주변 적을 자동으로 겨냥해 미사일을 두 차례 발사합니다."},
+ {id:"tut_18_r",t:"실드 비트입니다. 적탄이 다가오면 R 키를 한 번 눌러 장벽을 펼치세요. 장벽에 닿은 적탄은 쏜 적에게 되돌아갑니다. 적탄 한 발을 반사하세요.",cue:1,
+  f:"필살 게이지 충전 완료! F 키로 카운터 필드를 펼치세요. 6초 동안 무적 상태가 되며 적탄을 반사합니다."},
+ {t:"적 에이스 접근! 적에게 조준선을 맞추고 공격을 기다리세요. 적이 칼을 치켜들 때 마우스 왼쪽 버튼으로 먼저 베세요. 카운터를 한 번 성공하면 통과입니다.",cue:1,pre:1},
+ {t:"추진제 한계입니다. 훈련 종료. 우리엘 1, 귀환하세요.",pre:1}];
 const tutVoId=(i,x)=>"tut_"+String(i+1).padStart(2,"0")+(x?"_"+x:"");
-function tutVoIds(){const a=[];TUT_VO.forEach((v,i)=>{a.push(tutVoId(i));if(v.r)a.push(tutVoId(i,"retry"));if(v.cue)a.push(tutVoId(i,"ready"),tutVoId(i,"now"))});a.push("tut_09_success");return a}
+const tutVoMain=i=>TUT_VO[i].id||tutVoId(i);
+function tutVoIds(){const a=[];TUT_VO.forEach((v,i)=>{a.push(tutVoMain(i));if(v.r)a.push(tutVoId(i,"retry"));if(v.f)a.push(tutVoId(i,"f"));if(v.cue)a.push(tutVoId(i,"ready"),tutVoId(i,"now"))});a.push("tut_09_success","tut_end");return a}
 const voBusy=()=>VO_A&&!VO_A.paused&&!VO_A.ended;
 // short cue lines ("회피 준비", "지금!") play on their own channel so they never cut the step's instructions
 let TUT_CUE_A=null;function tutCueVo(id){if(!AUD.on)return;try{if(TUT_CUE_A)TUT_CUE_A.pause();const a=(VO_CACHE[id]||new Audio(voUrl(id)));try{a.currentTime=0}catch(_){}a.volume=Math.min(1,(AUD.vol??.9)*1.05);a.play().catch(()=>{});TUT_CUE_A=a}catch(_){}}
@@ -187,7 +199,8 @@ function tutDock(on){const o=$("tutObj"),r=$("radio");if(!o._home){o._home=o.par
 function tutStep(i){if(TUT.on)tutDock(true);const prev=TUT_STEPS[TUT.step];if(prev&&prev.exit)prev.exit();TUT.step=i;TUT.t=0;TUT.respT=0;TUT.lastProg=null;TUT.hintSaid=false;const s=TUT_STEPS[i];if(!s)return;
   $("tutObj").hidden=false;tutText(s);$("tutObjProg").textContent=s.prog?s.prog():"";$("tutObjN").textContent=`${i+1} / ${TUT_STEPS.length}`;
   $("tutSkip").hidden=i>=TUT_STEPS.length-1;$("tutCue").hidden=true;
-  const o=$("tutObj");o.classList.remove("new","ok");void o.offsetWidth;o.classList.add("new");TUT.cueSt=null;TUT.just0=TUT.c.just||0;const V=TUT_VO[i];if(V){TUT.sayTok=(TUT.sayTok||0)+1;setTimeout(()=>{if(TUT.on&&TUT.step===i)radio(OP,V.t,tutVoId(i))},i?150:500)}else tutSay(s.say);if(s.enter)s.enter()}
+  const o=$("tutObj");o.classList.remove("new","ok");void o.offsetWidth;o.classList.add("new");TUT.cueSt=null;TUT.aceRdy=false;TUT.just0=TUT.c.just||0;const V=TUT_VO[i];if(V){const tok=TUT.sayTok=(TUT.sayTok||0)+1,pre=V.pre&&s.say&&s.say[0][0]!==OP?s.say[0]:null;if(pre)radio(pre[0],pre[1]);
+    setTimeout(()=>{if(TUT.on&&TUT.step===i&&TUT.sayTok===tok)radio(OP,V.t,tutVoMain(i))},pre?2600:i?150:500)}else tutSay(s.say);if(s.enter)s.enter()}
 function tutText(s){const a=tutVal(s,"obj")||"",b=tutVal(s,"how")||"";if($("tutObjTxt").textContent!==a){$("tutObjTxt").textContent=a;const o=$("tutObj");o.classList.remove("new");void o.offsetWidth;o.classList.add("new")}
   if($("tutObjHow").textContent!==b)$("tutObjHow").textContent=b;tutKeysSet(tutVal(s,"keys"));tutHl(tutVal(s,"hl"))}
 function tutPass(why){if(TUT.busy)return;TUT.busy=true;const s=TUT_STEPS[TUT.step];const o=$("tutObj");$("tutCue").hidden=true;
@@ -195,7 +208,8 @@ function tutPass(why){if(TUT.busy)return;TUT.busy=true;const s=TUT_STEPS[TUT.ste
   setTimeout(()=>{TUT.busy=false;o.classList.remove("ok");if(TUT.on&&TUT_STEPS[TUT.step]===s)tutStep(TUT.step+1)},why?900:1500)}
 function tutFrame(dt){if(!TUT.on||SCREEN!=="play"||TUT.step<0){if(!TUT.on&&!$("tutEquip").hidden)tutEquipHide();if(!$("tutKeys").hidden&&!TUT.on&&!VST.on){tutKeysSet(null);tutHl(null);$("tutMark").hidden=$("tutCue").hidden=true}return}
   const s=TUT_STEPS[TUT.step];if(!s)return;TUT.t+=dt;TUT.dt=dt;G.unitCd=0; /* no option-unit cooldown anywhere in the tutorial */
-  if(s.tick)s.tick();if(TUT.step===8&&(TUT.c.just||0)>TUT.just0){TUT.just0=TUT.c.just;if(TUT.c.just===1)tutCueVo("tut_09_success")}tutKeep(s,dt);tutText(s);tutMarkTick(s);if(!TUT.busy)tutCueTick(s);
+  if(s.tick)s.tick();if(TUT.step===18&&!TUT.aceRdy&&TUT.t>12)for(const e of enemies)if(e.tutAce&&e.alive&&e.m.position.distanceTo(S.pos)<34){TUT.aceRdy=true;tutCueVo("tut_19_ready");break}
+  if(TUT.step===8&&(TUT.c.just||0)>TUT.just0){TUT.just0=TUT.c.just;if(TUT.c.just===1)tutCueVo("tut_09_success")}tutKeep(s,dt);tutText(s);tutMarkTick(s);if(!TUT.busy)tutCueTick(s);
   if(s.prog){const v=s.prog();if(v!==TUT.lastProg){TUT.lastProg=v;$("tutObjProg").textContent=v}}
   if(TUT.wp&&TUT.wp.visible){TUT.wp.userData.ring.lookAt(camera.position);TUT.wp.userData.ring.scale.setScalar(1+Math.sin(TUT.t*4)*.08)}
   // stuck for a while: point at Tab; past the limit: move on so nobody is trapped in a step
@@ -211,7 +225,7 @@ async function startTutorial(){if(TUT.on||!P)return;sfx("uiok");lock();
   document.body.classList.add("tut");show("launch");
   voPreload(tutVoIds());await playIntro();if(!TUT.on)return;await playCatapult();if(!TUT.on)return;
   show("play");S.started=true;tutStep(0)}
-function tutEnding(){if(!TUT.on)return;const n=Math.max(1,(S.kills||0)+(TUT.c.kill||0)*0);$("tutObj").hidden=true;if(document.pointerLockElement)document.exitPointerLock();
+function tutEnding(){if(!TUT.on)return;tutDock(false);voPlay("tut_end");const n=Math.max(1,(S.kills||0)+(TUT.c.kill||0)*0);$("tutObj").hidden=true;if(document.pointerLockElement)document.exitPointerLock();
   const e=$("tutEnd");$("tutEndA").textContent=`그날 밤, 서울 하늘에는 유성 ${n}개가 내렸다.`;$("tutEndB").textContent="동생은 그중 하나에 소원을 빌었다.";e.hidden=false;e.classList.remove("on");void e.offsetWidth;e.classList.add("on");sfx("phase");
   setTimeout(()=>$("tutGo").focus(),2600)}
 function tutExit(to){tutDock(false);tutEquipHide();tutKeysSet(null);tutHl(null);tutUnitsCard(false);$("tutMark").hidden=$("tutCue").hidden=true;if(TUT.unit0&&UNITS[TUT.unit0]){G.unit=TUT.unit0;buildBits(G.unit)}TUT.on=false;TUT.step=-1;tutWaypoint(null);$("tutObj").hidden=true;$("tutEnd").hidden=true;document.body.classList.remove("tut");
