@@ -112,12 +112,20 @@ function restart(){POPN=0;G.nf=null;{const f=$("feed");if(f)f.textContent=""}for
 
 /* ================= radar ================= */
 const rc=$("radar").getContext("2d");
-function drawRadar(){const W=264,c=W/2;rc.clearRect(0,0,W,W);rc.strokeStyle="rgba(255,178,26,.22)";rc.lineWidth=2;
-  [c-4,c*.62,c*.3].forEach(r=>{rc.beginPath();rc.arc(c,c,r,0,Math.PI*2);rc.stroke()});
-  rc.beginPath();rc.moveTo(c,4);rc.lineTo(c,W-4);rc.moveTo(4,c);rc.lineTo(W-4,c);rc.stroke();
-  rc.fillStyle="rgba(255,178,26,.12)";rc.beginPath();rc.moveTo(c,c);rc.arc(c,c,c-4,-Math.PI/2-.5,-Math.PI/2+.5);rc.fill();
-  const cs=Math.cos(S.yaw),sn=Math.sin(S.yaw);
-  for(const e of enemies){if(!e.alive)continue;const dx=e.m.position.x-S.pos.x,dz=e.m.position.z-S.pos.z;const lx=dx*cs-dz*sn,lz=dx*sn+dz*cs;const s=(c-10)/(VS?150:60);let x=c-lx*s,y=c-lz*s;
-    const d=Math.hypot(x-c,y-c);if(d>c-8){x=c+(x-c)*(c-8)/d;y=c+(y-c)*(c-8)/d}if(e.isWP)continue;if(e.isBoss){rc.fillStyle=(clockT*4|0)%2?"#ff4a3d":"#ffb21a";rc.fillRect(x-9,y-9,18,18);continue}rc.fillStyle=e.tele>0&&(clockT*8|0)%2?"#ffffff":e===target?"#ebe6da":e.elite?"#7fd8ff":"#ff4a3d";rc.beginPath();rc.arc(x,y,e===target?7:5,0,Math.PI*2);rc.fill()}
-  for(const k of (G.crates||[])){const dx=k.g.position.x-S.pos.x,dz=k.g.position.z-S.pos.z,lx=dx*cs-dz*sn,lz=dx*sn+dz*cs,sc=(c-10)/60;let x=c-lx*sc,y=c-lz*sc;const d=Math.hypot(x-c,y-c);if(d>c-8){x=c+(x-c)*(c-8)/d;y=c+(y-c)*(c-8)/d}rc.fillStyle="#8dff7a";rc.fillRect(x-6,y-6,12,12)}
-  rc.fillStyle="#ffb21a";rc.beginPath();rc.moveTo(c,c-11);rc.lineTo(c-8,c+8);rc.lineTo(c+8,c+8);rc.fill()}
+function drawRadar(){const W=rc.canvas.width,c=W/2,R=c-6,RANGE=VS?150:70,sc=(R-6)/RANGE;rc.clearRect(0,0,W,W);
+  // 10/29 cockpit radar: dark scope, brighter rings, a slow sweep, bigger contacts coloured by type
+  rc.strokeStyle="rgba(255,178,26,.38)";rc.lineWidth=2;[R,R*.66,R*.33].forEach(r=>{rc.beginPath();rc.arc(c,c,r,0,Math.PI*2);rc.stroke()});
+  rc.strokeStyle="rgba(255,178,26,.18)";rc.beginPath();rc.moveTo(c,c-R);rc.lineTo(c,c+R);rc.moveTo(c-R,c);rc.lineTo(c+R,c);rc.stroke();
+  for(let a=0;a<24;a++){const t=a/24*Math.PI*2,r0=a%6?R-6:R-12;rc.beginPath();rc.moveTo(c+Math.cos(t)*r0,c+Math.sin(t)*r0);rc.lineTo(c+Math.cos(t)*R,c+Math.sin(t)*R);rc.stroke()}
+  rc.fillStyle="rgba(255,178,26,.10)";rc.beginPath();rc.moveTo(c,c);rc.arc(c,c,R,-Math.PI/2-.55,-Math.PI/2+.55);rc.fill(); // view cone
+  const sw=(clockT*1.6)%(Math.PI*2),gr=rc.createRadialGradient(c,c,0,c,c,R);gr.addColorStop(0,"rgba(255,178,26,0)");gr.addColorStop(1,"rgba(255,178,26,.22)");
+  rc.fillStyle=gr;rc.beginPath();rc.moveTo(c,c);rc.arc(c,c,R,sw-.5,sw);rc.fill();
+  const cs=Math.cos(S.yaw),sn=Math.sin(S.yaw),put=p=>{const dx=p.x-S.pos.x,dz=p.z-S.pos.z,lx=dx*cs-dz*sn,lz=dx*sn+dz*cs;let x=c-lx*sc,y=c-lz*sc;const d=Math.hypot(x-c,y-c),edge=d>R-10;if(edge){x=c+(x-c)*(R-10)/d;y=c+(y-c)*(R-10)/d}return [x,y,edge,p.y-S.pos.y]};
+  for(const e of enemies){if(!e.alive||e.isWP)continue;const [x,y,edge,dy]=put(e.m.position);
+    if(e.isBoss){rc.fillStyle=(clockT*4|0)%2?"#ff4a3d":"#ffb21a";rc.fillRect(x-12,y-12,24,24);continue}
+    const col=e.tele>0&&(clockT*8|0)%2?"#ffffff":e===target?"#ffffff":e.crate?"#7dff8a":e.kami?"#ff8a20":e.sniper?"#c070ff":e.elite?"#7fd8ff":e.isRemote?"#7fd8ff":"#ff4a3d";
+    const r=(e===target?9:e.elite||e.ms?8:6.5)*(edge?.75:1);rc.fillStyle=col;rc.globalAlpha=edge?.6:1;rc.beginPath();rc.arc(x,y,r,0,Math.PI*2);rc.fill();
+    if(Math.abs(dy)>8&&!edge){rc.beginPath();rc.moveTo(x-5,y+(dy>0?-r-3:r+3));rc.lineTo(x+5,y+(dy>0?-r-3:r+3));rc.lineTo(x,y+(dy>0?-r-9:r+9));rc.fill()} // above / below you
+    rc.globalAlpha=1}
+  for(const k of (G.crates||[])){const [x,y]=put(k.g.position);rc.fillStyle="#8dff7a";rc.fillRect(x-7,y-7,14,14)}
+  rc.fillStyle="#ffb21a";rc.beginPath();rc.moveTo(c,c-14);rc.lineTo(c-10,c+10);rc.lineTo(c+10,c+10);rc.fill()}

@@ -918,6 +918,34 @@ body:not(.versus):not(.tut) #hud[hidden]~#feed{display:none}
 <div id="hurt"></div><div id="dmgEdge"><b id="dmgTxt"></b></div><div id="threats"><i></i><i></i><i></i><i></i><i></i><i></i></div>
 
 <!-- in-game HUD -->
+<style>
+/* ---- cockpit instrument console (10/29): radar in the middle, boost and heat as side gauges ---- */
+.hud.bc{bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(calc(-50% - 100px))} /* centred in the gap between the pilot plate and the weapon bar */
+.cockpit{display:grid;grid-template-columns:230px 168px 190px;align-items:end;gap:0;pointer-events:none}
+.ckw{position:relative;padding:12px 16px 12px;background:linear-gradient(180deg,rgba(14,18,24,.82),rgba(8,10,14,.9));border-top:1px solid rgba(255,178,26,.55);margin-bottom:6px}
+.ckL{clip-path:polygon(16px 0,100% 0,100% 100%,0 100%,0 16px);border-left:1px solid rgba(255,178,26,.25)}
+.ckRt{clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%);border-right:1px solid rgba(255,178,26,.25)}
+.ckh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:6px}
+.ckh .lbl{font-size:12px;letter-spacing:.18em;color:#cfc8b8}
+.ckh b{font:600 24px var(--f-mono);color:var(--amber);line-height:1}
+.cockpit #boostV,.cockpit #mult{display:inline!important}
+.cks{margin-top:6px;font-size:10.5px;letter-spacing:.06em;color:rgba(232,230,223,.5)}
+.ckL .bframe{width:100%}
+.ckRt .bar{height:12px}
+.ckRt.hot .ckh b{color:var(--red)}
+.boostG.low .ckh b{color:var(--red);animation:blow .5s steps(2) infinite}
+.ckR{position:relative;width:168px;height:168px;border-radius:50%;background:radial-gradient(circle,rgba(10,16,22,.9) 60%,rgba(6,8,12,.95) 100%);
+  box-shadow:0 0 0 2px rgba(255,178,26,.55),0 0 0 7px rgba(10,12,16,.85),0 0 0 8px rgba(255,178,26,.25),0 0 24px rgba(255,178,26,.18);z-index:1}
+.ckR .radar{width:168px;height:168px;display:block;border-radius:50%}
+.ckRl{position:absolute;left:50%;bottom:-2px;transform:translate(-50%,100%);font:600 10px var(--f-mono);letter-spacing:.3em;color:rgba(255,178,26,.75)}
+/* top right: kills / best chain, readable */
+.killTR{display:flex;gap:8px}
+.ktr{min-width:96px;padding:8px 14px 9px;background:linear-gradient(180deg,rgba(14,18,24,.8),rgba(8,10,14,.86));border-top:1px solid rgba(255,178,26,.55);clip-path:polygon(0 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%);text-align:right}
+.ktr .lbl{display:block;font-size:11px;letter-spacing:.16em;color:#cfc8b8;margin-bottom:2px}
+.ktr b{font:600 26px var(--f-mono);color:var(--bone);line-height:1}
+@media (max-width:1400px){.cockpit{grid-template-columns:180px 140px 150px}.ckR,.ckR .radar{width:140px;height:140px}.cks{display:none}.ckh b{font-size:20px}}
+@media (max-width:1100px){.hud.bc{transform:translateX(-50%)}}
+</style>
 <div id="hud" hidden>
   <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="feed"></div><div id="aimPart" hidden></div><div id="postBar" hidden><i></i><span>자세</span></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="lockWarn"><b>피격 경고</b></div>
   <div id="lock"><i></i><i></i><i></i><i></i><span id="lockTxt">록온</span></div>
@@ -942,16 +970,16 @@ body:not(.versus):not(.tut) #hud[hidden]~#feed{display:none}
     <div class="phaseTag lbl" id="phaseTag">PHASE 1 / 4</div>
     <div class="critTag" id="critTag" hidden>크리티컬 준비</div>
   </div>
-  <div class="hud tc"><div class="killBox"><span>격파<b id="kills">0</b></span><span>최대 연쇄<b id="best">0</b></span></div></div>
-  <div class="hud tr radarBox"><canvas class="radar" id="radar" width="272" height="272"></canvas><div class="lbl">레이더</div></div>
+  <div class="hud tr killTR"><div class="ktr"><span class="lbl">격파</span><b class="num" id="kills">0</b></div><div class="ktr"><span class="lbl">최대 연쇄</span><b class="num" id="best">0</b></div></div>
   <div class="hud bl"><div class="plate"><div class="lbl">파일럿</div><div class="nm" id="pName">—</div><div class="dp" id="pDept"></div><div class="so">출격 <b id="pSortie">1/3</b></div><div class="armorTag" id="armorTag" hidden>장갑 보호 1회</div>
     <div class="hpRow" id="hpRow"><span class="lbl">장갑</span><div class="hpBar"><i id="hpF"></i></div><b class="num" id="hpV">100</b></div>
     <div class="lives" id="lives"><i></i><i></i><i></i><span class="lbl" id="livesTxt">기체 3 / 3</span></div></div></div>
   <div class="hud bc">
     <div id="warn"></div>
-    <div class="gauges">
-      <div class="g boostG" id="boostG"><span class="lbl">부스트</span><div class="bframe"><div class="bslot"><i id="boostF"></i></div></div><span class="v" id="boostV">100</span></div>
-      <div class="g heat" id="heatG"><span class="lbl">과열</span><div class="bar"><i id="heatF"></i></div><span class="v" id="mult">×1</span></div>
+    <div class="cockpit">
+      <div class="ckw ckL boostG" id="boostG"><div class="ckh"><span class="lbl">부스트</span><b class="num" id="boostV">100</b></div><div class="bframe"><div class="bslot"><i id="boostF"></i></div></div><div class="cks">SHIFT 꾹 · 부스트 / 톡 · 회피</div></div>
+      <div class="ckR"><canvas class="radar" id="radar" width="320" height="320"></canvas><span class="ckRl">RADAR</span></div>
+      <div class="ckw ckRt" id="heatG"><div class="ckh"><span class="lbl">과열</span><b class="num" id="mult">0%</b></div><div class="bar"><i id="heatF"></i></div><div class="cks">사격·베기 연타 시 상승</div></div>
     </div>
   </div>
   <div class="hud br"><div class="wpns">
