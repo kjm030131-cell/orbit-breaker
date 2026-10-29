@@ -20,7 +20,7 @@ function fameRender(){const el=$("fameBoard");if(!el)return;const f=FAME.data;
     h+=r?`<div class="lbr ${n<=3?"p"+n:""}"><span class="r">${n<=3?`<img class="medal" src="ui/medal${n}.webp" alt="${n}">`:String(n).padStart(2,"0")}</span><span class="nm">${esc(r.name)}</span><span class="dp">${esc(r.dept)}</span><span class="sc">${bossTime(r.t)}</span></div>`
         :`<div class="lbr empty"><span class="r">${String(n).padStart(2,"0")}</span><span class="nm">—</span><span class="dp"></span><span class="sc">—</span></div>`}
   el.innerHTML=h+"</div>"}
-async function fameLoad(){if(!SERVER)return;try{FAME.data=await api("fame");fameRender()}catch(e){}}
+async function fameLoad(force){if(!SERVER||document.hidden)return;const now=Date.now();if(!force&&now-(FAME.at||0)<60000){fameRender();return}FAME.at=now;try{FAME.data=await api("fame");fameRender()}catch(e){}}
 function fameView(v){FAME.view=v;const fame=v==="fame",tb=document.querySelector(".tBoard");if(!tb)return;tb.classList.toggle("fame",fame);
   $("fameBoard").hidden=!fame;tb.querySelectorAll("[data-lbt]").forEach(b=>{const on=b.dataset.lbt===v;b.classList.toggle("on",on);b.setAttribute("aria-selected",on)});
   if(fame){fameRender();fameLoad()}}

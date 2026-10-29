@@ -537,3 +537,10 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 ## 54. 크레딧 화면 (10/29)
 - 타이틀 메뉴 하단 "크레딧"(data-go="credits") → #scrCredits, 천천히 올라가는 롤(휠·↑↓로 빨리 넘김, 끝나면 4초 뒤 처음부터), Esc·돌아가기로 타이틀.
 - 내용은 src/12l-credits.js 의 CREDITS 배열만 고치면 됨(팀·캐스트·기술·오픈소스 라이선스·생성형 AI 도구·감사).
+
+## 55. D1 무료 한도 초과 대응 (10/30 01:50)
+- 10/30 01시경 D1 무료 일일 읽기 한도(500만 줄) 초과 → /api/board 500 → 게임이 오프라인 모드. 원인: 열린 화면마다 8초마다 순위 전체 조회. 한도는 매일 09:00 KST 초기화.
+- server/api.js: board 공용 부분·fame 을 30초 캐시(isolate 메모리 + caches.default), 내 순위(me)는 상위 100 안이면 캐시에서, 밖이면 학번별 60초 캐시.
+  finish·관리자 POST 는 캐시를 비움(finish 응답은 새로 계산). start/finish 는 IP당 분당 40회 제한(429). runs(sid) 색인 추가.
+- 클라: 순위 조회 30초 간격, 순위가 보이는 화면 + 탭이 보일 때만, 실패 시 최대 5분까지 간격 늘림. 명예의 전당은 1분에 한 번. 관리자 자동 새로고침 30초.
+- .github/workflows/pages-status.yml: Pages 배포 이력 + /api/board 응답 확인(읽기 전용, 수동 실행).

@@ -182,7 +182,7 @@ function render(){
 $("q").addEventListener("input",()=>DATA&&render());
 $("rows").addEventListener("click",e=>{const b=e.target.closest("[data-runs]");if(b)openRuns(b.dataset.runs)});
 $("refreshBtn").addEventListener("click",()=>load().then(()=>toast("새로고침했습니다.")).catch(fail));
-setInterval(()=>{if(KEY&&!$("app").hidden&&$("runsModal").hidden&&$("askModal").hidden&&!busy)load().catch(()=>{})},15000);
+setInterval(()=>{if(KEY&&!$("app").hidden&&$("runsModal").hidden&&$("askModal").hidden&&!busy)load().catch(()=>{})},30000);
 
 /* player history */
 async function openRuns(sid){

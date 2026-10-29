@@ -31,19 +31,56 @@ async function fame(DB) {
   return { total: results.length, first: byFirst[0] ? row(byFirst[0]) : null, fastest: byTime.slice(0, 5).map(row) };
 }
 
-async function board(DB, sid) {
+/* ---- read cache (10/30): D1's free tier allows 5M rows read a day and every open title screen polled the full board every 8 s.
+   Shared results (board, fame) are computed at most once per TTL per isolate (+ the edge cache where available), so request
+   volume - including someone hammering the API on purpose - no longer turns into D1 reads. Any write clears the local copy. */
+const MEM = new Map();
+const BOARD_TTL = 30000, ME_TTL = 60000;
+function clearCache() { MEM.clear(); }
+async function cached(key, ttl, fn, fresh = false) {
+  const now = Date.now(), m = MEM.get(key);
+  if (!fresh && m && m.exp > now) return m.p;
+  let edge = null;
+  try { edge = typeof caches !== "undefined" && caches.default ? caches.default : null; } catch (e) { edge = null; }
+  const req = edge ? new Request("https://arclight-cache.internal/" + encodeURIComponent(key)) : null;
+  const p = (async () => {
+    if (edge && !fresh) { const hit = await edge.match(req).catch(() => null); if (hit) return hit.json(); }
+    const v = await fn();
+    if (edge) await edge.put(req, new Response(JSON.stringify(v), { headers: { "content-type": "application/json", "cache-control": "max-age=" + Math.round(ttl / 1000) } })).catch(() => {});
+    return v;
+  })();
+  MEM.set(key, { p, exp: now + ttl });
+  p.catch(() => MEM.delete(key));
+  return p;
+}
+async function boardShared(DB) {
   const kills = await killMap(DB);
-  const { results } = await DB.prepare("SELECT sid,name,dept,best,unit,frame FROM players WHERE best>0 ORDER BY best DESC, best_at ASC LIMIT 100").all();
+  const { results } = await DB.prepare("SELECT sid,name,dept,best,unit,frame,best_at FROM players WHERE best>0 ORDER BY best DESC, best_at ASC LIMIT 100").all();
   const total = (await DB.prepare("SELECT COUNT(*) AS n FROM players WHERE best>0").first()).n;
+  return { rows: results.map((r) => { const k = kills.get(r.sid); return { sid: r.sid, name: r.name, dept: r.dept, best: r.best, unit: r.unit, frame: r.frame, boss: !!k, bossT: k ? k.t : null }; }), total, killers: kills.size };
+}
+async function board(DB, sid, fresh = false) {
+  const sh = await cached("board", BOARD_TTL, () => boardShared(DB), fresh);
   let me = null;
   if (sid && validSid(sid)) {
-    const p = await DB.prepare("SELECT best,best_at FROM players WHERE sid=?").bind(sid).first();
-    if (p && p.best > 0) {
+    const i = sh.rows.findIndex((r) => r.sid === sid);
+    if (i >= 0) me = { rank: i + 1, best: sh.rows[i].best };
+    else me = await cached("me:" + sid, ME_TTL, async () => {
+      const p = await DB.prepare("SELECT best,best_at FROM players WHERE sid=?").bind(sid).first();
+      if (!p || !(p.best > 0)) return null;
       const ahead = (await DB.prepare("SELECT COUNT(*) AS n FROM players WHERE best>? OR (best=? AND best_at<?)").bind(p.best, p.best, p.best_at || "").first()).n;
-      me = { rank: ahead + 1, best: p.best };
-    }
+      return { rank: ahead + 1, best: p.best };
+    }, fresh);
   }
-  return { rows: results.map((r) => { const k = kills.get(r.sid); return { name: r.name, dept: r.dept, best: r.best, unit: r.unit, frame: r.frame, sidm: mask(r.sid), me: r.sid === sid, boss: !!k, bossT: k ? k.t : null }; }), total, me, killers: kills.size };
+  return { rows: sh.rows.map((r) => ({ name: r.name, dept: r.dept, best: r.best, unit: r.unit, frame: r.frame, sidm: mask(r.sid), me: r.sid === sid, boss: r.boss, bossT: r.bossT })), total: sh.total, me, killers: sh.killers };
+}
+// per-IP limit on the write routes (isolate-local, best effort): blocks scripted floods of fake sorties, never a busy booth
+const RATE = new Map();
+function limited(request, key, max) {
+  const ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "local";
+  const now = Date.now(), k = key + ":" + ip, r = RATE.get(k);
+  if (!r || now - r.t > 60000) { RATE.set(k, { t: now, n: 1 }); if (RATE.size > 5000) RATE.clear(); return false; }
+  return ++r.n > max;
 }
 
 export async function onRequest({ request, env, params }) {
@@ -53,7 +90,7 @@ export async function onRequest({ request, env, params }) {
   const url = new URL(request.url);
   try {
     if (request.method === "GET" && route === "board") return J(await board(DB, url.searchParams.get("sid")));
-    if (request.method === "GET" && route === "fame") return J(await fame(DB));
+    if (request.method === "GET" && route === "fame") return J(await cached("fame", BOARD_TTL, () => fame(DB)));
     if (request.method === "GET" && route === "player") {
       const sid = url.searchParams.get("sid") || "";
       if (!validSid(sid)) return bad("학번 형식 오류");
@@ -65,6 +102,7 @@ export async function onRequest({ request, env, params }) {
     if (request.method !== "POST") return bad("not found", 404);
     const body = await request.json().catch(() => ({}));
 
+    if ((route === "start" || route === "finish") && limited(request, route, 40)) return bad("요청이 너무 많습니다. 잠시 후 다시 시도하세요.", 429);
     if (route === "start") {
       const sid = clean(body.sid, 10), name = clean(body.name, 12), dept = clean(body.dept, 24);
       if (!validSid(sid) || !name || !dept) return bad("이름·학과·학번을 확인하세요.");
@@ -111,7 +149,8 @@ export async function onRequest({ request, env, params }) {
         }
       }
       const p = await DB.prepare("SELECT best,attempts FROM players WHERE sid=?").bind(run.sid).first();
-      const b = await board(DB, run.sid);
+      clearCache();
+      const b = await board(DB, run.sid, true);
       return J({ best: p.best, attempts: p.attempts, accepted: ok, boss, ...b });
     }
     return bad("not found", 404);
@@ -174,6 +213,7 @@ async function adminInit(DB) {
   if (adminReady.has(DB)) return;
   await DB.batch([
     DB.prepare("CREATE TABLE IF NOT EXISTS settings(k TEXT PRIMARY KEY, v TEXT)"),
+    DB.prepare("CREATE INDEX IF NOT EXISTS idx_runs_sid ON runs(sid)"),
     DB.prepare("CREATE TABLE IF NOT EXISTS admin_backup(id INTEGER PRIMARY KEY AUTOINCREMENT, at TEXT NOT NULL, kind TEXT NOT NULL, label TEXT, payload TEXT NOT NULL, restored INTEGER DEFAULT 0)"),
   ]);
   adminReady.add(DB);
@@ -215,6 +255,7 @@ async function admin(DB, env, request, route, url) {
   }
   await adminInit(DB);
   const GET = request.method === "GET";
+  if (!GET) clearCache();
   const body = GET ? {} : await request.json().catch(() => ({}));
   const sid = clean(GET ? url.searchParams.get("sid") : body.sid, 10);
 

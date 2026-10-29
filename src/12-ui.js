@@ -5,7 +5,10 @@ let DB=null,BOARD=[];
 let SERVER=false,RUN=null,MYRANK=null,TOTAL=0;
 const api=async(path,body)=>{const r=await fetch("api/"+path,body?{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)}:{cache:"no-store"});let j={};try{j=await r.json()}catch(e){}if(!r.ok)throw Object.assign(new Error(j.error||("HTTP "+r.status)),{status:r.status});return j};
 function applyBoard(j){if(!j||!Array.isArray(j.rows))return;BOARD=j.rows;MYRANK=j.me||null;TOTAL=j.total||j.rows.length;renderBoards()}
-async function pollBoard(){if(!SERVER)return;try{applyBoard(await api("board"+(PILOT.sid?"?sid="+PILOT.sid:"")))}catch(e){}}
+// board polling (10/30): every 30 s, only while a board is on screen and the tab is visible; failures back off up to 5 min
+const POLL={next:0,fail:0};
+async function pollBoard(){if(!SERVER||document.hidden||!["title","rank","result","form","load"].includes(SCREEN))return;const now=Date.now();if(now<POLL.next)return;
+  POLL.next=now+30000;try{applyBoard(await api("board"+(PILOT.sid?"?sid="+PILOT.sid:"")));POLL.fail=0}catch(e){POLL.fail++;POLL.next=now+Math.min(300000,30000*2**POLL.fail)}}
 const PILOT={name:"",dept:"",sid:"",rec:null};
 function lsAll(){try{return JSON.parse(localStorage.getItem(LS_KEY)||"{}")||{}}catch(e){return {}}}
 function lsSave(m){try{localStorage.setItem(LS_KEY,JSON.stringify(m))}catch(e){}}
@@ -23,7 +26,7 @@ async function putRec(rec){
 }
 function setNet(on){const n=$("netStatus");n.classList.toggle("off",!on);n.lastChild.textContent=on?"기록 서버 연결됨 · 모든 PC 순위 공유":"오프라인 모드 · 이 PC에만 기록됩니다"}
 (async()=>{
-  try{const j=await api("board");if(j&&Array.isArray(j.rows)){SERVER=true;setNet(true);applyBoard(j);setInterval(pollBoard,8000);return}}catch(e){}
+  try{const j=await api("board");if(j&&Array.isArray(j.rows)){SERVER=true;setNet(true);applyBoard(j);POLL.next=Date.now()+30000;setInterval(pollBoard,5000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)pollBoard()});return}}catch(e){}
   let d=null;try{d=window.claude&&window.claude.use?await window.claude.use("db"):null}catch(e){d=null}
   if(!d){setNet(false);BOARD=boardFromLocal();renderBoards();return}
   DB=d;setNet(true);
