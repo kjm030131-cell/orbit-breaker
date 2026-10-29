@@ -58,7 +58,7 @@ function spawnCluster(n){n=n||2+Math.floor(Math.random()*2);const c=aheadPlayer(
 function fillEnemies(dt){if(VS||S.demo||CINE.on||TUT.on||INTRO.on)return;const ph=PHASES[G.phase];let alive=0,el=0,rm=0,ms=0,bl=0;for(const e of enemies)if(e.alive&&e.launched<=0&&!e.isBoss&&!e.isWP){alive++;if(e.elite)el++;if(e.ram)rm++;if(e.blade)bl++;else if(e.ms)ms++}
   const live=SCREEN==="play"&&S.started;
   if(!live){let guard=0;while(alive<ph.count&&guard++<8){spawnCluster(3);alive+=3}return}
-  dt=dt||0;G.spawnT-=dt;G.bigT-=dt;
+  dt=dt||0;foesTick(dt);G.spawnT-=dt;G.bigT-=dt;
   if(G.bigT<=0){
     if(bl<(ph.blade||0)&&spawnMS(aheadPlayer(40,52,6),true)){G.bigT=7;return}
     if(ms<(ph.ms||0)&&spawnMS(aheadPlayer(36,48,8))){G.bigT=6;return}
@@ -74,7 +74,7 @@ function shieldFlash(e){const s=e.m.userData.shield;if(s)s.hit=1;fxElectric(e.m.
 const teleGeo=new THREE.CylinderGeometry(.05,.05,1,6,1,true);teleGeo.rotateX(Math.PI/2);teleGeo.translate(0,0,.5);
 function teleCount(){let n=0;for(const e of enemies)if(e.alive&&e.tele>0)n++;return n}
 function enemyAI(e,dt,T){
-  if(e.isRemote)return;if(e.isBoss){bossAI(e,dt,T);return}if(e.isWP)return;if(e.ram){ramAI(e,dt,T);return}
+  if(e.isRemote)return;if(e.isBoss){bossAI(e,dt,T);return}if(e.isWP)return;if(foeAI(e,dt,T))return;if(e.ram){ramAI(e,dt,T);return}
   const em=e.m;e.phase+=dt;const to=S.pos.clone().sub(em.position),d=to.length();to.normalize();
   if(e.ms){if(msMove(e,dt,T))return}else{
   if(d>e.keep)em.position.addScaledVector(to,dt*(e.elite?5:3.4+Math.sin(e.phase)*1.4));
@@ -130,7 +130,7 @@ function stepEBolts(dt){
     if(dt>0&&(!b.vsVisual||b.trailT<=0)){b.trailT=1/30;emit(ADD,{pos:b.g.position.clone().addScaledVector(b.dir,-1.6),color:b.color,s0:1.2,s1:.1,life:.16,a:b.dead?.25:.7});}
     if(b.vsVisual){}
     else if(!b.dead&&!b.refl&&SCREEN==="play"&&boltDefense(b)){}
-    else if(b.refl){for(const e of enemies){if(!targetable(e)||e.isBoss)continue;if(e.m.position.distanceTo(b.g.position)<3.2){if(e.isWP)wpDamage(e,2,b.g.position.clone());else{knock(e,b.dir,32,1.8);hitFlash(e);addScore(220,e.m.position.clone(),"cyan")}fxImpact(b.g.position,0x8dff7a);b.life=0;b.dead=true;break}}}
+    else if(b.refl){if(b.home&&b.home.alive&&b.home.launched<=0){const to=b.home.m.position.clone().sub(b.g.position).normalize();b.dir.lerp(to,Math.min(1,dt*8)).normalize();b.g.lookAt(b.g.position.clone().add(b.dir))}for(const e of enemies){if(!targetable(e)||e.isBoss)continue;if(e.m.position.distanceTo(b.g.position)<3.2){if(e.isWP)wpDamage(e,2,b.g.position.clone());else{knock(e,b.dir,32,1.8);hitFlash(e);addScore(220,e.m.position.clone(),"cyan")}fxImpact(b.g.position,0x8dff7a);b.life=0;b.dead=true;break}}}
     else if(!b.dead&&SCREEN==="play"){const c=S.pos.clone().add(new V3(0,.4,0));const seg=b.g.position.clone().sub(p0),L=seg.length()||1e-6;
       const tt=clamp(c.clone().sub(p0).dot(seg)/(L*L),0,1);const dd=p0.clone().addScaledVector(seg,tt).distanceTo(c);
       if(dd<2.3){if(G.iframe>0){b.dead=true}else{hurt(b);b.life=0}}}

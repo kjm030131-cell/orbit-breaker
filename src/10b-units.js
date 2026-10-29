@@ -6,15 +6,15 @@ const UNITS={
     p:"빔 라이플 명중 시 필살 게이지 +2"},
   pods:{name:"원격 포드 유닛",en:"RF-6",color:0x48d8ff,css:"#48d8ff",
     r:"포드 강습",rd:"포드 3기가 록온 대상을 직접 타격해 날림",cd:8,
-    f:"올 레인지",fd:"포드가 주변 적을 한 점으로 끌어모은 뒤 사방으로 폭산",
+    f:"올 레인지",fd:"포드가 70m 안의 적을 한 점으로 끌어모아 폭산, 이어서 3초간 포드가 남은 적을 연속 강습",
     p:"20초마다 적탄 1발 자동 요격"},
   missile:{name:"다탄두 미사일 유닛",en:"MP-12",color:0xff6a3d,css:"#ff6a3d",
     r:"멀티 록",rd:"누르고 있는 동안 최대 6기 표적, 떼면 일제 발사",cd:9,
-    f:"풀 버스트",fd:"60m 안의 적 최대 14기에 미사일 일제 사격",
+    f:"풀 버스트",fd:"110m 안의 적 최대 15기에 미사일 일제 사격 2연속 (약점 포드 포함)",
     p:"라이플 연사 간격 −25%"},
   shield:{name:"실드 비트 유닛",en:"SB-4",color:0x8dff7a,css:"#8dff7a",
     r:"반사 장벽",rd:"3초간 장벽 전개, 닿는 적탄을 쏜 적에게 되돌림",cd:10,
-    f:"카운터 필드",fd:"4초간 무적 · 모든 적탄 반사, 종료 시 충격파",
+    f:"카운터 필드",fd:"6초간 무적 · 적탄을 쏜 적에게 추적 반사 · 1.5초마다 충격파, 종료 시 대형 충격파",
     p:"저스트 회피 시 1회 피격 무효 (25초마다)"}};
 const UNIT_KEYS=Object.keys(UNITS);
 Object.assign(G,{unitCd:0,proj:[],marks:[],marking:false,markT:0,mega:null,barrier:0,cfield:0,podGuard:0,podsOut:0,podsPull:null});
@@ -121,7 +121,7 @@ function boltDefense(b){
 }
 function reflectBolt(b){
   const o=b.owner&&b.owner.alive?b.owner.m.position:null;
-  if(G.barrier>0)tutCount("u_shield");b.dir.copy(o?o.clone().sub(b.g.position).normalize():b.dir.clone().negate());b.refl=true;b.speed=110;b.life=1.4;b.color=0x8dff7a;
+  if(G.barrier>0)tutCount("u_shield");b.dir.copy(o?o.clone().sub(b.g.position).normalize():b.dir.clone().negate());b.refl=true;b.speed=110;b.life=1.4;b.color=0x8dff7a;b.home=b.owner&&b.owner.alive&&!b.owner.isBoss?b.owner:null;
   b.g.lookAt(b.g.position.clone().add(b.dir));b.g.children[1].material.color.set(0x8dff7a);
   fxImpact(b.g.position,0x8dff7a);sfx("block",b.g.position);addScore(80,b.g.position.clone(),"cyan");
 }
@@ -130,20 +130,21 @@ function reflectBolt(b){
 function unitSpecial(){
   const u=G.unit;
   if(u==="mega"){cutin("하이퍼 메가 빔","HM-1");megaStart("f");return}
-  if(u==="pods"){cutin("올 레인지","RF-6");G.podsPull={t:0,c:S.pos.clone().addScaledVector(aimDir(),16)};G.podsOut=2.4;return}
+  if(u==="pods"){cutin("올 레인지","RF-6");G.podsPull={t:0,c:S.pos.clone().addScaledVector(aimDir(),18)};G.podsOut=2.4;return}
   if(u==="missile"){cutin("풀 버스트","MP-12");
-    const list=enemies.filter(e=>targetable(e)&&!e.isBoss&&e.m.position.distanceTo(S.pos)<60).sort((a,b)=>a.m.position.distanceTo(S.pos)-b.m.position.distanceTo(S.pos)).slice(0,14);
-    setTimeout(()=>{if(!S.ended)fireMissiles(list,1)},420);return}
-  if(u==="shield"){cutin("카운터 필드","SB-4");G.cfield=4;G.iframe=Math.max(G.iframe,4)}
+    /* 10/29 buff: two waves, up to 15 targets each within 110 m (weak-point pods included), slow motion on launch */
+    const pick=()=>enemies.filter(e=>targetable(e)&&!e.isBoss&&e.m.position.distanceTo(S.pos)<110).sort((a,b)=>a.m.position.distanceTo(S.pos)-b.m.position.distanceTo(S.pos)).slice(0,15);
+    setTimeout(()=>{if(S.ended)return;fireMissiles(pick(),1);S.slow=Math.max(S.slow,.5)},420);setTimeout(()=>{if(!S.ended){fireMissiles(pick(),1);S.shake=Math.max(S.shake,.6)}},1250);return}
+  if(u==="shield"){cutin("카운터 필드","SB-4");G.cfield=6;G.cfPulse=1.2;G.iframe=Math.max(G.iframe,6)}
 }
 function unitSpecialBurst(){ // called at the special's strike frame
   const u=G.unit;
   if(u==="mega")return; // the beam itself does the work (megaTick)
   if(u==="pods"){const c=G.podsPull?G.podsPull.c:S.pos.clone();S.hitstop=.12;S.shake=1.2;flash(.4);sfx("specBurst");
     emit(ADD,{pos:c,tex:TX.ring,color:0x48d8ff,s0:3,s1:70,life:.6});emit(ADD,{pos:c,tex:TX.flare,color:0xffffff,s0:14,s1:26,life:.2});flashLight(c,0x48d8ff,14,100,.5);
-    let n=0;for(const e of enemies){if(!isMob(e))continue;const d=e.m.position.clone().sub(c),dist=d.length();if(dist>30)continue;
-      knock(e,dist<.5?new V3().randomDirection():d.normalize(),34,2);e.rad=Math.max(e.rad,4.4);hitFlash(e);n++}
-    if(n)addScore(140*n,c.clone().add(new V3(0,4,0)),"big");G.podsPull=null;return}
+    let n=0;for(const e of enemies){if(!isMob(e))continue;const d=e.m.position.clone().sub(c),dist=d.length();if(dist>55)continue;
+      knock(e,dist<.5?new V3().randomDirection():d.normalize(),36,2);e.rad=Math.max(e.rad,4.6);hitFlash(e);n++}
+    if(n)addScore(200*n,c.clone().add(new V3(0,4,0)),"big");G.podsPull=null;G.podStorm={t:3.2,next:.15};emit(ADD,{pos:c,tex:TX.ring,color:0x9ff0ff,s0:6,s1:110,life:.8});return}
   if(u==="missile"){S.shake=.8;flash(.25);sfx("specBurst");return}
   if(u==="shield"){sfx("gravOn");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x8dff7a,s0:3,s1:30,life:.5})}
 }
@@ -161,21 +162,30 @@ function unitsTick(dt,rdt,T){
     G.marks=G.marks.filter(e=>e.alive);if(G.markT>4){unitSkillUp()}}
   // shield
   G.barrier=Math.max(0,G.barrier-dt);
+  if(G.cfield>0){G.cfPulse=(G.cfPulse||0)-dt;if(G.cfPulse<=0&&G.cfield>.6){G.cfPulse=1.5;cfieldWave(30,.6)}}
   if(G.cfield>0){const was=G.cfield;G.cfield-=dt;if(was>0&&G.cfield<=0){G.cfield=0;
     const c=S.pos.clone();S.shake=1;flash(.3);sfx("specBurst");emit(ADD,{pos:c,tex:TX.ring,color:0x8dff7a,s0:3,s1:60,life:.55});
-    let n=0;for(const e of enemies){if(!isMob(e))continue;const d=e.m.position.clone().sub(c),dist=d.length();if(dist>26)continue;knock(e,d.normalize(),32,1.9);e.rad=Math.max(e.rad,4.2);hitFlash(e);n++}
-    if(n)addScore(130*n,c.clone().add(new V3(0,4,0)),"big")}}
+    emit(ADD,{pos:c,tex:TX.ring,color:0xcaffc0,s0:5,s1:120,life:.8});flashLight(c,0x8dff7a,16,120,.6);S.hitstop=Math.max(S.hitstop||0,.1);cfieldWave(60,1)}}
   const bOn=G.barrier>0||G.cfield>0;barrier.visible=bOn;
   if(bOn){barrier.position.copy(S.pos).add(new V3(0,.8,0));barrier.rotation.y+=rdt*1.5;barrier.rotation.x+=rdt*.7;
     const k=G.cfield>0?1.5:1;barrier.scale.setScalar(k);barrier.material.opacity=.22+.1*Math.sin(T*14)}
   // all-range pull
   if(G.podsPull){G.podsPull.t+=dt;const c=G.podsPull.c;
-    for(const e of enemies){if(!isMob(e))continue;const d=c.clone().sub(e.m.position),dist=d.length();if(dist>40||dist<2)continue;clearTele(e);e.fireT=Math.max(e.fireT,1);e.m.position.addScaledVector(d.normalize(),dt*Math.min(dist*3,50))}
+    for(const e of enemies){if(!isMob(e))continue;const d=c.clone().sub(e.m.position),dist=d.length();if(dist>70||dist<2)continue;clearTele(e);e.fireT=Math.max(e.fireT,1);e.m.position.addScaledVector(d.normalize(),dt*Math.min(dist*3,65))}
     if(dt>0)for(let i=0;i<3;i++){const o=new V3().randomDirection().multiplyScalar(16);emit(ADD,{pos:c.clone().add(o),color:0x48d8ff,vel:o.clone().multiplyScalar(-2.6),s0:.9,s1:.2,life:.35,a:.7,drag:0})}}
+  // all range, second act: the pods keep striking whatever is left nearby for ~3 s
+  if(G.podStorm){const st=G.podStorm;st.t-=dt;st.next-=dt;if(st.t<=0)G.podStorm=null;else if(st.next<=0){st.next=.16;
+    let best=null,bd=95;for(const e of enemies){if(!(isMob(e)||e.isWP&&e.alive))continue;const dd=e.m.position.distanceTo(S.pos);if(dd<bd&&!G.proj.some(p=>p.tgt===e)){bd=dd;best=e}}
+    if(best){const r=new V3().randomDirection();r.y=Math.abs(r.y);launchProj(S.pos.clone().add(new V3(0,2.4,0)).addScaledVector(r,3),r.multiplyScalar(30),best,"pod");sfx("dash",null)}}}
   stepProj(dt);stepBits(rdt,T);
 }
+// counter field shockwave (pulses every 1.5 s, last one big): knocks drones, damages weak-point pods
+function cfieldWave(R,k){const c=S.pos.clone();S.shake=Math.max(S.shake,.5+k*.5);flash(.15+k*.2);sfx("specBurst");emit(ADD,{pos:c,tex:TX.ring,color:0x8dff7a,s0:3,s1:R*1.1,life:.5});
+  let n=0;for(const e of enemies){if(!e.alive||e.launched>0||e.isBoss||e.isRemote)continue;const d=e.m.position.clone().sub(c),dist=d.length();if(dist>R)continue;
+    if(e.isWP){wpDamage(e,k>=1?3:1,e.m.position.clone());continue}knock(e,dist<.5?new V3().randomDirection():d.normalize(),32+k*6,1.9);e.rad=Math.max(e.rad,4.4);hitFlash(e);n++}
+  if(n)addScore((k>=1?180:120)*n,c.clone().add(new V3(0,4,0)),"big")}
 function resetUnits(){
   for(const p of G.proj){scene.remove(p.s);p.s.material.dispose()}
-  megaEnd(true);Object.assign(G,{unitCd:0,proj:[],marks:[],marking:false,markT:0,mega:null,barrier:0,cfield:0,podGuard:0,podsOut:0,podsPull:null});
+  megaEnd(true);Object.assign(G,{unitCd:0,proj:[],marks:[],marking:false,markT:0,mega:null,barrier:0,cfield:0,cfPulse:0,podGuard:0,podsOut:0,podsPull:null,podStorm:null});
   if(BIT.kind!==G.unit)buildBits(G.unit);
 }

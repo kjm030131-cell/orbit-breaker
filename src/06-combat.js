@@ -105,8 +105,8 @@ function slashStrike(){ // called on the strike frame of a slash action
 }
 function disposeEnemy(e){clearTele(e);if(e.arc){scene.remove(e.arc.mesh);e.arc.mat.dispose();e.arc.geo.dispose();e.arc=null}scene.remove(e.m);e.m.traverse(o=>{if(o.material)o.material.dispose()})}
 function chainPts(n){const k=Math.min(n,6);return 200*k*k+Math.max(0,n-6)*1500}
-function explode(e,chainN){if(e.isWP){wpDamage(e,3,e.m.position.clone());return}if(e.isBoss){bossDie(e,chainN);return}e.alive=false;if(SCREEN==="play")S.kills=(S.kills||0)+1;disposeEnemy(e);fxExplosion(e.m.position,(e.elite?1.7:1)+Math.min(chainN,6)*.12);onKill(e);sfx("boom",e.m.position,chainN);S.shake=Math.max(S.shake,.5)}
-function restart(){POPN=0;{const f=$("feed");if(f)f.textContent=""}for(const e of enemies)disposeEnemy(e);enemies.length=0;fieldReset();
+function explode(e,chainN){if(e.isWP){wpDamage(e,3,e.m.position.clone());return}if(e.isBoss){bossDie(e,chainN);return}e.alive=false;if(e.kami)kamiBlast(e.m.position.clone(),false);if(e.crate)crateReward(e);if(SCREEN==="play")S.kills=(S.kills||0)+1;disposeEnemy(e);fxExplosion(e.m.position,(e.elite?1.7:1)+Math.min(chainN,6)*.12);onKill(e);sfx("boom",e.m.position,chainN);S.shake=Math.max(S.shake,.5)}
+function restart(){POPN=0;G.nf=null;{const f=$("feed");if(f)f.textContent=""}for(const e of enemies)disposeEnemy(e);enemies.length=0;fieldReset();
   Object.assign(S,{score:0,best:0,kills:0,time:120,started:false,ended:false,heat:0,over:0,boost:100,act:null,combo:0,dash:0,dashT:null,pending:null,bladeOn:0,hitstop:0,slow:0});
   S.pos.set(0,0,0);S.vel.set(0,0,0);resetGameplay();fillEnemies()}
 

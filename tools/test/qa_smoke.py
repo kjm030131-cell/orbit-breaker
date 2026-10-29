@@ -33,6 +33,16 @@ async def main():
         await shot('02b_shoot')
         await ev('slash','()=>{const T=window.__T;for(let i=0;i<12;i++)T.update(.05);T.attack();for(let i=0;i<3;i++)T.update(.05);return T.S.act}')
         await shot('02c_slash')
+        # new foes (10/29): kamikaze, sniper, formation, crate + buffed specials
+        await ev('foes','''()=>{const T=window.__T,V=T.S.pos.constructor,r={};try{T.setPaused(true);T.restart();T.show("play");T.S.started=true;T.S.demo=false;T.G.iframe=999;
+          const f=T.camera().getWorldDirection(new V()),at=d=>T.S.pos.clone().addScaledVector(f,d);
+          const k=T.spawnKami(at(30)),s=T.spawnSniper(at(80)),fm=T.spawnFormation(),c=T.spawnCrate(at(25));
+          for(let i=0;i<40;i++)T.update(.05);r.kami={alive:k.alive};r.sniper={alive:s.alive,tele:+s.tele.toFixed(2)};r.form=fm.map(e=>e.alive&&!!e.form).join(",");
+          const sp0=T.G.spec;if(c.alive){T.knock(c,new V(0,0,1),30,.2);for(let i=0;i<30;i++)T.update(.05)}r.crate={alive:c.alive,spec:[sp0,T.G.spec]};
+          const k2=T.spawnKami(at(20));for(let i=0;i<3;i++)T.spawnKami(at(22).add(new V(i*3,0,0)));T.knock(k2,new V(0,0,1),20,.15);for(let i=0;i<30;i++)T.update(.05);r.chain=T.enemies.filter(e=>e.kami&&e.alive).length;
+          r.spec={};for(const u of ["pods","missile","shield"]){T.G.unit=u;T.G.spec=100;T.G.specT=-1;T.G.mega=null;for(let i=0;i<4;i++)T.spawnKami(at(30+i*4));T.special();let max=0;for(let i=0;i<80;i++){T.update(.05);max=Math.max(max,(T.G.proj||[]).length)}r.spec[u]={proj:max,cfield:+(T.G.cfield||0).toFixed(1)}}
+        }catch(e){r.err=String(e).slice(0,300)}return r}''')
+        await pg.evaluate('()=>window.__T.setPaused(false)');await pg.wait_for_timeout(800);await shot('02d_foes')
         # 1b) a decent player for the full 120 s: dodges ~60% of shots / rams in time, breaks staggers, kills a drone every 1.5 s, chips the pods and slashes the stalled boss
         await ev('solo_skilled','''()=>{const T=window.__T;T.setPaused(true);T.G.unit="mega";T.restart();T.show("play");T.S.started=true;T.S.ended=false;T.S.demo=false;
           let lost=0,hits=0,minHp=100,dodges=0,bossT=null,last=100;
