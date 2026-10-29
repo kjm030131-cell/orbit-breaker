@@ -28,6 +28,14 @@ function coneTarget(cone,range,excl){let best=null,bs=-9;const cf=aimDir(),cp=ca
 function pickTarget(){
   if(G.focus){const f=G.focus;if(targetable(f)&&f.m.position.distanceTo(S.pos)<(VS?260:150))return f;G.focus=null;if(SCREEN==="play")sfx("unfocus")}
   return VS?coneTarget(Math.cos(20*Math.PI/180),180):coneTarget(AIM_CONE,44)}
+/* melee pick (single, 10/29 19:40): many slashes whiffed because only a target inside the 13 deg rifle cone was taken.
+   Sabre: 22 deg cone out to 44 m, and anything within 12 m in front of the camera (~75 deg) if nothing sits nearer the reticle. */
+const SABRE_CONE=Math.cos(22*Math.PI/180),SABRE_NEAR=Math.cos(75*Math.PI/180);
+function meleeTarget(){if(G.focus)return pickTarget();const t=coneTarget(SABRE_CONE,44);if(t)return t;
+  let best=null,bd=12;const cf=camFwd().setY(0).normalize();for(const e of enemies){if(!targetable(e))continue;const d=e.m.position.clone().sub(S.pos),L=d.length();if(L>=bd)continue;
+    if(d.setY(0).normalize().dot(cf)<SABRE_NEAR)continue;bd=L;best=e}return best}
+// how far a slash reaches this enemy (centre to centre): bigger bodies are hit further out
+function meleeReach(e){return e.isBoss&&e.rad>20?e.rad*.9:8.6+Math.max(0,(e.rad||4.1)-4.1)*.9}
 function toggleFocus(){if(SCREEN!=="play"||S.ended||G.dead>0)return;if(G.focus){G.focus=null;sfx("unfocus");return}
   const t=VS&&VS.tgt&&targetable(VS.tgt)?VS.tgt:coneTarget(FOCUS_CONE,VS?64:120);if(t){G.focus=t;sfx("focus")}else sfx("deny")}
 let target=null;
@@ -48,9 +56,9 @@ function attack(){
   const name="slash"+(S.combo+1);S.attackCd=S.combo===2?.42:.26;
   if(S.bladeOn<=0){sfx("ignite");emit(ADD,{pos:new V3(),follow:P.hiltGlowRef||P.beam,color:0xffc080,s0:2.5,s1:.5,life:.25})}
   S.bladeOn=1.3;S.heat=Math.min(100,S.heat+(S.combo===2?12:8));
-  const t=pickTarget();
+  const t=meleeTarget();
   if(t&&t.m.position.distanceTo(S.pos)>5){S.dashT=t;S.dash=.32;S.pending=name;startAct("lunge");sfx("dash")}
-  else{startAct(name);S.pending=null;if(t)S.dashT=t}
+  else{startAct(name);S.pending=null;S.dashT=t||null} /* no stale target from an earlier swing: the wind-up would chase it */
 }
 function shoot(){
   if(VS){
@@ -82,10 +90,13 @@ function shoot(){
 }
 function slashStrike(){ // called on the strike frame of a slash action
   const heavy=S.act==="slash3";if(VS&&!vsCanAct())return;S.lastStrikeT=clockT;if(heavy)tutCount("combo");sfx("slash",null,S.act==="slash2"?1:heavy?2:0);{const f=new V3(Math.sin(S.face),0,Math.cos(S.face)),r=new V3(Math.cos(S.face),0,-Math.sin(S.face));fxSlashArt(S.pos.clone().addScaledVector(f,4.5).add(new V3(0,1.4,0)),S.combo===1?r.clone().negate():r,heavy,S.combo)}
-  const e=S.dashT&&S.dashT.alive&&S.dashT.launched<=0&&S.dashT.m.position.distanceTo(S.pos)<(S.dashT.isBoss&&S.dashT.rad>20?S.dashT.rad*.9:7.5)?S.dashT:null;
+  let e=S.dashT&&S.dashT.alive&&S.dashT.launched<=0&&S.dashT.m.position.distanceTo(S.pos)<(VS?7.5:meleeReach(S.dashT))?S.dashT:null;
+  // single: the target slipped out (or none was picked) -> whatever sits in reach inside the blade's ~110 deg arc takes the cut
+  if(!e&&!VS){const f=new V3(Math.sin(S.face),0,Math.cos(S.face));let bd=1e9;for(const o of enemies){if(!targetable(o)||o.isRemote)continue;const d=o.m.position.clone().sub(S.pos),L=d.length();
+    if(L>meleeReach(o)||L>=bd||d.setY(0).normalize().dot(f)<.57)continue;bd=L;e=o}}
   if(!e){fieldSlash(heavy);return}
   const tip=new V3();P.tipObj.getWorldPosition(tip);const at=e.m.position.clone().lerp(tip,.4);
-  if(e.isRemote){vsAttackHit(heavy,G.crit>0,at);hitMark(heavy?"kill":"hit");impactPunch(heavy?.8:.45);sfx("thud",at,heavy?1:0);sfx("sizzle",at);return}
+  if(e.isRemote){vsAttackHit(heavy,G.crit>0,at);return} // 1:1: the hit spark / sound / punch come with the server's damage event, so a whiff never looks like a hit
   if(e.ms&&!e.isRemote&&msCutCheck(e,at,heavy||G.crit>0)&&e.blade){S.dashT=null;return}
   if(e.blade&&bladeParry(e,at))return;
   if(e.isWP){wpDamage(e,3,at);S.hitstop=.08;S.shake=.6;flash(.18);fxSlashHit(at,0xff8a2a,true);sfx("heavy",at);addSpec(2);S.vel.multiplyScalar(.1);S.dashT=null;return}

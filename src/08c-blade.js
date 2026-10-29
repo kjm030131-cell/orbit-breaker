@@ -78,6 +78,8 @@ function bladeParry(e,at){S.lastStrikeT=clockT;
   if(e.bs==="wind"){tutCount("counter");bladeHitFx(e,at,true);addScore(500,at,"cyan");if(!bladePost(e,POST_COUNTER,at,"카운터! 자세가 흔들려요")){e.stun=.6;e.bs="hunt";e.bt=.5}S.dashT=null;return true}
   if(e.stun>0||e.bs==="rec"){bladeHitFx(e,at,false);if(!bladePost(e,POST_REC,at,"연타!")){e.stun=.45;e.bs="hunt";e.bt=.6}S.dashT=null;return true}
   if(e.bs==="strike"){e.hitDone=true;bladeClash(e,true);S.dashT=null;return true} // slash met its swing head-on
+  // caught mid-dash (10/29 19:40): it cannot guard while it boosts -> the cut lands (posture hit, like a reel)
+  if(e.bs==="hunt"&&(e.dashK||0)>.4){bladeHitFx(e,at,false);e.dashV.set(0,0,0);if(!bladePost(e,POST_REC,at,"대시 중 적중!")){e.stun=.4;e.bt=.6}S.dashT=null;return true}
   bladeClash(e,false);S.dashT=null;return true}
 // rifle bolts: deflected while it guards, only chip its posture while it reels
 function bladeShot(e,at){if(e.stun>0||e.bs==="rec"){sparks(at,null,0xffc080,20,.3,10);sfx("hit",at);sfx("hitmark");e.flash=1;bladePost(e,POST_SHOT,at,null)}else bladeDeflect(e,at)}
