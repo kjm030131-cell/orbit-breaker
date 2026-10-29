@@ -4,7 +4,7 @@
    - weak-point markers: every live weak point gets a "약점" tag on screen, or an arrow at the screen edge pointing to it
    - "지금! 베기" banner with a bar while the boss is stalled
    - kamikaze drones: a one-time warning when the first one shows up, then a "자폭" tag / edge arrow with distance on each one */
-var BCINE={on:false,t:0,dur:5.2,fov0:0};
+var BCINE={on:false,t:0,dur:6.8,fov0:0};
 function bossCineStart(){if(TUT.on||VS||DUEL||SCREEN!=="play"||!BOSS.e)return false;
   Object.assign(BCINE,{on:true,t:0,fov0:camera.fov});G.iframe=Math.max(G.iframe,BCINE.dur+1.5);S.act=null;S.dashT=null;
   let el=$("bcine");if(!el){el=document.createElement("div");el.id="bcine";el.innerHTML=`<i class="bcBar t"></i><i class="bcBar b"></i>
@@ -16,14 +16,14 @@ function bossCineEnd(){if(!BCINE.on)return;BCINE.on=false;const el=$("bcine");if
   const b=BOSS.e;if(b){const d=b.m.position.clone().sub(S.pos);S.yaw=Math.atan2(d.x,d.z);S.face=S.yaw;S.pitch=clamp(Math.atan2(d.y,Math.hypot(d.x,d.z))*.6,-.4,.35)}
   G.iframe=Math.max(G.iframe,1.2)}
 function bossCineCam(rdt){BCINE.t+=rdt;const b=BOSS.e,t=BCINE.t;if(!b||S.ended||SCREEN!=="play"||t>=BCINE.dur){bossCineEnd();return}
-  const el=$("bcine");if(el){el.classList.toggle("how",t>1.4);el.classList.toggle("skip",t>1.5)}
+  const el=$("bcine");if(el){el.classList.toggle("how",t>1.1);el.classList.toggle("skip",t>2.2)}
   const bp=b.m.position,dir=bp.clone().sub(S.pos).normalize(),side=new V3(dir.z,0,-dir.x).normalize();
   // over the shoulder: behind and above the mech, slowly pushing toward the boss
   const k=Math.min(1,t/1.2),e=k*k*(3-2*k);
   const want=S.pos.clone().addScaledVector(dir,-14+e*5).addScaledVector(side,4).add(new V3(0,5,0));
   camera.position.lerp(want,1-Math.pow(.002,rdt));camera.lookAt(bp.clone().lerp(S.pos,.08));
   const fv=BCINE.fov0-14*e;if(Math.abs(camera.fov-fv)>.05){camera.fov=fv;camera.updateProjectionMatrix()}}
-["keydown","mousedown"].forEach(ev=>addEventListener(ev,e=>{if(!BCINE.on||BCINE.t<1.5)return;if(ev==="keydown"&&!["Space","Enter","Escape"].includes(e.code))return;e.preventDefault();e.stopImmediatePropagation();bossCineEnd()},{capture:true}));
+["keydown","mousedown"].forEach(ev=>addEventListener(ev,e=>{if(!BCINE.on||BCINE.t<2.2)return;if(ev==="keydown"&&!["Space","Enter","Escape"].includes(e.code))return;e.preventDefault();e.stopImmediatePropagation();bossCineEnd()},{capture:true}));
 
 // ---- edge / on-screen markers ----
 const ALR={els:[],box:null,v:new V3(),run:null,kamiSaid:false,downMax:5};

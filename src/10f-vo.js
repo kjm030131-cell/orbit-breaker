@@ -18,7 +18,7 @@ const SOLO_VO={
   op21:"방위선 사수 완료. 수고하셨습니다, 우리엘 1. 귀환하세요."};
 // re-recorded files keep their old name: bump the revision so caches fetch the new take
 Object.assign(VO_REV,{vo_op04:2,vo_op27:2,vo_op28:2});
-const SOLO_IDS=["vo_op04","vo_op06","vo_op07","vo_op17","vo_op27","vo_op28",...Object.keys(SOLO_VO).map(k=>"vo_"+k)];
+const SOLO_IDS=["vo_op04","vo_op06","vo_op07","vo_op17","vo_op27","vo_op28","vo_op30","vo_op31","vo_op32",...Object.keys(SOLO_VO).map(k=>"vo_"+k)];
 const soloVoBusy=()=>!!(VO_A&&!VO_A.paused&&!VO_A.ended);
 const SOLO={on:false,ended:false,q:null,cd:{},once:{},dead:false,form:null};
 const soloLive=()=>!VS&&!DUEL&&!TUT.on&&!S.demo&&SCREEN==="play"&&S.started&&!S.ended;

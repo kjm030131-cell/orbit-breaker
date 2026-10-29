@@ -78,7 +78,9 @@ function fieldStep(dt,T){const show=!inVS()&&!CINE.on;VSC.g.visible=inVS();FIELD
     if(!o.alive){o.respawn-=dt;if(o.respawn<=0&&o.center.distanceTo(S.pos)>o.rad+25){o.alive=true;o.hp=o.def.hp;o.mesh.visible=true;if(o.glow)o.glow.visible=true;emit(ADD,{pos:o.center,tex:TX.ring,color:0x6fb8ff,s0:2,s1:o.rad*2,life:.6,a:.5})}}}
   // soft edge of the operation area
   if(SCREEN==="play"&&S.started&&!S.ended){const d=S.pos.clone().sub(FIELD.C),L=d.length();FIELD.warnT-=dt;
-    if(L>FIELD.R){S.vel.addScaledVector(d.normalize(),-(L-FIELD.R)*4*dt);if(FIELD.warnT<=0){FIELD.warnT=3;popText("작전 구역 경계 · 복귀하세요")}}}}
+    if(L>FIELD.R){S.vel.addScaledVector(d.normalize(),-(L-FIELD.R)*4*dt);if(FIELD.warnT<=0){FIELD.warnT=3;popText("작전 구역 경계 · 복귀하세요")}
+      if(!TUT.on&&!DUEL&&(FIELD.voT||0)<clockT){FIELD.voT=clockT+20;radio("이클립스 CIC · 최지우 중위","우리엘 1, 작전 구역 경계입니다. 더 나가면 추진이 안 됩니다. 안쪽으로 복귀하세요.","vo_op30")}}}
+  fieldWall(L0());function L0(){return S.pos.distanceTo(FIELD.C)}}
 setTimeout(loadField,1200);
 
 /* ---- 1:1 cover: the single-player objects placed into the arena; spheres baked server-side (LOCAL_ARENA.VS_COVER) ---- */
@@ -96,3 +98,13 @@ function vsCoverRay(from,dir,range){let best=range;const o=new V3();for(const q 
 function vsCoverStep(){VSC.g.visible=inVS();if(!VSC.g.visible)return;vsCoverBuild();
   for(const q of vsCoverSph()){const dx=S.pos.x-q[0],dy=S.pos.y-q[1],dz=S.pos.z-q[2],L=Math.hypot(dx,dy,dz),min=q[3]+2.2;if(L>=min)continue;const d=new V3(dx,dy,dz).divideScalar(L||1);
     S.pos.set(q[0],q[1],q[2]).addScaledVector(d,min);const vn=S.vel.dot(d);if(vn<0)S.vel.addScaledVector(d,-vn*1.2)}}
+
+// the edge of the operation area becomes visible as you get close: a faint hex wall + an "작전 구역 끝" bar on the HUD
+const FWALL={m:null};
+function fieldWall(L){const live=SCREEN==="play"&&S.started&&!S.ended&&!VS;const k=live?clamp((L-(FIELD.R-45))/45,0,1):0;
+  if(!FWALL.m){if(k<=0||typeof FXB==="undefined"||!FXB.hexshield)return;const t=FXB.hexshield.clone();t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(48,24);t.needsUpdate=true;
+    FWALL.m=new THREE.Mesh(new THREE.SphereGeometry(FIELD.R+4,64,32),new THREE.MeshBasicMaterial({map:t,color:0x6fc8ff,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.BackSide}));
+    FWALL.m.position.copy(FIELD.C);FWALL.m.renderOrder=-1;scene.add(FWALL.m)}
+  FWALL.m.visible=k>0;FWALL.m.material.opacity=k*.55;let el=$("edgeBar");
+  if(!el){if(k<=0)return;el=document.createElement("div");el.id="edgeBar";el.innerHTML="<b>작전 구역 끝</b><span>더 나가면 밀려나요 · 안쪽으로</span>";$("hud").appendChild(el)}
+  const on=k>.15;if(el.hidden===on)el.hidden=!on;if(on)el.style.opacity=String(Math.min(1,k*1.4))}

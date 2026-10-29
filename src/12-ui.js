@@ -73,7 +73,7 @@ function show(name){
   $("hud").hidden=name!=="play";
   SCREEN=name;S.demo=!(name==="play"||name==="launch");
   if(name==="title"){markMenu();PILOT.sid=PILOT.sid;if(TITLE)titleEnter()}
-  if(name==="form"){if(prev==="title"){["fName","fDept","fSid"].forEach(id=>$(id).value="");$("fErr").textContent="";meter(null)}setTimeout(()=>$("fName").focus(),60)}
+  if(name==="form"){{const tb=$("tipBox");if(tb){tb.classList.remove("glow");void tb.offsetWidth;tb.classList.add("glow")}}if(prev==="title"){["fName","fDept","fSid"].forEach(id=>$(id).value="");$("fErr").textContent="";meter(null)}setTimeout(()=>$("fName").focus(),60)}
   if(name==="load"){renderUnits();setTimeout(()=>$("loadGo").focus(),60)}
   if(name==="brief"){const l=briefMode==="launch";$("briefStep").textContent=l?"3 / 3":"조작법";$("launchBtn").hidden=!l;$("launchNote").hidden=!l;setTimeout(()=>(l?$("launchBtn"):$("briefBack")).focus(),60)}
   if(name==="rank")renderBoards();

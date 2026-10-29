@@ -18,7 +18,7 @@ function spawnBoss(){
     sp.position.set(Math.sin(a)*sc*.62,-.05*sc,Math.cos(a)*sc*.62);sp.rotation.y=a;ring.add(sp);sp.position.set(Math.sin(a)*sc*.62,Math.cos(a)*sc*.62,0);sp.rotation.set(0,0,a)}
   const eye=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0xff2040,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
   eye.position.set(0,(.655-.5)*sc,.2*sc);eye.scale.set(3,3,1);g.add(eye);g.userData.eye=eye;}
-  const from=S.pos.clone().addScaledVector(fwd(),BOSS_GLTF?175:95).add(new V3(0,14,0));g.position.copy(from);scene.add(g);
+  const from=S.pos.clone().addScaledVector(fwd(),BOSS_GLTF?175:95).add(new V3(0,14,0));bossKeepIn(from);g.position.copy(from);scene.add(g);
   const e={m:g,v:new V3(),spin:new V3(),launched:0,chain:0,alive:true,phase:0,flash:0,elite:false,rad:BOSS_GLTF?39:9,isBoss:true,down:0,yaw:Math.atan2(S.pos.x-from.x,S.pos.z-from.z),tele:0,teleDir:new V3(),fireT:99};
   enemies.push(e);BOSS.e=e;BOSS.atkT=4;BOSS.mode=0;BOSS.down=0;BOSS.introT=3.2;
   buildWPs();
@@ -81,6 +81,7 @@ function bossAI0(b,dt,T){
   const big=!!m.userData.anim,keep=big?95:40;if(d>keep+6)m.position.addScaledVector(to,dt*(BOSS.introT>0?26:7));else if(d<(big?45:keep-8))m.position.addScaledVector(to,-dt*(big?4.5:6));
   const side=new V3(-to.z,0,to.x);if(big){b.sstep=(b.sstep||4)-dt;if(b.sstep<=0){b.sstep=4+Math.random()*3;b.sdir=Math.random()<.5?-1:1;b.sT=1.2}if(b.sT>0)b.sT-=dt}
   m.position.addScaledVector(side,dt*(big?(4*Math.sin(b.phase*.3)+(b.sT>0?5*b.sdir*Math.sin(Math.PI*b.sT/1.2):0)):4*Math.sin(b.phase*.35)));m.position.y+=(S.pos.y+(big?23:6)-m.position.y)*dt*(big?.25:.6);
+  bossKeepIn(m.position);if((BOSS.stage||0)>=BOSS_WAVES-1&&!BOSS.saidRun&&big&&d<45&&BOSS.introT<=0){BOSS.saidRun=true;radio("이클립스 CIC · 최지우 중위","놈이 물러납니다! 놓치지 마세요, 구역 안에 묶여 있어요!","vo_op32")}
   BOSS.introT=Math.max(0,BOSS.introT-dt);
   const want=Math.atan2(S.pos.x-m.position.x,S.pos.z-m.position.z);let dy=Math.atan2(Math.sin(want-b.yaw),Math.cos(want-b.yaw));const yr=m.userData.anim?.22:.9;b.yaw+=clamp(dy,-yr*dt,yr*dt); /* the big hulk turns slowly: its wing-tip pods swung ~40 m/s when it snapped to face you */
   m.rotation.set(0,b.yaw,Math.sin(b.phase*.6)*.05);if(ring)ring.rotation.z+=dt*.5;
@@ -119,7 +120,7 @@ function bossPods(b,dt){if(BOSS.tele>0)return;for(const w of BOSS.wps){if(!w.ali
 function bossTick(dt,rdt,T){placeWPs(T)}
 function resetBoss(){
   if(BOSS.e){disposeEnemy(BOSS.e)}for(const w of BOSS.wps)if(w.alive)disposeEnemy(w);
-  Object.assign(BOSS,{e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0,phase2:false,stage:0,escT:3,guide:BOSS.guide,saidClang:false});
+  Object.assign(BOSS,{e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0,phase2:false,stage:0,saidRun:false,escT:3,guide:BOSS.guide,saidClang:false});
 }
 // radio chatter overlay (reuses the cutscene subtitle style, but small, top-centre)
 // portraits: ui/face_op.webp (CIC), face_ace.webp (enemy), face_cap.webp (captain) when present
@@ -154,9 +155,13 @@ function bossPhase2(b){if((BOSS.stage||0)>=BOSS_WAVES-1||!(b.down>0))return fals
   const p=b.m.position.clone();for(let i=0;i<4;i++)setTimeout(()=>{if(BOSS.e===b&&b.alive){fxExplosion(p.clone().add(new V3().randomDirection().multiplyScalar(6)),1.4);sfx("boom",p,3)}},i*140);
   S.hitstop=Math.max(S.hitstop||0,.14);S.slow=Math.max(S.slow,.5);flash(.35);impactPunch(1.4);addScore(3000,p,"big");
   if(BOSS.stage===1){cutin("1차 격파","케르고그모스 분노 · 공격이 거세집니다");radio("CIC","1차 격파! 아직 살아 있어요. 약점이 다시 열려요, 한 번 더!","vo_op05")}
-  else{cutin(`${BOSS.stage}차 격파`,"마지막 약점이 열립니다 · 한 번만 더!");radio("이클립스 CIC · 최지우 중위",`${BOSS.stage}차 격파! 마지막이에요. 약점을 한 번 더 부수고 끝내세요!`)}
+  else{cutin(`${BOSS.stage}차 격파`,"마지막 약점이 열립니다 · 한 번만 더!");radio("이클립스 CIC · 최지우 중위","2차 격파 확인! 마지막이에요. 약점이 다시 열립니다, 한 번만 더!","vo_op31")}
   buildWPs();b.m.userData.mat.emissive.setRGB(.35,.04,.02);setTimeout(()=>{if(BOSS.e===b)b.m.userData.mat.emissive.setRGB(0,0,0)},900);BOSS.atkT=1.6;return true}
 
 // body hit while it is still armoured (weak points up): sparks and a clang, no knockback, a hint now and then
 function bossClang(b){const p=b.m.position.clone().lerp(S.pos,.35);sparks(p,null,0xffe0a0,24,.35,14);fxImpact(p,0xffc080);sfx("block",p);S.vel.multiplyScalar(.3);
   const now=performance.now();if(now-(BOSS.clangT||0)>4000){BOSS.clangT=now;popText("본체 장갑이 단단해요 · 약점 포드부터");if(!BOSS.saidClang&&!TUT.on){BOSS.saidClang=true;radio("이클립스 CIC · 최지우 중위","본체는 안 통합니다. 약점 포드부터 처리하세요.","vo_op17")}}}
+
+// the boss backs off and side-steps but never leaves the operation area (it used to drift out and drag the player into the edge push);
+// at the edge it simply slides along it, so it still retreats - just inside the map
+function bossKeepIn(p){if(typeof FIELD==="undefined"||!FIELD.R)return;const d=p.clone().sub(FIELD.C),L=d.length(),max=FIELD.R-45;if(L>max)p.copy(FIELD.C).addScaledVector(d,max/L)}

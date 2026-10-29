@@ -1090,6 +1090,16 @@ body:has(#bcine.on) #hud{opacity:.15;transition:opacity .3s}
 #downBan span{display:block;font:700 14px var(--f-kdisp);color:var(--bone);margin-top:2px}#downBan i{display:block;height:6px;margin-top:10px;background:rgba(255,255,255,.15)}#downBan u{display:block;height:100%;width:100%;background:#ffb21a}
 @keyframes dbIn{from{transform:translateX(-50%) scale(1.3);opacity:0}}
 body.bossguide #bossBar{top:calc(128px + env(safe-area-inset-top,0px))} /* below the boss guide objective box (they overlapped) */
+/* registration tip box (glows a few times when the screen opens) + operation-area edge bar */
+.tipBox{margin-top:16px;padding:12px 16px 12px 16px;border:1px solid rgba(255,178,26,.45);background:rgba(255,178,26,.06);position:relative}
+.tipBox.glow{animation:tbGlow .9s ease-in-out 3}
+@keyframes tbGlow{50%{border-color:#ffd48a;box-shadow:0 0 22px rgba(255,178,26,.55),inset 0 0 14px rgba(255,178,26,.18)}}
+.tbH{font:800 15px var(--f-kdisp);color:#ffd48a;margin-bottom:6px}.tbH.t2{margin-top:10px;color:#ff8a60}
+.tipBox ol{margin:0;padding-left:20px;display:grid;gap:3px}.tipBox li{font:600 14px/1.4 var(--f-kdisp);color:var(--bone)}.tipBox li b,.tbT b{color:#ffd48a}
+.tbT{display:flex;align-items:center;gap:8px;font:600 14px/1.4 var(--f-kdisp);color:var(--bone);margin-top:3px}
+.tbT i{flex:none;font:800 12px var(--f-kdisp);font-style:normal;padding:1px 7px;color:#fff}.tbT i.k{background:#d8361e}.tbT i.s{background:#8a3ad0}
+#edgeBar{position:fixed;left:50%;top:calc(34% + env(safe-area-inset-top,0px));transform:translateX(-50%);text-align:center;padding:8px 22px;background:rgba(6,14,24,.82);border:1px solid #6fc8ff;box-shadow:0 0 18px rgba(111,200,255,.35);pointer-events:none;z-index:5}
+#edgeBar[hidden]{display:none}#edgeBar b{display:block;font:800 18px var(--f-kdisp);color:#bfe8ff}#edgeBar span{font:600 13px var(--f-kdisp);color:#9fc4dc}
 </style>
 <div id="hud" hidden>
   <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="feed"></div><div id="aimPart" hidden></div><div id="postBar" hidden><i></i><span>자세</span></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="tutEquip" hidden></div><div id="tutEquipFx"></div><div id="lockWarn"><b>피격 경고</b></div>
@@ -1190,6 +1200,13 @@ body.bossguide #bossBar{top:calc(128px + env(safe-area-inset-top,0px))} /* below
       <div class="pHead" style="margin:26px 0 12px"><span class="lbl">남은 출격</span><span class="lbl" id="sortieTxt">학번 입력 후 표시</span></div>
       <div class="sortieMeter" id="sortieMeter"><i class="used"></i><i class="used"></i><i class="used"></i></div>
       <p class="note" id="fNote">같은 학번이면 기록이 이어집니다.</p>
+      <div class="tipBox" id="tipBox">
+        <div class="tbH">고득점 요령</div>
+        <ol><li>베어 날린 적을 다른 적에게 부딪혀 <b>연쇄 폭발</b></li><li>계속 잡고, 안 맞을수록 <b>점수 배율 UP</b></li><li><b>마지막 단계는 점수 2배</b> · 끝까지 버티세요</li></ol>
+        <div class="tbH t2">특수 위협</div>
+        <div class="tbT"><i class="k">자폭</i><span>붉게 깜빡이며 돌진 → <b>붙기 전에 쏴서</b> 터뜨리기</span></div>
+        <div class="tbT"><i class="s">저격</i><span>보라색 조준선 → <b>보이면 바로 회피</b></span></div>
+      </div>
     </div>
   </div>
 </section>
