@@ -193,13 +193,13 @@ function finishRun(reason){
   $("rPb").innerHTML=(pb&&score>0?'<span class="pb">개인 최고 기록 갱신</span> ':"")+(lost?'<span class="note">기체 대파 · 작전 조기 종료</span>':`<span class="note">생존 보너스 +${bonus.toLocaleString()} (전투 점수의 ${Math.round(rate*100)}% · 남은 기체 ${G.lives}${G.lives===MAX_LIVES?" · 무피격 클리어":""})</span>`);
   $("rDebrief").innerHTML='<span class="who">이클립스 CIC · 최지우 중위</span>'+debriefLine(lost,score);
   $("rSortie").textContent=`출격 ${rec.attempts} / ${MAX_SORTIE}`;
-  const left=MAX_SORTIE-rec.attempts,ag=$("againBtn");ag.disabled=left<=0;ag.hidden=left<=0; /* one sortie per student id: no retry button */
+  const left=MAX_SORTIE-rec.attempts,ag=$("againBtn");ag.disabled=left<=0;ag.hidden=false; /* like before: "재출격 · n회 남음", or a disabled "출격 횟수 소진" */
   ag.firstChild.textContent=left>0?`재출격 · ${left}회 남음 `:"출격 횟수 소진 ";
   show("result");renderBoards();updateRankLine();setTimeout(()=>(left>0?ag:document.querySelector("#scrResult [data-go]")).focus(),120);
 }
 $("launchBtn").addEventListener("click",launch);
 $("briefBack").addEventListener("click",()=>show(briefMode==="launch"?"load":"title"));
-$("againBtn").addEventListener("click",()=>{if(DUELDONE){DUELDONE=false;show("duel");return}if(PILOT.rec&&PILOT.rec.attempts<MAX_SORTIE)launch()});
+$("againBtn").addEventListener("click",()=>{if(DEV.retry){DEV.retry=false;devLaunch(false);return}if(DUELDONE){DUELDONE=false;show("duel");return}if(PILOT.rec&&PILOT.rec.attempts<MAX_SORTIE)launch()});
 
 /* ================= HUD ================= */
 const HC={};
