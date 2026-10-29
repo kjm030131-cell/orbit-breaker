@@ -232,10 +232,10 @@ async function startTutorial(){if(TUT.on||!P)return;sfx("uiok");lock();
   document.body.classList.add("tut");show("launch");
   voPreload(tutVoIds());await playIntro();if(!TUT.on)return;await playCatapult();if(!TUT.on)return;
   show("play");S.started=true;tutStep(0)}
-function tutEnding(){if(!TUT.on)return;tutDock(false);voPlay("tut_end");const n=Math.max(1,(S.kills||0)+(TUT.c.kill||0)*0);$("tutObj").hidden=true;if(document.pointerLockElement)document.exitPointerLock();
+function tutEnding(){if(!TUT.on)return;wasLocked=false;S.ended=true; /* releasing the mouse for the end screen must not open the pause menu */tutDock(false);voPlay("tut_end");const n=Math.max(1,(S.kills||0)+(TUT.c.kill||0)*0);$("tutObj").hidden=true;if(document.pointerLockElement)document.exitPointerLock();
   const e=$("tutEnd");$("tutEndA").textContent=`그날 밤, 서울 하늘에는 유성 ${n}개가 내렸다.`;$("tutEndB").textContent="동생은 그중 하나에 소원을 빌었다.";e.hidden=false;e.classList.remove("on");void e.offsetWidth;e.classList.add("on");sfx("phase");
   setTimeout(()=>$("tutGo").focus(),2600)}
-function tutExit(to){tutDock(false);tutEquipHide();tutKeysSet(null);tutHl(null);tutUnitsCard(false);$("tutMark").hidden=$("tutCue").hidden=true;if(TUT.unit0&&UNITS[TUT.unit0]){G.unit=TUT.unit0;buildBits(G.unit)}TUT.on=false;TUT.step=-1;tutWaypoint(null);$("tutObj").hidden=true;$("tutEnd").hidden=true;document.body.classList.remove("tut");
+function tutExit(to){wasLocked=false;PAUSED=false;$("pause").hidden=true;muffle(false);tutDock(false);tutEquipHide();tutKeysSet(null);tutHl(null);tutUnitsCard(false);$("tutMark").hidden=$("tutCue").hidden=true;if(TUT.unit0&&UNITS[TUT.unit0]){G.unit=TUT.unit0;buildBits(G.unit)}TUT.on=false;TUT.step=-1;tutWaypoint(null);$("tutObj").hidden=true;$("tutEnd").hidden=true;document.body.classList.remove("tut");
   if(INTRO.on){INTRO.done=null;INTRO.on=false;introClear();$("intro").hidden=true;if(P)P.root.visible=true}
   if(CINE.on){CINE.done=null;endCine()}if(document.pointerLockElement)document.exitPointerLock();restart();show(to||"title");tutHintRefresh()}
 $("tutGo").addEventListener("click",()=>{sfx("uiok");tutExit("form")});
