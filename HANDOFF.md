@@ -505,6 +505,6 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
   이벤트당 자르기 120→300, 버리기 260→600(크롬 포인터락 튐만 거름).
 
 ## 51. 싱글 대사창 좌측 소형 도킹 (10/29)
-- 인게임 #radio: 화면 왼쪽 중앙(430x100), 새 프레임 ui/radio_side.webp (마지막 <style> in head2.html, body:not(.tutdock):not(.versus) 범위).
+- 인게임 #radio: 화면 왼쪽 중앙(430x100, 점수 박스 아래 top≥296px; 높이 700px 이하 창은 오른쪽 위 격파 박스 아래), 새 프레임 ui/radio_side.webp (마지막 <style> in head2.html, body:not(.tutdock):not(.versus) 범위).
 - 10f-vo.js의 큰 대사창 CSS 주입 제거. 초상화 있을 때 스피커 아이콘 숨김(#radioFace.has).
 - 튜토리얼 도킹(tutdock)·1:1·순위표 상위 3칸은 기존 ui/radio.webp 유지.

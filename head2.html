@@ -983,7 +983,7 @@ body.tutdock #radioTxt{font-size:14px;line-height:1.45;color:#bdb8ad;padding-rig
 <style>
 /* 10/29: in-play radio = smaller box docked on the left edge (voice carries the line; the centre stays clear for aiming).
    Frame ui/radio_side.webp (portrait slot + text box); tutorial dock and 1:1 keep their own layouts. */
-body:not(.tutdock):not(.versus) #radio{position:fixed;left:16px;right:auto;top:calc(50% - 50px);transform:translateX(-12px);width:min(430px,34vw)!important;max-width:none!important;min-width:0!important;height:100px;min-height:0;box-sizing:border-box;
+body:not(.tutdock):not(.versus) #radio{position:fixed;left:16px;right:auto;top:max(296px,calc(50% - 50px));transform:translateX(-12px);width:min(430px,34vw)!important;max-width:none!important;min-width:0!important;height:100px;min-height:0;box-sizing:border-box;
  padding:13px 22px 13px 100px!important;border-image:url(ui/radio_side.webp) 70 65 80 270 fill / 23.5px 21.8px 26.8px 90.6px stretch!important;justify-content:center;gap:1px}
 body:not(.tutdock):not(.versus) #radio.on{transform:none}
 body:not(.tutdock):not(.versus) #radioFace{left:7px;top:6px;width:67px;height:88px;transform:none;background-size:cover;border-radius:0}
@@ -991,6 +991,8 @@ body:not(.tutdock):not(.versus) #radioFace:empty::after{inset:20px 14px}
 #radioFace.has::after{display:none!important} /* speaker icon only when there is no portrait */
 body:not(.tutdock):not(.versus) #radioWho{font-size:11px}
 body:not(.tutdock):not(.versus) #radioTxt{font-size:13.5px;line-height:1.38;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+/* short windows: the left column meets the cockpit gauges, so the box moves to the right edge under the kill counters */
+@media (max-height:700px) and (min-width:761px){body:not(.tutdock):not(.versus) #radio{left:auto;right:16px;top:calc(96px + env(safe-area-inset-top,0px));transform:translateX(12px)}}
 @media (max-width:760px){body:not(.tutdock):not(.versus) #radio{width:min(360px,calc(100vw - 32px))!important;top:calc(290px + env(safe-area-inset-top,0px))}}
 </style>
 <div id="hud" hidden>
