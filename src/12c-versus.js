@@ -1,7 +1,7 @@
 /* ================= server-coordinated 1:1 mech battle ================= */
 let VS=null;
 const VS_HP=180,VS_ROUND=75,VS_WIN=2,VS_INTERP=100,VS_BOLT=230;
-const VS_UNIT_TEXT={mega:{r:"메가 빔",f:"하이퍼 빔",desc:"R: 0.7초 충전 후 0.6초 지속 빔(최대 약 30) · F: 0.9초 충전 후 2.4초 굵은 빔을 마우스로 쓸기(최대 약 48, 가드도 깎음) · 라이플 명중 시 필살 +6"},pods:{r:"포드 교차사격",f:"올 레인지",desc:"R: 3발 교차사격 · F: 7발 확산사격 · 20초마다 1발 요격"},missile:{r:"미사일 연사",f:"풀 버스트",desc:"R: 3발 연사 · F: 6발 연사 · 라이플 간격 0.3초"},shield:{r:"반사 장벽",f:"카운터 필드",desc:"R: 1초 방어, 첫 0.25초 반사 · F: 2초 방어 후 12m 충격파 · 저스트 회피 장갑"}};
+const VS_UNIT_TEXT={mega:{r:"메가 빔",f:"하이퍼 빔",desc:"R: 0.7초 충전 후 0.6초 지속 빔(최대 약 40) · F: 0.9초 충전 후 2.4초 굵은 빔을 마우스로 쓸기(최대 약 72, 가드도 깎음) · 라이플 명중 시 필살 +6"},pods:{r:"포드 교차사격",f:"올 레인지",desc:"R: 4발 교차사격 · F: 10발 확산사격 · 20초마다 1발 요격"},missile:{r:"미사일 연사",f:"풀 버스트",desc:"R: 4발 연사 · F: 8발 연사 · 라이플 간격 0.3초"},shield:{r:"반사 장벽",f:"카운터 필드",desc:"R: 1.5초 방어, 첫 0.5초 반사 · F: 2초 방어 후 16m 강충격파 · 저스트 회피 장갑"}};
 function vsNow(){return Date.now()+(VS?VS.off:0)}
 function vsCanAct(){return !!VS&&VS.phase==="fight"&&!S.ended&&!PAUSED&&S.started&&G.stagger<=0&&vsNow()<VS.endAt}
 function vsSkills(){return !!VS&&VS.rules.skills}
@@ -31,7 +31,7 @@ function vsOpen(code,name,create=false){
   if(VS)vsClose();VS={code,name,side:null,phase:"wait",hp:100,maxHp:100,oppHp:100,oppMaxHp:100,rules:{passives:false,skills:false},players:{},wins:[0,0],round:0,oppName:"",remote:null,tgt:null,sendT:0,pingT:0,off:0,ready:false};const v=VS;
   const base=window.PVP_URL||((location.protocol==="https:"?"wss://":"ws://")+location.host+"/pvp");
   if(code==="local"){v.ws=vstLocalSocket(v,name);v.local=true;$("dCodeBig").textContent="연 습";vsLobby();return}
-  try{v.ws=new WebSocket(base+"?room="+code+"&name="+encodeURIComponent(name)+"&v=13&create="+(create?1:0))}catch(e){VS=null;duelErr("대전 서버에 연결할 수 없습니다.");return}
+  try{v.ws=new WebSocket(base+"?room="+code+"&name="+encodeURIComponent(name)+"&v=14&create="+(create?1:0))}catch(e){VS=null;duelErr("대전 서버에 연결할 수 없습니다.");return}
   v.ws.onmessage=e=>{if(VS!==v)return;let m;try{m=JSON.parse(e.data)}catch{return}vsMsg(m)};
   v.ws.onclose=()=>{if(VS!==v)return;if(["wait","lobby"].includes(v.phase)){vsClose();duelErr("대전 서버 연결이 종료됐습니다. 방을 다시 만들어 주세요.")}else if(v.phase!=="end"&&!v.matchDone)vsEnd("disconnect")};
   v.ws.onerror=()=>{if(VS===v)duelErr("대전 서버에 연결할 수 없습니다.")};

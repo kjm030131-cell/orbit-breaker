@@ -9,7 +9,7 @@ const UNITS={
     f:"올 레인지",fd:"포드가 70m 안의 적을 한 점으로 끌어모아 대폭발, 이어서 4.5초간 포드가 남은 적을 연속 강습",
     p:"20초마다 적탄 1발 자동 요격"},
   missile:{name:"다탄두 미사일 유닛",en:"MP-12",color:0xff6a3d,css:"#ff6a3d",
-    r:"멀티 록",rd:"R로 록온 시작, 조준선으로 훑어 최대 8기 표적, R 한 번 더 누르면 일제 발사 (착탄 시 범위 폭발)",cd:7,
+    r:"멀티 록",rd:"R을 꾹 누른 채 조준선으로 훑어 최대 8기 표적, 떼면 일제 발사 (착탄 시 범위 폭발)",cd:7,
     f:"풀 버스트",fd:"110m 안의 적 최대 15기에 미사일 일제 사격 3연속, 마지막에 적이 몰린 곳에 대폭발",
     p:"라이플 연사 간격 −25%"},
   shield:{name:"실드 비트 유닛",en:"SB-4",color:0x8dff7a,css:"#8dff7a",
@@ -103,7 +103,7 @@ function skillBlast(c,R,kind,skip){
 /* ---- R skill ---- */
 function unitSkill(){
   if(VS){vsSkill(false);return}if(SCREEN!=="play"||S.ended||G.dead>0||G.stagger>0||G.specT>=0||G.cfield>0||G.mega)return;
-  if(G.unit==="missile"&&G.marking){unitSkillUp();return} // multi-lock is a toggle now: R starts marking, R again fires
+  if(G.unit==="missile"&&G.marking)return; // multi-lock: hold R to mark, release to fire (10/29 rollback from the toggle)
   if(G.unitCd>0){sfx("deny");return}
   const u=G.unit;tutCount("unit");
   if(u==="mega"){megaStart("r");G.unitCd=UNITS.mega.cd;
@@ -228,4 +228,4 @@ function resetUnits(){
 // multi-lock counter next to the reticle while marking: "록온 3 / 6 · R 발사"
 function lockCountHud(){let el=$("lockCount");const on=SCREEN==="play"&&G.marking&&!VS;
   if(!el){if(!on)return;el=document.createElement("div");el.id="lockCount";el.style.cssText="position:fixed;left:50%;top:calc(44% + 46px);transform:translateX(-50%);z-index:6;pointer-events:none;padding:5px 12px;background:rgba(10,12,16,.82);border:1px solid #ff6a3d;color:#ffd0b8;font:700 15px Pretendard,'Noto Sans CJK KR',sans-serif;letter-spacing:.04em;white-space:nowrap";$("hud").appendChild(el)}
-  if(el.hidden===on)el.hidden=!on;if(!on)return;const n=G.marks.length,t=`록온 ${n} / 8 · R 한 번 더 = 발사`;if(el.textContent!==t){el.textContent=t;el.style.borderColor=n>=8?"#ffb21a":"#ff6a3d"}}
+  if(el.hidden===on)el.hidden=!on;if(!on)return;const n=G.marks.length,t=`록온 ${n} / 8 · R 떼면 발사`;if(el.textContent!==t){el.textContent=t;el.style.borderColor=n>=8?"#ffb21a":"#ff6a3d"}}
