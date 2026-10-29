@@ -9,7 +9,7 @@ const UNITS={
     f:"올 레인지",fd:"포드가 70m 안의 적을 한 점으로 끌어모아 폭산, 이어서 3초간 포드가 남은 적을 연속 강습",
     p:"20초마다 적탄 1발 자동 요격"},
   missile:{name:"다탄두 미사일 유닛",en:"MP-12",color:0xff6a3d,css:"#ff6a3d",
-    r:"멀티 록",rd:"누르고 있는 동안 최대 6기 표적, 떼면 일제 발사",cd:9,
+    r:"멀티 록",rd:"R로 록온 시작, 조준선으로 훑어 최대 6기 표적, R 한 번 더 누르면 일제 발사",cd:9,
     f:"풀 버스트",fd:"110m 안의 적 최대 15기에 미사일 일제 사격 2연속 (약점 포드 포함)",
     p:"라이플 연사 간격 −25%"},
   shield:{name:"실드 비트 유닛",en:"SB-4",color:0x8dff7a,css:"#8dff7a",
@@ -91,6 +91,7 @@ function projHit(p){const e=p.tgt,at=e.m.position.clone();
 /* ---- R skill ---- */
 function unitSkill(){
   if(VS){vsSkill(false);return}if(SCREEN!=="play"||S.ended||G.dead>0||G.stagger>0||G.specT>=0||G.cfield>0||G.mega)return;
+  if(G.unit==="missile"&&G.marking){unitSkillUp();return} // multi-lock is a toggle now: R starts marking, R again fires
   if(G.unitCd>0){sfx("deny");return}
   const u=G.unit;tutCount("unit");
   if(u==="mega"){megaStart("r");G.unitCd=UNITS.mega.cd;
@@ -170,7 +171,8 @@ function unitsTick(dt,rdt,T){
   // missile marking
   if(G.marking){G.markT+=rdt;if(G.marks.length<6&&G.markT>.16){G.markT=0;
       const t=coneTarget(Math.cos(24*Math.PI/180),70,G.marks);if(t){G.marks.push(t);sfx("lock")}}
-    G.marks=G.marks.filter(e=>e.alive);if(G.markT>4){unitSkillUp()}}
+    G.marks=G.marks.filter(e=>e.alive);if(G.markT>6){unitSkillUp()}}
+  lockCountHud();
   // shield
   G.barrier=Math.max(0,G.barrier-dt);
   if(G.cfield>0){G.cfPulse=(G.cfPulse||0)-dt;if(G.cfPulse<=0&&G.cfield>.6){G.cfPulse=1.5;cfieldWave(30,.6)}}
@@ -200,3 +202,8 @@ function resetUnits(){
   megaEnd(true);Object.assign(G,{unitCd:0,proj:[],marks:[],marking:false,markT:0,mega:null,barrier:0,cfield:0,cfPulse:0,podGuard:0,podsOut:0,podsPull:null,podStorm:null});
   if(BIT.kind!==G.unit)buildBits(G.unit);
 }
+
+// multi-lock counter next to the reticle while marking: "록온 3 / 6 · R 발사"
+function lockCountHud(){let el=$("lockCount");const on=SCREEN==="play"&&G.marking&&!VS;
+  if(!el){if(!on)return;el=document.createElement("div");el.id="lockCount";el.style.cssText="position:fixed;left:50%;top:calc(44% + 46px);transform:translateX(-50%);z-index:6;pointer-events:none;padding:5px 12px;background:rgba(10,12,16,.82);border:1px solid #ff6a3d;color:#ffd0b8;font:700 15px Pretendard,'Noto Sans CJK KR',sans-serif;letter-spacing:.04em;white-space:nowrap";$("hud").appendChild(el)}
+  if(el.hidden===on)el.hidden=!on;if(!on)return;const n=G.marks.length,t=`록온 ${n} / 6 · R 한 번 더 = 발사`;if(el.textContent!==t){el.textContent=t;el.style.borderColor=n>=6?"#ffb21a":"#ff6a3d"}}
