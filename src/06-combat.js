@@ -26,10 +26,10 @@ function coneTarget(cone,range,excl){let best=null,bs=-9;const cf=aimDir(),cp=ca
   for(const e of enemies){if(!targetable(e)||(excl&&excl.includes(e)))continue;const dist=e.m.position.distanceTo(S.pos);if(dist>range)continue;
     const c=e.m.position.clone().sub(cp).normalize().dot(cf);if(c<cone)continue;const sc=c-dist*.0012+(e.isWP?.004:0);if(sc>bs){bs=sc;best=e}}return best}
 function pickTarget(){
-  if(G.focus){const f=G.focus;if(targetable(f)&&f.m.position.distanceTo(S.pos)<(VS?260:80))return f;G.focus=null;if(SCREEN==="play")sfx("unfocus")}
+  if(G.focus){const f=G.focus;if(targetable(f)&&f.m.position.distanceTo(S.pos)<(VS?260:150))return f;G.focus=null;if(SCREEN==="play")sfx("unfocus")}
   return VS?coneTarget(Math.cos(20*Math.PI/180),180):coneTarget(AIM_CONE,44)}
 function toggleFocus(){if(SCREEN!=="play"||S.ended||G.dead>0)return;if(G.focus){G.focus=null;sfx("unfocus");return}
-  const t=VS&&VS.tgt&&targetable(VS.tgt)?VS.tgt:coneTarget(FOCUS_CONE,64);if(t){G.focus=t;sfx("focus")}else sfx("deny")}
+  const t=VS&&VS.tgt&&targetable(VS.tgt)?VS.tgt:coneTarget(FOCUS_CONE,VS?64:120);if(t){G.focus=t;sfx("focus")}else sfx("deny")}
 let target=null;
 const COMBO_WIN=.9; // time after a swing in which the next click continues the 3-hit string
 function startAct(name,at){S.act=name;S.actT=at||0;S.actHit=false}
@@ -69,7 +69,7 @@ function shoot(){
   if(!P||S.over>0||S.shotCd>0||G.stagger>0||G.specT>=0||G.mega)return;S.shotCd=G.unit==="missile"?.24:.32;
   if(P.bladeLen>.04||S.bladeOn>0){S.bladeOn=0;P.bladeLen=0;S.pending=null;S.dash=0;S.act=null;P.rifleS=1;P.J.rifle.scale.setScalar(1);P.J.rifle.updateMatrixWorld(true)}
   // aimed rifle: shots fly down the reticle line; only a target sitting right on the reticle (~2.5 deg) gets a light assist
-  const ad=aimDir();let t=null;if(target&&!target.isRemote){const tv=target.m.position.clone().sub(camera.position);if(tv.normalize().dot(ad)>Math.cos(.044))t=target}
+  const ad=aimDir();let t=null;if(target&&!target.isRemote){const tv=target.m.position.clone().sub(camera.position);if(tv.normalize().dot(ad)>Math.cos(G.focus===target?.12:.07))t=target} /* ~4 deg assist (7 deg on the E-locked target): default mouse speed players kept missing */
   const end=t?t.m.position.clone():camera.position.clone().addScaledVector(ad,170);
   // raise and square up first (~70 ms), then fire from wherever the muzzle actually ended up
   S.aimPt=end.clone();S.aimT=.75;startAct("shoot");

@@ -8,7 +8,7 @@
 let BOSS_GLTF=null,POD_GLTF=null;
 const BOSS_W=150,POD_S=8.5,POD_R=4.6,BOSS_EYE=17;
 // pods sit just outside the wing tips and above the crown (boss-local, world units)
-const WP_OFF2=[new V3(-44,9,22),new V3(44,9,22),new V3(0,39,10)];
+const WP_OFF2=[new V3(-44,9,22),new V3(44,9,22),new V3(0,-9,36)]; /* 3rd pod: under the chest, facing you (on the crown it was nearly unreachable) */
 function bossBuildModel(g){
   const o=THREE.SkeletonUtils.clone(BOSS_GLTF.scene);let mat=null;
   o.traverse(m=>{if(!m.isMesh)return;m.frustumCulled=false;m.material=m.material.clone();m.material.envMap=ENV;m.material.envMapIntensity=.9;
