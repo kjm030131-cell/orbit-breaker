@@ -52,6 +52,7 @@ async def main():
         for u in ['mega','missile','pods','shield']:
             await ev('unit_'+u,'''()=>{const T=window.__T;T.setPaused(true);T.restart();T.show("play");T.S.started=true;T.S.demo=false;T.G.iframe=999;for(const e of T.enemies)e.alive=false;T.G.unit="%s";T.buildBits("%s");for(let i=0;i<20;i++)T.update(.05);return Object.keys(T.UNIT_GLTF)}'''%(u,u))
             await pg.evaluate('()=>window.__T.setPaused(false)');await pg.wait_for_timeout(900);await pg.evaluate('()=>window.__T.setPaused(true)');await shot('02e_unit_'+u)
+            await ev('marks_'+u,'()=>{const b=document.getElementById("emarks");if(!b)return "no box";const v=[...b.querySelectorAll("i")].filter(i=>!i.hidden);return {shown:v.length,first:v[0]?[v[0].style.left,v[0].style.top,getComputedStyle(v[0]).display,getComputedStyle(b).zIndex]:null,hud:getComputedStyle(document.getElementById("hud")).display}}')
         # 1b) a decent player for the full 120 s: dodges ~60% of shots / rams in time, breaks staggers, kills a drone every 1.5 s, chips the pods and slashes the stalled boss
         await ev('solo_skilled','''()=>{const T=window.__T;T.setPaused(true);T.G.unit="mega";T.restart();T.show("play");T.S.started=true;T.S.ended=false;T.S.demo=false;
           let lost=0,hits=0,minHp=100,dodges=0,bossT=null,last=100;
