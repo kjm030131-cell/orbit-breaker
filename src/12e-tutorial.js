@@ -54,45 +54,45 @@ function unitStep(k){const T=UNIT_TXT[k],rDone=()=>(TUT.c["u_"+k]||0)>=1,fase=()
 // five passive drones in a row straight ahead (for the piercing beam)
 function tutLine(n){for(let i=0;i<n;i++)tutDrone(tutAhead(26+i*9,(i%2?1:-1)*1.2,2),true)}
 const TUT_STEPS=[
-  {obj:"화면을 클릭해서 마우스 고정",how:"클릭하면 마우스 커서가 사라지고 조종이 시작돼요. 나중에 Esc를 누르면 일시정지예요.",keys:["LMB"],limit:30,
+  {obj:"화면을 클릭해서 마우스 고정",how:"화면을 한 번 클릭하면 조종 시작 · Esc = 일시정지",keys:["LMB"],limit:30,
    say:[[OP,"기체 동조 확인. 들려요, 우리엘 1? 차근차근 같이 해 봐요."]],done(){return locked}},
-  {obj:"마우스로 주변 둘러보기",how:"마우스를 움직이면 시점과 조준선(화면 가운데)이 같이 돌아가요. 좌우 위아래로 크게 둘러봐요.",keys:["Mouse"],limit:30,
+  {obj:"마우스로 주변 둘러보기",how:"마우스로 크게 둘러보기",keys:["Mouse"],limit:30,
    prog:()=>`${Math.min(100,Math.round((TUT.c.look||0)/3*100))}%`,enter(){TUT.c.look=0;TUT.y0=S.yaw;TUT.p0=S.pitch},
    tick(){TUT.c.look+=Math.abs(S.yaw-TUT.y0)+Math.abs(S.pitch-TUT.p0);TUT.y0=S.yaw;TUT.p0=S.pitch},done(){return TUT.c.look>=3}},
-  {obj:"노란 고리까지 이동",how:"W 앞 · S 뒤 · A 왼쪽 · D 오른쪽. 마우스로 고리 쪽을 바라보고 W를 누르고 있으면 돼요.",keys:["W","A","S","D"],limit:60,
+  {obj:"노란 고리까지 이동",how:"고리를 바라보고 W 꾹 (A·D 좌우 · S 뒤)",keys:["W","A","S","D"],limit:60,
    enter(){tutWaypoint(tutAhead(60,0,0))},done(){return TUT.wp&&S.pos.distanceTo(TUT.wp.position)<12},exit(){tutWaypoint(null)}},
-  {obj:"위아래로 움직이기",how:"우주라서 위아래로도 움직여요. Space를 누르고 있으면 위로, C를 누르고 있으면 아래로.",keys:["Space","C"],limit:40,
+  {obj:"위아래로 움직이기",how:"Space = 위로 · C = 아래로",keys:["Space","C"],limit:40,
    prog:()=>`위 ${(TUT.c.up||0)>=.7?"✓":"…"}   아래 ${(TUT.c.down||0)>=.7?"✓":"…"}`,enter(){TUT.c.up=TUT.c.down=0},
    tick(){if(keys.Space)TUT.c.up+=TUT.dt;if(keys.KeyC)TUT.c.down+=TUT.dt},done(){return TUT.c.up>=.7&&TUT.c.down>=.7}},
-  {obj:"부스트로 빠르게 이동",how:"Shift를 꾹 누른 채로 W. 훨씬 빨라지는 대신 아래 부스트 게이지가 닳아요. 손을 떼면 다시 차요.",keys:["Shift","W"],hl:"boostG",limit:45,
+  {obj:"부스트로 빠르게 이동",how:"Shift 꾹 + W = 부스트 (게이지 소모)",keys:["Shift","W"],hl:"boostG",limit:45,
    prog:()=>`${Math.min(100,Math.round((TUT.c.boostT||0)/1.5*100))}%`,enter(){TUT.c.boostT=0},
    tick(){if((keys.ShiftLeft||keys.ShiftRight)&&(keys.KeyW||keys.KeyA||keys.KeyS||keys.KeyD)&&S.boost>0)TUT.c.boostT+=TUT.dt},done(){return TUT.c.boostT>=1.5}},
-  {obj:"회피 2번",how:"Shift를 짧게 톡 누르면 회피예요(꾹 누르면 부스트). A나 D를 같이 누르면 그 방향으로 몸을 빼요.",keys:["Shift","A","D"],hl:"boostG",limit:40,
+  {obj:"회피 2번",how:"Shift 톡 = 회피 · A/D와 같이 누르면 옆으로",keys:["Shift","A","D"],hl:"boostG",limit:40,
    prog:()=>`${Math.min(2,TUT.c.dodge||0)} / 2`,enter(){TUT.c.dodge=0},done(){return (TUT.c.dodge||0)>=2}},
-  {obj:"빔 라이플로 정찰기 3기 격추",how:"조준선(화면 가운데)을 적에게 올리면 빨갛게 변해요. 그때 우클릭.",keys:["Mouse","RMB"],hl:"wRifle",limit:70,mark:true,
+  {obj:"빔 라이플로 정찰기 3기 격추",how:"조준선이 빨개지면 우클릭",keys:["Mouse","RMB"],hl:"wRifle",limit:70,mark:true,
    prog:()=>`${Math.min(3,TUT.c.kill||0)} / 3`,say:[[OP,"전방에 적 정찰기. 노란 화살표가 가리키는 놈부터."]],
    keep:{n:3,passive:true,d:[44,60]},enter(){TUT.c.kill=0;[-14,0,14].forEach((s,i)=>tutDrone(tutAhead(48+i*6,s,2+i*2),true))},done(){return (TUT.c.kill||0)>=3},exit(){tutClear()}},
-  {obj:"빔 사벨 3연속 베기",how:"적을 조준한 채 좌클릭을 리듬 있게 3번. 멀어도 알아서 파고들어 베요. 세 번째가 가장 강해요.",keys:["LMB"],hl:"wBlade",limit:60,mark:true,
+  {obj:"빔 사벨 3연속 베기",how:"적을 조준하고 좌클릭 3번, 리듬 있게",keys:["LMB"],hl:"wBlade",limit:60,mark:true,
    prog:()=>`${Math.min(1,TUT.c.combo||0)} / 1`,say:[[OP,"근접은 빔 사벨. 날려 보낸 적이 다른 적에 부딪히면 연쇄 폭발해요."]],
    keep:{n:3,passive:true,d:[16,28]},enter(){TUT.c.combo=0;[-6,6,0].forEach((s,i)=>tutDrone(tutAhead(18+i*4,s,1),true))},done(){return (TUT.c.combo||0)>=1},exit(){tutClear()}},
-  {obj:"적탄을 아슬아슬하게 피하기 (저스트 회피)",how:"적이 쏜 탄이 닿기 직전에 Shift. 화면이 느려지며 '지금!'이 뜨면 바로 눌러요. 성공하면 다음 베기가 크리티컬.",keys:["Shift"],limit:45,mark:true,
+  {obj:"적탄을 아슬아슬하게 피하기 (저스트 회피)",how:"탄이 닿기 직전 '지금!'에 Shift",keys:["Shift"],limit:45,mark:true,
    prog:()=>`${Math.min(2,TUT.c.just||0)} / 2`,say:[[OP,"조준 경보가 울리면 곧 쏴요. 맞기 직전에 피하는 게 제일 이득이에요."]],
    cue:()=>cueDodge(cueBolt(),.15,.6),
    keep:{n:2,passive:false,d:[36,46]},enter(){TUT.c.just=0;[-16,16].forEach(s=>{const e=tutDrone(tutAhead(42,s,4),false);if(e)e.fireT=1.2+Math.random()})},
    tick(){for(const e of enemies)if(e.alive&&!e.tutPassive&&e.fireT>3)e.fireT=1.5+Math.random()},
    done(){return (TUT.c.just||0)>=2},exit(){tutClear()}},
-  {obj:"돌격 드론의 돌진 피하기",how:"주황색 드론은 쏘지 않고 몸으로 들이받아요. 돌진해 올 때 '지금!'이 뜨면 Shift로 옆으로 피해요.",keys:["Shift"],limit:45,mark:true,
+  {obj:"돌격 드론의 돌진 피하기",how:"돌진해 오면 '지금!'에 Shift로 옆으로",keys:["Shift"],limit:45,mark:true,
    prog:()=>`${Math.min(1,TUT.c.ramDodge||0)} / 1`,say:[[OP,"주황 드론이 선을 깜빡이면 곧 돌진이에요."]],cue:()=>cueDodge(cueRam(),.22,.7),
    keep:{n:1,kind:"ram",d:[34,42]},enter(){TUT.c.ramDodge=0},done(){return (TUT.c.ramDodge||0)>=1},exit(){tutClear()}},
-  {obj:"정예기를 옆이나 뒤에서 베기",how:"파란 실드가 앞을 막아서 정면 공격은 안 통해요. Shift 부스트로 옆이나 뒤로 돌아간 뒤 좌클릭.",keys:["Shift","A","D","LMB"],limit:60,mark:"elite",
+  {obj:"정예기를 옆이나 뒤에서 베기",how:"부스트로 옆·뒤로 돌아가서 좌클릭",keys:["Shift","A","D","LMB"],limit:60,mark:"elite",
    prog:()=>`${Math.min(1,TUT.c.elite||0)} / 1`,say:[[OP,"파란 실드 정예기. 굼뜨니까 돌아 들어가요."]],
    keep:{n:1,kind:"elite",d:[26,32]},enter(){TUT.c.elite=0;TUT.c.eliteBlock=0;TUT.ebSaid=false},
    tick(){if((TUT.c.eliteBlock||0)>0&&!TUT.ebSaid){TUT.ebSaid=true;popText("막혔어요 · 실드 반대편으로!")}},
    done(){return (TUT.c.elite||0)>=1},exit(){tutClear()}},
-  {obj:"이족보행 MS 격파",how:"첫 공격은 장갑이 막고 MS가 비틀거려요. 비틀거릴 때 한 번 더 베면 격파. 연사 예고가 뜨면 먼저 회피.",keys:["LMB","Shift"],limit:60,mark:"ms",
+  {obj:"이족보행 MS 격파",how:"한 번 베고, 비틀거릴 때 한 번 더",keys:["LMB","Shift"],limit:60,mark:"ms",
    prog:()=>`${Math.min(1,TUT.c.ms||0)} / 1`,say:[[OP,"적 MS 접근. 한 번에 안 쓰러져요, 두 번 베요."]],
    keep:{n:1,kind:"ms",d:[26,34]},enter(){TUT.c.ms=0},done(){return (TUT.c.ms||0)>=1},exit(){tutClear()}},
-  {obj:"중력탄으로 적을 모은 뒤 베기",how:"적 무리 쪽을 보고 Q를 누르면 중력탄이 날아가 주변 적을 한 점에 끌어모아요. 모이면 좌클릭으로 날려요. 실전에서 중력탄은 떠다니는 보급 컨테이너를 부숴야만 얻을 수 있어요.",keys:["Q","LMB"],hl:"wGrav",limit:50,mark:true,
+  {obj:"중력탄으로 적을 모은 뒤 베기",how:"Q로 적을 모으고 좌클릭 · 중력탄은 실전에서 보급 컨테이너에서만",keys:["Q","LMB"],hl:"wGrav",limit:50,mark:true,
    prog:()=>`${Math.min(1,TUT.c.grav||0)} / 1`,say:[[OP,"모인 덩어리를 베어 날리면 연쇄 폭발이 크게 터져요."]],
    keep:{n:5,passive:true,d:[26,40]},enter(){TUT.c.grav=0;G.grav=Math.max(G.grav||0,2)},tick(){if(G.grav<1&&!(TUT.c.grav>0))G.grav=1},done(){return (TUT.c.grav||0)>=1&&TUT.t>4},exit(){tutClear()}},
   {obj:"옵션 장비 알아보기",how:"출격할 때는 아래 4가지 중 1개만 골라 장착해요. 지금은 시험 삼아 하나씩 전부 써 볼게요. Enter를 누르면 시작해요.",keys:["Enter"],limit:20,
@@ -107,6 +107,26 @@ const TUT_STEPS=[
    done(){return (TUT.c.counter||0)>=1}},
   {obj:"귀환",how:"수고했어요. 잠시 후 튜토리얼이 끝나요.",say:[[ACE,"…좋은 반응이다. 다음에 떨어지는 건 네 쪽일지도 모르지."],[OP,"추진제 한계예요. …버텼네요. 귀환해요, 우리엘 1."]],
    enter(){setTimeout(()=>{for(const e of enemies)if(e.tutAce){fxExplosion(e.m.position,.8);sfx("dash",e.m.position);e.alive=false;disposeEnemy(e)}enemies.length=0},2600);setTimeout(tutEnding,6500)},done(){return false}}];
+// recorded operator lines for steps 1-13 (10/29): subtitles match the audio; r = repeat when the player is stuck
+const TUT_VO=[
+ {t:"우리엘 1, 조작 훈련을 시작합니다. 일시정지는 Esc 키입니다. 화면을 한 번 클릭하세요. 커서가 사라지면 조종이 시작됩니다."},
+ {t:"마우스를 좌우, 위아래로 크게 움직이세요. 화면 중앙의 표시가 조준선입니다. 마우스로 적에게 맞춰 조준합니다."},
+ {t:"전진은 W, 후진은 S, 왼쪽은 A, 오른쪽은 D 키입니다. 노란 고리를 화면 중앙에 맞추고 W 키를 계속 눌러 고리까지 이동하세요.",r:"노란 고리를 바라보고 W 키를 계속 누르세요."},
+ {t:"Space 키를 누른 채 위로 이동하고 손을 떼세요. 이번엔 C 키를 누른 채 아래로 이동하세요. 위아래 모두 움직이면 통과입니다."},
+ {t:"W 키와 Shift 키를 함께 길게 누르세요. 부스트로 빠르게 전진합니다. 부스트 게이지가 소모되며, Shift 키를 놓으면 회복됩니다."},
+ {t:"Shift 키를 짧게 눌렀다 바로 떼세요. 길게 누르면 부스트, 짧게 누르면 회피입니다. A나 D 키를 함께 누르면 옆으로 피합니다. 회피를 두 번 실시하세요.",r:"Shift 키를 짧게 눌렀다 바로 떼세요."},
+ {t:"노란 화살표가 가리키는 적에게 조준선을 맞추세요. 조준선이 빨갛게 변하면 마우스 오른쪽 버튼으로 사격하세요. 정찰기 3기를 격추하세요.",r:"조준선을 적에게 맞추고, 빨갛게 변하면 마우스 오른쪽 버튼을 누르세요."},
+ {t:"적을 조준하고 마우스 왼쪽 버튼을 리듬에 맞춰 세 번 이어 누르세요. 자동으로 파고들어 벱니다. 세 번째 베기가 가장 강합니다."},
+ {t:"적탄이 닿기 직전에 회피합니다. '지금' 신호에 Shift 키를 짧게 눌렀다 떼세요. 두 번 성공하면 통과입니다.",cue:1},
+ {t:"주황색 드론이 몸으로 돌진합니다. 드론을 바라보고 A나 D 키를 누른 채 대기하세요. '지금' 신호에 Shift 키를 짧게 눌렀다 떼어 옆으로 피하세요.",cue:1},
+ {t:"파란 실드는 정면 공격을 막습니다. Shift 키와 A 또는 D 키를 길게 눌러 옆이나 뒤로 돌아가세요. 적을 조준하고 마우스 왼쪽 버튼으로 베세요.",r:"정면은 막힙니다. 옆이나 뒤에서 베세요."},
+ {t:"적을 조준하고 마우스 왼쪽 버튼으로 베세요. 첫 공격은 장갑이 막습니다. 적이 비틀거리면 왼쪽 버튼을 다시 눌러 한 번 더 베세요. 연사 예고가 뜨면 Shift 키로 먼저 회피하세요."},
+ {t:"적 무리를 바라보고 Q 키를 한 번 누르세요. 중력탄이 적을 한곳에 모읍니다. 모인 적을 조준하고 마우스 왼쪽 버튼으로 베어 날려 연쇄 폭발을 일으키세요.",r:"Q 키로 적을 모은 뒤 왼쪽 버튼으로 베세요."}];
+const tutVoId=(i,x)=>"tut_"+String(i+1).padStart(2,"0")+(x?"_"+x:"");
+function tutVoIds(){const a=[];TUT_VO.forEach((v,i)=>{a.push(tutVoId(i));if(v.r)a.push(tutVoId(i,"retry"));if(v.cue)a.push(tutVoId(i,"ready"),tutVoId(i,"now"))});a.push("tut_09_success");return a}
+const voBusy=()=>VO_A&&!VO_A.paused&&!VO_A.ended;
+// short cue lines ("회피 준비", "지금!") play on their own channel so they never cut the step's instructions
+let TUT_CUE_A=null;function tutCueVo(id){if(!AUD.on)return;try{if(TUT_CUE_A)TUT_CUE_A.pause();const a=(VO_CACHE[id]||new Audio(voUrl(id)));try{a.currentTime=0}catch(_){}a.volume=Math.min(1,(AUD.vol??.9)*1.05);a.play().catch(()=>{});TUT_CUE_A=a}catch(_){}}
 function tutRestoreUnit(){if(TUT.unit0&&G.unit!==TUT.unit0)tutSetUnit(TUT.unit0);G.spec=0}
 function tutAce(){const e=spawnMS(tutAhead(46,0,2),true);if(e){e.tutAce=true;e.windT=.85}}
 // top up targets: knocked / destroyed enemies are replaced in front of the player so no step can dead-end
@@ -145,12 +165,13 @@ function tutMarkTick(s){const mk=$("tutMark"),want=s.mark;let best=null,bd=1e9;
   if(off){const cx=innerWidth/2,cy=innerHeight/2,dx=x-cx,dy=y-cy,k=Math.min((cx-m)/Math.abs(dx||1e-6),(cy-m)/Math.abs(dy||1e-6));x=cx+dx*k;y=cy+dy*k;mk.style.setProperty("--rot",Math.atan2(dy,dx)+Math.PI/2+"rad")}else mk.style.setProperty("--rot","0rad");
   mk.style.left=x+"px";mk.style.top=y+"px";mk.classList.toggle("edge",off)}
 // "지금!" cue: slow motion while a timed input is coming, big prompt in the window itself
-function tutCueTick(s){const c=s.cue?s.cue():null,el=$("tutCue");if(!c){if(!el.hidden)el.hidden=true;return}
-  S.slow=Math.max(S.slow||0,.06);el.hidden=false;el.classList.toggle("now",!!c.now);const t=c.now?`지금! ${KEYLBL[c.key]||c.key}`:"준비…";if(el.textContent!==t){el.textContent=t;if(c.now)sfx("lock")}}
+function tutCueTick(s){const c=s.cue?s.cue():null,el=$("tutCue");if(!c){if(!el.hidden)el.hidden=true;TUT.cueSt=null;return}
+  S.slow=Math.max(S.slow||0,.06);el.hidden=false;el.classList.toggle("now",!!c.now);const t=c.now?`지금! ${KEYLBL[c.key]||c.key}`:"준비…";if(el.textContent!==t){el.textContent=t;if(c.now)sfx("lock")}
+  const V=TUT_VO[TUT.step],st=c.now?"now":"ready";if(V&&V.cue&&TUT.cueSt!==st&&(st==="now"||!(TUT.cueT>clockT))){TUT.cueSt=st;if(st==="ready")TUT.cueT=clockT+4;tutCueVo(tutVoId(TUT.step,st))}}
 function tutStep(i){const prev=TUT_STEPS[TUT.step];if(prev&&prev.exit)prev.exit();TUT.step=i;TUT.t=0;TUT.respT=0;TUT.lastProg=null;TUT.hintSaid=false;const s=TUT_STEPS[i];if(!s)return;
   $("tutObj").hidden=false;tutText(s);$("tutObjProg").textContent=s.prog?s.prog():"";$("tutObjN").textContent=`${i+1} / ${TUT_STEPS.length}`;
   $("tutSkip").hidden=i>=TUT_STEPS.length-1;$("tutCue").hidden=true;
-  const o=$("tutObj");o.classList.remove("new","ok");void o.offsetWidth;o.classList.add("new");tutSay(s.say);if(s.enter)s.enter()}
+  const o=$("tutObj");o.classList.remove("new","ok");void o.offsetWidth;o.classList.add("new");TUT.cueSt=null;TUT.just0=TUT.c.just||0;const V=TUT_VO[i];if(V){TUT.sayTok=(TUT.sayTok||0)+1;setTimeout(()=>{if(TUT.on&&TUT.step===i)radio(OP,V.t,tutVoId(i))},i?150:500)}else tutSay(s.say);if(s.enter)s.enter()}
 function tutText(s){const a=tutVal(s,"obj")||"",b=tutVal(s,"how")||"";if($("tutObjTxt").textContent!==a){$("tutObjTxt").textContent=a;const o=$("tutObj");o.classList.remove("new");void o.offsetWidth;o.classList.add("new")}
   if($("tutObjHow").textContent!==b)$("tutObjHow").textContent=b;tutKeysSet(tutVal(s,"keys"));tutHl(tutVal(s,"hl"))}
 function tutPass(why){if(TUT.busy)return;TUT.busy=true;const s=TUT_STEPS[TUT.step];const o=$("tutObj");$("tutCue").hidden=true;
@@ -158,12 +179,12 @@ function tutPass(why){if(TUT.busy)return;TUT.busy=true;const s=TUT_STEPS[TUT.ste
   setTimeout(()=>{TUT.busy=false;o.classList.remove("ok");if(TUT.on&&TUT_STEPS[TUT.step]===s)tutStep(TUT.step+1)},why?900:1500)}
 function tutFrame(dt){if(!TUT.on||SCREEN!=="play"||TUT.step<0){if(!$("tutKeys").hidden&&!TUT.on&&!VST.on){tutKeysSet(null);tutHl(null);$("tutMark").hidden=$("tutCue").hidden=true}return}
   const s=TUT_STEPS[TUT.step];if(!s)return;TUT.t+=dt;TUT.dt=dt;G.unitCd=0; /* no option-unit cooldown anywhere in the tutorial */
-  if(s.tick)s.tick();tutKeep(s,dt);tutText(s);tutMarkTick(s);if(!TUT.busy)tutCueTick(s);
+  if(s.tick)s.tick();if(TUT.step===8&&(TUT.c.just||0)>TUT.just0){TUT.just0=TUT.c.just;if(TUT.c.just===1)tutCueVo("tut_09_success")}tutKeep(s,dt);tutText(s);tutMarkTick(s);if(!TUT.busy)tutCueTick(s);
   if(s.prog){const v=s.prog();if(v!==TUT.lastProg){TUT.lastProg=v;$("tutObjProg").textContent=v}}
   if(TUT.wp&&TUT.wp.visible){TUT.wp.userData.ring.lookAt(camera.position);TUT.wp.userData.ring.scale.setScalar(1+Math.sin(TUT.t*4)*.08)}
   // stuck for a while: point at Tab; past the limit: move on so nobody is trapped in a step
-  if(s.limit&&!TUT.hintSaid&&TUT.t>s.limit*.5){TUT.hintSaid=true;$("tutSkip").classList.remove("pulse");void $("tutSkip").offsetWidth;$("tutSkip").classList.add("pulse")}
-  if(!TUT.busy&&TUT.t>1&&s.done())tutPass();else if(!TUT.busy&&s.limit&&TUT.t>s.limit)tutPass("괜찮아요 · 실전에서 익혀요")}
+  if(s.limit&&!TUT.hintSaid&&TUT.t>s.limit*.5){TUT.hintSaid=true;{const V=TUT_VO[TUT.step];if(V&&V.r&&!voBusy())radio(OP,V.r,tutVoId(TUT.step,"retry"))}$("tutSkip").classList.remove("pulse");void $("tutSkip").offsetWidth;$("tutSkip").classList.add("pulse")}
+  if(!TUT.busy&&TUT.t>1&&(!TUT_VO[TUT.step]||TUT.t>7||!voBusy())&&s.done())tutPass();else if(!TUT.busy&&s.limit&&TUT.t>s.limit)tutPass("괜찮아요 · 실전에서 익혀요")}
 // no game over in the tutorial: a hit only costs a flash and a shove
 function tutHurt(b){if(G.iframe>0)return;G.iframe=1.4;fxImpact(S.pos.clone().add(new V3(0,.8,0)),0xff4030);sfx("hurt");S.shake=.7;S.vel.addScaledVector(b.dir||new V3(0,0,-1),18);
   const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");popText("피격 — 실전이었다면 격추예요")}
@@ -172,7 +193,7 @@ async function startTutorial(){if(TUT.on||!P)return;sfx("uiok");lock();
   const U=UNITS[G.unit];document.documentElement.style.setProperty("--uc",U.css);$("unitName").textContent=U.r;$("specName").textContent=U.f;$("uIconR").src=`ui/r_${G.unit}.webp`;$("uIconF").src=`ui/f_${G.unit}.webp`;buildBits(G.unit);
   $("pName").textContent=PILOT.name||"우리엘 1";$("pDept").textContent="첫 출격";$("pSortie").textContent="—";
   document.body.classList.add("tut");show("launch");
-  await playIntro();if(!TUT.on)return;await playCatapult();if(!TUT.on)return;
+  voPreload(tutVoIds());await playIntro();if(!TUT.on)return;await playCatapult();if(!TUT.on)return;
   show("play");S.started=true;tutStep(0)}
 function tutEnding(){if(!TUT.on)return;const n=Math.max(1,(S.kills||0)+(TUT.c.kill||0)*0);$("tutObj").hidden=true;if(document.pointerLockElement)document.exitPointerLock();
   const e=$("tutEnd");$("tutEndA").textContent=`그날 밤, 서울 하늘에는 유성 ${n}개가 내렸다.`;$("tutEndB").textContent="동생은 그중 하나에 소원을 빌었다.";e.hidden=false;e.classList.remove("on");void e.offsetWidth;e.classList.add("on");sfx("phase");
