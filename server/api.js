@@ -7,7 +7,32 @@ const clean = (v, n) => String(v == null ? "" : v).replace(/[\u0000-\u001f<>]/g,
 const validSid = (s) => /^\d{8,10}$/.test(s);
 const mask = (s) => s.length > 4 ? s.slice(0, 4) + "*".repeat(s.length - 6) + s.slice(-2) : s;
 
+/* ---- boss (Kerberos) kills (10/29): a kill counts while its run exists and was accepted (score>0), so admin deletes / restores
+   of runs apply to kills automatically. Order of "Nth slayer" = each player's first valid kill time. */
+const bossReady = new WeakSet();
+async function bossInit(DB) {
+  if (bossReady.has(DB)) return;
+  await DB.prepare("CREATE TABLE IF NOT EXISTS boss_kills(run_id TEXT PRIMARY KEY, sid TEXT NOT NULL, t REAL NOT NULL, at INTEGER NOT NULL)").run();
+  bossReady.add(DB);
+}
+const KILLS = "SELECT k.sid AS sid, MIN(k.t) AS t, MIN(k.at) AS first_at FROM boss_kills k JOIN runs r ON r.id=k.run_id AND r.score>0 GROUP BY k.sid";
+async function killMap(DB) {
+  await bossInit(DB);
+  const { results } = await DB.prepare(KILLS).all();
+  const m = new Map();
+  for (const k of results) m.set(k.sid, k);
+  return m;
+}
+async function fame(DB) {
+  await bossInit(DB);
+  const { results } = await DB.prepare(`SELECT x.sid, x.t, x.first_at, p.name, p.dept, p.unit FROM (${KILLS}) x JOIN players p ON p.sid=x.sid`).all();
+  const row = (k) => ({ name: k.name, dept: k.dept, unit: k.unit, sidm: mask(k.sid), t: k.t, at: k.first_at });
+  const byFirst = [...results].sort((a, b) => a.first_at - b.first_at), byTime = [...results].sort((a, b) => a.t - b.t || a.first_at - b.first_at);
+  return { total: results.length, first: byFirst[0] ? row(byFirst[0]) : null, fastest: byTime.slice(0, 5).map(row) };
+}
+
 async function board(DB, sid) {
+  const kills = await killMap(DB);
   const { results } = await DB.prepare("SELECT sid,name,dept,best,unit,frame FROM players WHERE best>0 ORDER BY best DESC, best_at ASC LIMIT 100").all();
   const total = (await DB.prepare("SELECT COUNT(*) AS n FROM players WHERE best>0").first()).n;
   let me = null;
@@ -18,7 +43,7 @@ async function board(DB, sid) {
       me = { rank: ahead + 1, best: p.best };
     }
   }
-  return { rows: results.map((r) => ({ name: r.name, dept: r.dept, best: r.best, unit: r.unit, frame: r.frame, sidm: mask(r.sid), me: r.sid === sid })), total, me };
+  return { rows: results.map((r) => { const k = kills.get(r.sid); return { name: r.name, dept: r.dept, best: r.best, unit: r.unit, frame: r.frame, sidm: mask(r.sid), me: r.sid === sid, boss: !!k, bossT: k ? k.t : null }; }), total, me, killers: kills.size };
 }
 
 export async function onRequest({ request, env, params }) {
@@ -28,6 +53,7 @@ export async function onRequest({ request, env, params }) {
   const url = new URL(request.url);
   try {
     if (request.method === "GET" && route === "board") return J(await board(DB, url.searchParams.get("sid")));
+    if (request.method === "GET" && route === "fame") return J(await fame(DB));
     if (request.method === "GET" && route === "player") {
       const sid = url.searchParams.get("sid") || "";
       if (!validSid(sid)) return bad("학번 형식 오류");
@@ -70,9 +96,23 @@ export async function onRequest({ request, env, params }) {
         await DB.prepare("UPDATE players SET best=?, kills=?, chain=?, combo=?, unit=?, frame=?, best_at=? WHERE sid=? AND best<?")
           .bind(score, Math.floor(body.kills || 0), Math.floor(body.chain || 0), Math.floor(body.combo || 0), run.unit, run.frame, new Date().toISOString(), run.sid, score).run();
       }
+      // boss kill: in-sortie time of the kill (seconds since launch); the boss only appears in the last phase
+      let boss = null;
+      const bt = Number(body.bossT);
+      if (ok && score > 0 && body.boss === true && bt >= 10 && bt <= 135) {
+        await bossInit(DB);
+        const at = Date.now();
+        await DB.prepare("INSERT OR IGNORE INTO boss_kills(run_id,sid,t,at) VALUES(?,?,?,?)").bind(id, run.sid, Math.round(bt * 10) / 10, at).run();
+        const mine = await DB.prepare(`SELECT t, first_at FROM (${KILLS}) WHERE sid=?`).bind(run.sid).first();
+        if (mine) {
+          const before = (await DB.prepare(`SELECT COUNT(*) AS n FROM (${KILLS}) WHERE first_at<?`).bind(mine.first_at).first()).n;
+          const faster = (await DB.prepare(`SELECT COUNT(*) AS n FROM (${KILLS}) WHERE t<?`).bind(Math.round(bt * 10) / 10).first()).n;
+          boss = { nth: before + 1, t: Math.round(bt * 10) / 10, best: mine.t, firstKill: mine.first_at === at, speedRank: faster + 1 };
+        }
+      }
       const p = await DB.prepare("SELECT best,attempts FROM players WHERE sid=?").bind(run.sid).first();
       const b = await board(DB, run.sid);
-      return J({ best: p.best, attempts: p.attempts, accepted: ok, ...b });
+      return J({ best: p.best, attempts: p.attempts, accepted: ok, boss, ...b });
     }
     return bad("not found", 404);
   } catch (e) {
@@ -179,11 +219,12 @@ async function admin(DB, env, request, route, url) {
   const sid = clean(GET ? url.searchParams.get("sid") : body.sid, 10);
 
   if (GET && route === "admin/overview") {
+    const kills = await killMap(DB);
     const { results: players } = await DB.prepare(
       "SELECT p.*, (SELECT COUNT(*) FROM runs r WHERE r.sid=p.sid) AS runs, (SELECT COUNT(*) FROM runs r WHERE r.sid=p.sid AND r.score<0) AS flagged, (SELECT MAX(started) FROM runs r WHERE r.sid=p.sid) AS last_play FROM players p ORDER BY p.best DESC, p.best_at ASC, p.created_at ASC").all();
     const runs = (await DB.prepare("SELECT COUNT(*) AS n, SUM(CASE WHEN score<0 THEN 1 ELSE 0 END) AS f, SUM(CASE WHEN finished=0 THEN 1 ELSE 0 END) AS u FROM runs").first()) || {};
     let rank = 0;
-    for (const p of players) p.rank = p.best > 0 ? ++rank : null;
+    for (const p of players) { p.rank = p.best > 0 ? ++rank : null; const k = kills.get(p.sid); p.boss_t = k ? k.t : null; }
     return J({ players, stats: { players: players.length, ranked: rank, runs: runs.n || 0, flagged: runs.f || 0, unfinished: runs.u || 0 }, closed: await isClosed(DB), maxSortie: MAX_SORTIE });
   }
   if (GET && route === "admin/runs") {

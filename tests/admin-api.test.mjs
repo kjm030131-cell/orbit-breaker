@@ -86,3 +86,19 @@ T('closing the event blocks new sorties; reopening allows them',async()=>{
   await call('POST','admin/close',{closed:false});
   assert.equal((await play(DB,call,'20260006','바',10)).status,200);
 });
+
+T('boss kills: badge on the board, Nth slayer, fastest list; deleting the run removes the kill',async()=>{
+  const DB=d1(),call=client(DB);
+  const run=async(sid,name,score,boss,bossT)=>{const s=await call('POST','start',{sid,name,dept:'학과'},null);DB.db.prepare('UPDATE runs SET started=? WHERE id=?').run(Date.now()-60000,s.j.runId);return call('POST','finish',{runId:s.j.runId,score,kills:1,chain:1,combo:1,boss,bossT},null)};
+  let r=await run('20261001','가',5000,true,98.4);assert.equal(r.j.boss.nth,1);assert.equal(r.j.boss.firstKill,true);
+  r=await run('20261002','나',9000,false);assert.equal(r.j.boss,null);
+  r=await run('20261003','다',7000,true,80);assert.equal(r.j.boss.nth,2);assert.equal(r.j.boss.speedRank,1);
+  r=await run('20261001','가',4000,true,70);assert.equal(r.j.boss.nth,1);assert.equal(r.j.boss.firstKill,false);assert.equal(r.j.boss.best,70);
+  r=await run('20261002','나',100,true,5);assert.equal(r.j.boss,null); // impossible time
+  const b=r.j.rows;assert.equal(b.find(x=>x.name==='가').boss,true);assert.equal(b.find(x=>x.name==='나').boss,false);assert.equal(r.j.killers,2);
+  const f=await (await onRequest({request:new Request('https://x/api/fame'),env:{DB},params:{route:['fame']}})).json();
+  assert.equal(f.total,2);assert.equal(f.first.name,'가');assert.deepEqual(f.fastest.map(x=>[x.name,x.t]),[['가',70],['다',80]]);
+  const runs=(await call('GET','admin/runs?sid=20261003')).j.runs;await call('POST','admin/run/delete',{id:runs[0].id,refund:false});
+  const f2=await (await onRequest({request:new Request('https://x/api/fame'),env:{DB},params:{route:['fame']}})).json();assert.equal(f2.total,1);
+  assert.equal((await call('GET','admin/overview')).j.players.find(p=>p.sid==='20261001').boss_t,70);
+});

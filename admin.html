@@ -104,7 +104,7 @@ section.bk{margin-top:28px}
   </div>
   <div class="bar"><input id="q" type="search" placeholder="이름·학번·학과로 검색"><span class="muted" id="updated"></span></div>
   <div class="tablebox"><table>
-    <thead><tr><th class="num">순위</th><th>학번</th><th>이름</th><th>학과</th><th class="num">최고점</th><th class="num">출격</th><th>최고점 시각</th><th>마지막 플레이</th><th>관리</th></tr></thead>
+    <thead><tr><th class="num">순위</th><th>학번</th><th>이름</th><th>학과</th><th class="num">최고점</th><th class="num">출격</th><th>보스 격파</th><th>최고점 시각</th><th>마지막 플레이</th><th>관리</th></tr></thead>
     <tbody id="rows"></tbody>
   </table></div>
 
@@ -175,9 +175,9 @@ function render(){
   const list=DATA.players.filter(p=>!q||[p.sid,p.name,p.dept].some(v=>String(v||"").toLowerCase().includes(q)));
   $("rows").innerHTML=list.length?list.map(p=>`<tr class="${p.rank&&p.rank<=3?"p"+p.rank:""}">
     <td class="num rk">${p.rank||"<span class=muted>—</span>"}</td><td>${esc(p.sid)}</td><td>${esc(p.name)}${p.flagged?`<span class="tag flag">의심 ${p.flagged}</span>`:""}</td><td>${esc(p.dept)}</td>
-    <td class="num">${num(p.best)}</td><td class="num">${p.attempts} / ${DATA.maxSortie}</td><td>${fmtT(p.best_at)}</td><td>${fmtT(p.last_play)}</td>
+    <td class="num">${num(p.best)}</td><td class="num">${p.attempts} / ${DATA.maxSortie}</td><td>${p.boss_t!=null?"최단 "+Math.floor(p.boss_t/60)+":"+String((p.boss_t%60).toFixed(1)).padStart(4,"0"):"—"}</td><td>${fmtT(p.best_at)}</td><td>${fmtT(p.last_play)}</td>
     <td><div class="acts"><button class="btn sm" data-runs="${esc(p.sid)}">전적 보기</button></div></td></tr>`).join("")
-    :`<tr><td colspan="9" class="empty">${DATA.players.length?"검색 결과가 없습니다.":"아직 기록이 없습니다."}</td></tr>`;
+    :`<tr><td colspan="10" class="empty">${DATA.players.length?"검색 결과가 없습니다.":"아직 기록이 없습니다."}</td></tr>`;
 }
 $("q").addEventListener("input",()=>DATA&&render());
 $("rows").addEventListener("click",e=>{const b=e.target.closest("[data-runs]");if(b)openRuns(b.dataset.runs)});
@@ -241,8 +241,8 @@ function csv(name,head,rows){const q=v=>{v=v==null?"":String(v);return /[",\n]/.
   const s="﻿"+[head,...rows].map(r=>r.map(q).join(",")).join("\r\n");const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([s],{type:"text/csv;charset=utf-8"}));
   a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
 const stamp=()=>new Date().toLocaleString("sv-SE",{timeZone:"Asia/Seoul"}).replace(/[: ]/g,"").replace(/-/g,"").slice(0,13);
-$("csvBtn").addEventListener("click",()=>{if(!DATA)return;csv(`arclight-순위-${stamp()}.csv`,["순위","학번","이름","학과","최고점","출격 횟수","최고점 시각","첫 등록","마지막 플레이","의심 기록 수"],
-  DATA.players.map(p=>[p.rank||"",p.sid,p.name,p.dept,p.best,p.attempts,fmtFull(p.best_at),fmtFull(p.created_at),fmtFull(p.last_play),p.flagged||0]))});
+$("csvBtn").addEventListener("click",()=>{if(!DATA)return;csv(`arclight-순위-${stamp()}.csv`,["순위","학번","이름","학과","최고점","출격 횟수","보스 최단 격파(초)","최고점 시각","첫 등록","마지막 플레이","의심 기록 수"],
+  DATA.players.map(p=>[p.rank||"",p.sid,p.name,p.dept,p.best,p.attempts,p.boss_t??"",fmtFull(p.best_at),fmtFull(p.created_at),fmtFull(p.last_play),p.flagged||0]))});
 $("csvRunsBtn").addEventListener("click",async()=>{try{const {runs}=await api("admin/runs");
   csv(`arclight-전적-${stamp()}.csv`,["학번","이름","학과","출격 시각","종료 시각","점수","상태","기체","옵션"],
     runs.map(r=>[r.sid,r.name||"",r.dept||"",fmtFull(r.started),fmtFull(r.finished),r.finished?Math.abs(r.score):"",!r.finished?"미완료":r.score<0?"의심(순위 제외)":"정상",FRAME[r.frame]||r.frame||"",UNIT[r.unit]||r.unit||""]))}catch(e){fail(e)}});

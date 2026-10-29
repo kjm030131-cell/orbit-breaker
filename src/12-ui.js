@@ -35,7 +35,7 @@ function setNet(on){const n=$("netStatus");n.classList.toggle("off",!on);n.lastC
 /* ================= boards ================= */
 function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c])}
 function rowsHTML(rows,start){return rows.map((r,i)=>{const n=start+i+1;
-  return `<tr class="${n<=3?"p"+n:""} ${r.me||(r.sid&&r.sid===PILOT.sid)?"me":""}"><td class="r">${n<=3?`<img class="medal" src="ui/medal${n}.webp" alt="${n}">`:String(n).padStart(2,"0")}</td><td>${esc(r.name)}${r.sidm?`<span class="ut"> ${esc(r.sidm)}</span>`:""}${r.unit&&U_SHORT[r.unit]?`<span class="ut"> · ${U_SHORT[r.unit]}</span>`:""}</td><td class="d">${esc(r.dept)}</td><td class="s">${(r.best||0).toLocaleString()}</td></tr>`}).join("")}
+  return `<tr class="${n<=3?"p"+n:""} ${r.me||(r.sid&&r.sid===PILOT.sid)?"me":""}"><td class="r">${n<=3?`<img class="medal" src="ui/medal${n}.webp" alt="${n}">`:String(n).padStart(2,"0")}</td><td>${r.boss?BOSS_BADGE:""}${esc(r.name)}${r.sidm?`<span class="ut"> ${esc(r.sidm)}</span>`:""}${r.unit&&U_SHORT[r.unit]?`<span class="ut"> · ${U_SHORT[r.unit]}</span>`:""}</td><td class="d">${esc(r.dept)}</td><td class="s">${(r.best||0).toLocaleString()}</td></tr>`}).join("")}
 function tableHTML(rows,extra){
   if(!rows.length)return '<div class="empty">아직 작전 기록이 없습니다.<br>첫 번째 파일럿이 되어 보세요.</div>';
   return `<table class="board"><thead><tr><th>#</th><th>파일럿</th><th>학과</th><th class="s">최고점</th></tr></thead><tbody>${rowsHTML(rows,0)}${extra||""}</tbody></table>`}
@@ -45,7 +45,7 @@ function renderBoards(){
     let h="";for(let n=1;n<=10;n++){const r=BOARD[n-1];
       if(!r){h+=`<div class="lbr empty"><span class="r">${String(n).padStart(2,"0")}</span><span class="nm">—</span><span class="dp"></span><span class="sc">—</span></div>`;continue}
       const key=(r.sid||r.name)+"",best=r.best||0;seen[key]=best;const fl=renderBoards.prev&&prev[key]!==best;
-      h+=`<div class="lbr ${n<=3?"p"+n:""} ${r.me||(r.sid&&r.sid===PILOT.sid)?"me":""} ${fl?"flash":""}"><span class="r">${n<=3?`<img class="medal" src="ui/medal${n}.webp" alt="${n}">`:String(n).padStart(2,"0")}</span><span class="nm">${esc(r.name)}</span><span class="dp">${esc(r.dept)}</span><span class="sc">${best.toLocaleString()}</span></div>`}
+      h+=`<div class="lbr ${n<=3?"p"+n:""} ${r.me||(r.sid&&r.sid===PILOT.sid)?"me":""} ${fl?"flash":""}"><span class="r">${n<=3?`<img class="medal" src="ui/medal${n}.webp" alt="${n}">`:String(n).padStart(2,"0")}</span><span class="nm">${r.boss?BOSS_BADGE:""}${esc(r.name)}</span><span class="dp">${esc(r.dept)}</span><span class="sc">${best.toLocaleString()}</span></div>`}
     renderBoards.prev=seen;$("miniBoard").innerHTML=h;
     $("miniCount").textContent=BOARD.length?BOARD.length+"명 참가":"첫 기록에 도전하세요";}
   $("fullBoard").innerHTML=tableHTML(BOARD);$("rankCount").textContent=BOARD.length+"명 참가";
@@ -189,10 +189,11 @@ function finishRun(reason){
   const rec=PILOT.rec||{},score=S.score,pb=score>(rec.best||0);
   if(pb){rec.best=score;rec.chain=S.best;rec.kills=S.kills||0;rec.combo=G.maxKC;rec.unit=G.unit;rec.frame=P?P.frame:"mk2"}
   rec.at=new Date().toISOString();putRec({...rec});
-  if(SERVER&&RUN){const runId=RUN;RUN=null;api("finish",{runId,score,kills:S.kills||0,chain:S.best,combo:G.maxKC}).then(j=>{rec.best=j.best;rec.attempts=j.attempts;$("rBest").textContent=(j.best||0).toLocaleString();applyBoard(j);updateRankLine()}).catch(e=>{$("rRank").innerHTML='<span class="note" style="color:var(--red)">기록 서버 전송 실패 — 운영진에게 화면을 보여주세요.</span>'})}
+  if(SERVER&&RUN){const runId=RUN;RUN=null;api("finish",{runId,score,kills:S.kills||0,chain:S.best,combo:G.maxKC,boss:!!BOSS.dead,bossT:BOSS.killT||0}).then(j=>{bossCard(j.boss);rec.best=j.best;rec.attempts=j.attempts;$("rBest").textContent=(j.best||0).toLocaleString();applyBoard(j);updateRankLine()}).catch(e=>{$("rRank").innerHTML='<span class="note" style="color:var(--red)">기록 서버 전송 실패 — 운영진에게 화면을 보여주세요.</span>'})}
   music(null);sfx("end");if(pb&&score>0)sfx("pb");setTimeout(()=>{if(SCREEN==="result"){music("title");muffle(true)}},2600);
   $("rScore").textContent=score.toLocaleString();{const g=score>=250000?"S":score>=150000?"A":score>=70000?"B":"C",im=$("rGrade");im.hidden=false;im.src=`ui/grade_${g}.webp`;im.alt=g+" 등급";im.style.animation="none";void im.offsetWidth;im.style.animation=""}$("rKills").textContent=S.kills||0;$("rCombo").textContent=G.maxKC;$("rChain").textContent=S.best;$("rBest").textContent=(rec.best||0).toLocaleString();
   $("rPb").innerHTML=(pb&&score>0?'<span class="pb">개인 최고 기록 갱신</span> ':"")+(lost?'<span class="note">기체 대파 · 작전 조기 종료</span>':`<span class="note">생존 보너스 +${bonus.toLocaleString()} (전투 점수의 ${Math.round(rate*100)}% · 남은 기체 ${G.lives}${G.lives===MAX_LIVES?" · 무피격 클리어":""})</span>`);
+  bossCard(BOSS.dead?{pending:true,t:BOSS.killT||0}:null);
   $("rDebrief").innerHTML='<span class="who">이클립스 CIC · 최지우 중위</span>'+debriefLine(lost,score);
   $("rSortie").textContent=`출격 ${rec.attempts} / ${MAX_SORTIE}`;
   const left=MAX_SORTIE-rec.attempts,ag=$("againBtn");ag.disabled=left<=0;ag.hidden=false; /* like before: "재출격 · n회 남음", or a disabled "출격 횟수 소진" */

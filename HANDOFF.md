@@ -528,3 +528,8 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
   damage 이벤트에 stun(ms) 포함 → 클라 vsDamageFX 가 그대로 사용(숫자 이중 관리 없음). 프로토콜 필드 추가만이라 VERSION 그대로.
   표시(src/12k-stagger.js 신규): 내가 경직되면 조준선 위 큰 빨간 "경직" + 남은 시간 막대 + "Shift 경직 풀기 · 부스트 30"(또는 불가 사유) + 화면 가장자리 붉은 맥동 + 경고음,
   상대가 경직되면 상대 표시 위 "경직 · 공격 찬스" 깜빡임 + "상대 경직! 지금 공격"(패리·간파·가드 브레이크 포함, 상대 경직 풀기 시 해제). 사격 경직(.3초 미만)은 큰 표시 생략.
+
+## 53. 보스(케르고그모스) 격파 보상 (10/29)
+- 서버: boss_kills(run_id,sid,t,at) 테이블(자동 생성). finish에 boss:true,bossT(출격 후 격파까지 초, 10~135만 인정) → 응답 boss{nth,t,best,firstKill,speedRank}. 격파는 해당 run이 남아 있고 점수>0일 때만 유효(관리자 삭제·복원과 자동 연동).
+- /api/board rows에 boss/bossT, /api/fame = 최초 격파자 + 최단 TOP5. 관리자 명단·CSV에 보스 최단 격파 열.
+- 클라(12k-fame.js): 순위표 이름 앞 격파 배지(.bossB), 결과 화면 격파 인증 카드(#rBoss, N번째 격파자), 타이틀 순위표 탭 "점수 순위 / 명예의 전당"(대기 중 12초마다 자동 전환, 클릭 후 40초는 고정).
