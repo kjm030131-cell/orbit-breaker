@@ -60,7 +60,7 @@ function updateRankLine(){
 }
 
 /* ================= screens ================= */
-const SCR={title:"scrTitle",form:"scrForm",load:"scrLoad",duel:"scrDuel",brief:"scrBrief",result:"scrResult",rank:"scrRank"};
+const SCR={title:"scrTitle",form:"scrForm",load:"scrLoad",duel:"scrDuel",brief:"scrBrief",result:"scrResult",rank:"scrRank",credits:"scrCredits"};
 let briefMode="manual",menuSel=0;
 const menuItems=[...document.querySelectorAll("#menu .mi")];
 function markMenu(){menuItems.forEach((m,i)=>m.classList.toggle("sel",i===menuSel))}
@@ -74,8 +74,9 @@ function show(name){
   if(name==="load"){renderUnits();setTimeout(()=>$("loadGo").focus(),60)}
   if(name==="brief"){const l=briefMode==="launch";$("briefStep").textContent=l?"3 / 3":"조작법";$("launchBtn").hidden=!l;$("launchNote").hidden=!l;setTimeout(()=>(l?$("launchBtn"):$("briefBack")).focus(),60)}
   if(name==="rank")renderBoards();
+  if(typeof creditsShow==="function")creditsShow(name==="credits");
   if(name==="duel")duelOpen();
-  if(["title","form","load","duel","brief","rank"].includes(name)){music("title");muffle(false)}
+  if(["title","form","load","duel","brief","rank","credits"].includes(name)){music("title");muffle(false)}
   if(name==="launch")music(null);
   if(name==="play")music("battle");
 }
@@ -93,7 +94,7 @@ UI.key=function(e){
     if(e.code.startsWith("Digit"))j=+e.code.slice(5)-1;else if(e.code==="ArrowRight")j=(i+1)%4;else if(e.code==="ArrowLeft")j=(i+3)%4;else if(e.code==="ArrowDown")j=(i+2)%4;else j=(i+2)%4;
     pickUnit(UNIT_KEYS[j])
   }else if(e.code==="Escape"){if(SCREEN!=="play"&&SCREEN!=="launch")sfx("uiback");
-    if(SCREEN==="form"||SCREEN==="rank")show("title");
+    if(SCREEN==="form"||SCREEN==="rank"||SCREEN==="credits")show("title");
     else if(SCREEN==="duel")duelBack();
     else if(SCREEN==="load")show("form");
     else if(SCREEN==="brief")show(briefMode==="launch"?"load":"title");

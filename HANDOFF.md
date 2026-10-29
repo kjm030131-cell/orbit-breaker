@@ -533,3 +533,7 @@ cd ../orbit-breaker-deploy && bash deploy.sh    # 대전 중계 워커 + Pages �
 - 서버: boss_kills(run_id,sid,t,at) 테이블(자동 생성). finish에 boss:true,bossT(출격 후 격파까지 초, 10~135만 인정) → 응답 boss{nth,t,best,firstKill,speedRank}. 격파는 해당 run이 남아 있고 점수>0일 때만 유효(관리자 삭제·복원과 자동 연동).
 - /api/board rows에 boss/bossT, /api/fame = 최초 격파자 + 최단 TOP5. 관리자 명단·CSV에 보스 최단 격파 열.
 - 클라(12k-fame.js): 순위표 이름 앞 격파 배지(.bossB), 결과 화면 격파 인증 카드(#rBoss, N번째 격파자), 타이틀 순위표 탭 "점수 순위 / 명예의 전당"(대기 중 12초마다 자동 전환, 클릭 후 40초는 고정).
+
+## 54. 크레딧 화면 (10/29)
+- 타이틀 메뉴 하단 "크레딧"(data-go="credits") → #scrCredits, 천천히 올라가는 롤(휠·↑↓로 빨리 넘김, 끝나면 4초 뒤 처음부터), Esc·돌아가기로 타이틀.
+- 내용은 src/12l-credits.js 의 CREDITS 배열만 고치면 됨(팀·캐스트·기술·오픈소스 라이선스·생성형 AI 도구·감사).

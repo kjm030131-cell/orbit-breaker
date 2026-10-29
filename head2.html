@@ -1026,6 +1026,28 @@ body:not(.tutdock):not(.versus) #radioTxt{font-size:13.5px;line-height:1.38;disp
 .bkU{font:800 18px var(--f-kdisp);color:var(--bone)}
 .bkSub{font-size:14px;color:#e8d8c8}.bkSub b{color:#ffd2a0}
 .bkFoot{display:flex;justify-content:space-between;gap:10px;margin-top:6px;font:600 12px var(--f-mono);color:var(--muted)}
+/* credits (12l-credits.js): a slow roll over the title backdrop */
+#scrCredits{display:block;padding:0;background:linear-gradient(90deg,rgba(4,5,8,.92) 0%,rgba(4,5,8,.78) 30%,rgba(4,5,8,.78) 70%,rgba(4,5,8,.92) 100%)}
+#scrCredits[hidden]{display:none}
+.crView{position:absolute;inset:0;overflow:hidden;-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 14%,#000 84%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 14%,#000 84%,transparent 100%)}
+.crRoll{position:absolute;left:50%;top:0;width:min(640px,calc(100vw - 32px));transform:translate(-50%,100vh);text-align:center;will-change:transform}
+.crLogo{width:min(520px,86%);display:block;margin:0 auto 14px}
+.crSub{font:600 15px var(--f-kdisp);color:var(--muted);letter-spacing:.04em;margin-bottom:120px}
+.crSec{margin:0 0 88px}
+.crSec h3{font:700 12px var(--f-mono);letter-spacing:.32em;color:var(--amber);margin:0 0 22px;text-transform:uppercase}
+.crRow{margin:0 0 18px}
+.crRow .crR{display:block;font:600 13px var(--f-kdisp);color:var(--muted);margin-bottom:4px}
+.crRow .crN{display:block;font:800 26px var(--f-kdisp);color:var(--bone);line-height:1.25}
+.crRow .crN small{font:600 14px var(--f-kdisp);color:var(--muted);margin-left:8px}
+.crList{display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;text-align:left}
+.crList div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(255,255,255,.08);padding:6px 0;font:600 15px var(--f-kdisp);color:var(--bone)}
+.crList div span{color:var(--muted);font-weight:500;font-size:13px;white-space:nowrap}
+.crEnd{padding:60px 0 40vh}
+.crEnd b{display:block;font:900 34px var(--f-kdisp);color:var(--bone);letter-spacing:.12em}
+.crEnd span{display:block;margin-top:14px;font:600 16px var(--f-kdisp);color:#ffd48a}
+.crBar{position:absolute;right:28px;bottom:24px;display:flex;align-items:center;gap:16px;z-index:3}
+.crHint{font:600 13px var(--f-kdisp);color:var(--muted)}
+@media (max-width:700px){.crList{grid-template-columns:1fr}.crHint{display:none}.crRow .crN{font-size:22px}}
 </style>
 <div id="hud" hidden>
   <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="feed"></div><div id="aimPart" hidden></div><div id="postBar" hidden><i></i><span>자세</span></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="tutEquip" hidden></div><div id="tutEquipFx"></div><div id="lockWarn"><b>피격 경고</b></div>
@@ -1090,6 +1112,7 @@ body:not(.tutdock):not(.versus) #radioTxt{font-size:13.5px;line-height:1.38;disp
       <div class="mSub">
         <button class="mi ter" data-go="brief" type="button"><span class="t">조작 교본</span></button>
         <button class="mi ter" data-settings type="button"><span class="t">설정</span></button>
+        <button class="mi ter" data-go="credits" type="button"><span class="t">크레딧</span></button>
       </div>
     </nav>
   </div>
@@ -1261,6 +1284,12 @@ body:not(.tutdock):not(.versus) #radioTxt{font-size:13.5px;line-height:1.38;disp
 </section>
 
 <!-- ranking -->
+<!-- credits -->
+<section class="screen" id="scrCredits" hidden aria-label="크레딧">
+  <div class="crView" id="crView"><div class="crRoll" id="crRoll"></div></div>
+  <div class="crBar"><span class="crHint">마우스 휠 · ↑↓ 빨리 넘기기</span><button class="btn" type="button" data-go="title">돌아가기 <kbd>Esc</kbd></button></div>
+</section>
+
 <section class="screen shade" id="scrRank" hidden>
   <div class="console">
     <div class="frame pane">
