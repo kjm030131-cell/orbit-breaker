@@ -27,7 +27,7 @@ const barrierGeo=new THREE.IcosahedronGeometry(3.6,2);
 const barrier=new THREE.Mesh(barrierGeo,new THREE.MeshBasicMaterial({color:0x8dff7a,wireframe:true,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));
 barrier.visible=false;scene.add(barrier);
 /* option unit models (user assets 10/29, models/u_*.glb): wrapper +Z = the unit's front, longest side = size (world units) */
-const UNIT_GLTF={},UNIT_MDL={mega:{size:3.6,ry:0},missile:{size:1.5,ry:0},pods:{size:1.7,ry:Math.PI/2},shield:{size:2.1,ry:Math.PI/2}};
+const UNIT_GLTF={},UNIT_MDL={mega:{size:3.2,ry:0},missile:{size:1.3,ry:0},pods:{size:1.5,ry:Math.PI/2},shield:{size:1.35,ry:Math.PI/2}};
 function unitModel(kind){const g=UNIT_GLTF[kind],d=UNIT_MDL[kind];if(!g||!d)return null;const o=g.scene.clone(true);o.traverse(m=>{if(m.isMesh){m.material=m.material.clone();m.material.envMap=ENV;m.material.envMapIntensity=.9;m.castShadow=false}});
   o.rotation.y=d.ry;o.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(o),sz=box.getSize(new V3()),c=box.getCenter(new V3()),k=d.size/Math.max(sz.x,sz.y,sz.z);
   o.scale.multiplyScalar(k);o.position.sub(c).multiplyScalar(k);const w=new THREE.Group();w.add(o);return w}
@@ -51,8 +51,8 @@ function stepBits(rdt,T){
   if(!BIT.g.visible)return;
   const f=new V3(Math.sin(S.face),0,Math.cos(S.face)),r=new V3(Math.cos(S.face),0,-Math.sin(S.face)),base=P.root.position;
   BIT.items.forEach((m,i)=>{let want;
-    if(BIT.kind==="missile"){want=base.clone().addScaledVector(r,-m.userData.side*1.05).addScaledVector(f,-.5).add(new V3(0,2.35,0));m.position.copy(want);m.rotation.set(0,S.face,0);return}
-    if(BIT.kind==="mega"){want=base.clone().addScaledVector(r,-1.05).addScaledVector(f,-.35).add(new V3(0,2.55,0));m.position.copy(want);m.lookAt(want.clone().add(G.mega?aimDir():f));return} // shoulder cannon: follows the beam while firing
+    if(BIT.kind==="missile"){want=base.clone().addScaledVector(r,-m.userData.side*1.0).addScaledVector(f,-.45).add(new V3(0,1.45,0));m.position.copy(want);m.rotation.set(0,S.face,0);return}
+    if(BIT.kind==="mega"){want=base.clone().addScaledVector(r,-1.15).addScaledVector(f,-.25).add(new V3(0,1.25,0));m.position.copy(want);m.lookAt(want.clone().add(G.mega?aimDir():f));return} // shoulder cannon: follows the beam while firing
     if(BIT.kind==="pods"){m.visible=G.podsOut<=0;const a=T*1.3+i*2.094;want=base.clone().addScaledVector(r,(i-1)*2.4+Math.cos(a)*.3).addScaledVector(f,-.8+Math.sin(a)*.3).add(new V3(0,3+(i===1?.6:0)+Math.sin(a*1.7)*.25,0))}
     else{const a=T*(G.barrier>0||G.cfield>0?5:1.1)+i*2.094,R=G.barrier>0||G.cfield>0?3.3:2;want=base.clone().addScaledVector(r,Math.cos(a)*R).addScaledVector(f,Math.sin(a)*R).add(new V3(0,1.2+Math.sin(a*2)*.3,0))}
     m.position.lerp(want,1-Math.pow(.0005,rdt));
