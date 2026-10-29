@@ -96,13 +96,13 @@ UI.key=function(e){
   }else if(e.code==="Escape"){if(SCREEN!=="play"&&SCREEN!=="launch")sfx("uiback");
     if(SCREEN==="form"||SCREEN==="rank"||SCREEN==="credits")show("title");
     else if(SCREEN==="duel")duelBack();
-    else if(SCREEN==="load")show("form");
+    else if(SCREEN==="load")$("loadBack").click();
     else if(SCREEN==="brief")show(briefMode==="launch"?"load":"title");
     else if(SCREEN==="result")show("title");
   }else if(e.code==="Enter"){
     if(SCREEN==="brief"&&briefMode==="launch"){e.preventDefault();launch()}
     else if(SCREEN==="load"&&document.activeElement!==$("loadBack")){e.preventDefault();$("loadGo").click()}
-    else if(SCREEN==="result"&&!$("againBtn").disabled&&document.activeElement!==$("againBtn")){e.preventDefault();$("againBtn").click()}
+    else if(SCREEN==="result"&&!$("againBtn").disabled&&document.activeElement!==$("againBtn")&&document.activeElement!==$("againLoadBtn")){e.preventDefault();$("againBtn").click()}
   }
 };
 
@@ -143,8 +143,9 @@ function renderUnits(){renderFrames();
 }
 function pickUnit(k){if(!UNITS[k])return;if(k!==G.unit)sfx("ui");G.unit=k;buildBits(k);renderUnits();$("loadGo").focus()}
 $("units").addEventListener("click",e=>{const b=e.target.closest("[data-unit]");if(b)pickUnit(b.dataset.unit)});
-$("loadGo").addEventListener("click",()=>{sfx("uiok");PILOT.unit=G.unit;PILOT.frame=P?P.frame:"mk2";briefMode="launch";show("brief")});
-$("loadBack").addEventListener("click",()=>{sfx("uiback");show("form")});
+let RELOAD=false; /* set by "장비 바꿔 재출격" on the result screen */
+$("loadGo").addEventListener("click",()=>{sfx("uiok");PILOT.unit=G.unit;PILOT.frame=P?P.frame:"mk2";if(RELOAD){RELOAD=false;launch();return}briefMode="launch";show("brief")});
+$("loadBack").addEventListener("click",()=>{sfx("uiback");if(RELOAD){RELOAD=false;show("result");return}show("form")});
 
 /* ================= launch / finish ================= */
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
@@ -198,11 +199,14 @@ function finishRun(reason){
   $("rDebrief").innerHTML='<span class="who">이클립스 CIC · 최지우 중위</span>'+debriefLine(lost,score);
   $("rSortie").textContent=`출격 ${rec.attempts} / ${MAX_SORTIE}`;
   const left=MAX_SORTIE-rec.attempts,ag=$("againBtn");ag.disabled=left<=0;ag.hidden=false; /* like before: "재출격 · n회 남음", or a disabled "출격 횟수 소진" */
-  ag.firstChild.textContent=left>0?`재출격 · ${left}회 남음 `:"출격 횟수 소진 ";
+  ag.firstChild.textContent=left>0?`재출격 · ${left}회 남음 `:"출격 횟수 소진 ";$("againLoadBtn").hidden=left<=0;
   show("result");renderBoards();updateRankLine();setTimeout(()=>(left>0?ag:document.querySelector("#scrResult [data-go]")).focus(),120);
 }
 $("launchBtn").addEventListener("click",launch);
 $("briefBack").addEventListener("click",()=>show(briefMode==="launch"?"load":"title"));
+// re-sortie with a different option unit: the loadout screen, then straight to launch (no briefing again)
+$("againLoadBtn").addEventListener("click",()=>{if(!PILOT.rec||PILOT.rec.attempts>=MAX_SORTIE)return;sfx("uiok");RELOAD=true;show("load")});
+addEventListener("keydown",e=>{if(e.code==="KeyU"&&SCREEN==="result"&&!$("againLoadBtn").hidden&&!(e.target&&e.target.tagName==="INPUT")){e.preventDefault();$("againLoadBtn").click()}});
 $("againBtn").addEventListener("click",()=>{if(DEV.retry){DEV.retry=false;devLaunch(false);return}if(DUELDONE){DUELDONE=false;show("duel");return}if(PILOT.rec&&PILOT.rec.attempts<MAX_SORTIE)launch()});
 
 /* ================= HUD ================= */

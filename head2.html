@@ -525,7 +525,7 @@ body{font-weight:500;letter-spacing:-.01em;font-feature-settings:"tnum" 1}
 /* briefing rules: the number column fits "120초" (28px made it run into the text) */
 .rules li{grid-template-columns:72px 1fr;gap:12px}
 #scrBrief .rules li{grid-template-columns:58px 1fr}
-#againBtn[hidden]{display:none}
+#againBtn[hidden],#againLoadBtn[hidden]{display:none}
 
 #radio{min-width:0!important;width:min(620px,58vw);max-width:min(620px,58vw)}
 .hud.tl{width:230px}.hud.tl .comboBox,.hud.tl .cleanBox,.hud.tl .tbar{width:100%}
@@ -1273,6 +1273,7 @@ body:not(.tutdock):not(.versus) #radioTxt{font-size:13.5px;line-height:1.38;disp
       <div class="debrief" id="rDebrief"></div>
       <div class="btns" style="margin-top:18px">
         <button class="btn primary" type="button" id="againBtn">재출격 <kbd>Enter</kbd></button>
+        <button class="btn" type="button" id="againLoadBtn" hidden>장비 바꿔 재출격 <kbd>U</kbd></button>
         <button class="btn" type="button" data-go="title">메인으로 <kbd>Esc</kbd></button>
       </div>
     </div>

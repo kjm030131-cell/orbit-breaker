@@ -11,7 +11,7 @@ async function devLaunch(cine){if(!P||TUT.on||VS)return;DEV.run=true;lock();rest
 function devFinish(lost){DEV.run=false;DEV.retry=true;resultMode(false);const score=S.score;
   $("rScore").textContent=score.toLocaleString();$("rGrade").hidden=true;$("rPb").innerHTML=`<span class="note">개발자 모드 · 기록 안 됨${lost?" · 기체 대파":""}</span>`;
   $("rDebrief").innerHTML='<span class="who">DEV</span>순위·출격 횟수에 반영되지 않았어요.';$("rSortie").textContent="DEV";
-  const ag=$("againBtn");ag.hidden=false;ag.disabled=false;ag.firstChild.textContent="재출격 (DEV) ";music(null);sfx("end");show("result");setTimeout(()=>ag.focus(),120)}
+  const ag=$("againBtn");ag.hidden=false;ag.disabled=false;$("againLoadBtn").hidden=true;ag.firstChild.textContent="재출격 (DEV) ";music(null);sfx("end");show("result");setTimeout(()=>ag.focus(),120)}
 if(DEV.on){
   const p=document.createElement("div");p.id="devPanel";
   p.innerHTML=`<style>

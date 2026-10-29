@@ -58,7 +58,7 @@ function duelFinish(lost,bonus,rate){DUEL.lost=lost;DUELDONE=true;$("duelBar").h
   music(null);sfx("end");duelTick();
   $("rScore").textContent=S.score.toLocaleString();$("rKills").textContent=S.kills||0;$("rCombo").textContent=G.maxKC;$("rChain").textContent=S.best;$("rBest").textContent="—";
   $("rSortie").textContent="1:1 SHOWDOWN · 비순위";$("rDebrief").innerHTML="";
-  const ag=$("againBtn");ag.disabled=false;ag.hidden=false;ag.firstChild.textContent="쇼다운 로비로 ";
+  const ag=$("againBtn");ag.disabled=false;ag.hidden=false;$("againLoadBtn").hidden=true;ag.firstChild.textContent="쇼다운 로비로 ";
   duelResult();show("result");setTimeout(()=>ag.focus(),120)}
 function duelResult(){if(!DUEL)return;const me=S.score,op=DUEL.oppScore,oDone=["done","lost","left"].includes(DUEL.oppState);
   const head=!oDone?`<span class="note">상대(${esc(DUEL.oppName)}) 아직 비행 중 · 현재 ${op.toLocaleString()}점</span>`:
