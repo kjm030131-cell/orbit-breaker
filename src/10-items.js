@@ -65,9 +65,10 @@ const crateGeo=new THREE.BoxGeometry(3,3,3),crateEdges=new THREE.EdgesGeometry(c
 const beamGeo=new THREE.CylinderGeometry(.35,.35,60,8,1,true);
 function dropCrate(item){
   const g=new THREE.Group(),pos=S.pos.clone().addScaledVector(fwd(),34).add(new V3(0,4,0));
+  let bc;if(CRATE_GLTF)bc=crateMesh(g,0x8dff7a);else{
   g.add(new THREE.Mesh(crateGeo,new THREE.MeshStandardMaterial({color:0x2a2e33,metalness:.6,roughness:.5,envMap:ENV,emissive:0x0a1a08})));
   g.add(new THREE.LineSegments(crateEdges,new THREE.LineBasicMaterial({color:0x8dff7a})));
-  const bc=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0x8dff7a,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));bc.scale.set(7,7,1);g.add(bc);
+  bc=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0x8dff7a,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));bc.scale.set(7,7,1);g.add(bc)}
   const beam=new THREE.Mesh(beamGeo,new THREE.MeshBasicMaterial({color:0x8dff7a,transparent:true,opacity:.18,blending:THREE.AdditiveBlending,depthWrite:false}));beam.position.y=30;g.add(beam);
   g.position.copy(pos);scene.add(g);
   G.crates.push({g,bc,item,t:0,life:22});

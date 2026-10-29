@@ -75,10 +75,14 @@ function formAI(e,dt,T){const em=e.m,F=e.form,eye=em.userData.eye;e.phase+=dt;
 
 /* ---- supply crate ---- */
 const CRATE_GEO=new THREE.BoxGeometry(3.6,2.4,2.4);
-function spawnCrate(pos){const g=new THREE.Group();const mat=new THREE.MeshStandardMaterial({color:0xd8a040,metalness:.5,roughness:.45,envMap:ENV,emissive:0x000000});
-  const m=new THREE.Mesh(CRATE_GEO,mat);g.add(m);g.userData.mat=mat;
-  const edge=new THREE.LineSegments(new THREE.EdgesGeometry(CRATE_GEO),new THREE.LineBasicMaterial({color:0xffd070,transparent:true,opacity:.9}));g.add(edge);
-  const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:0x7dff8a,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));glow.scale.setScalar(7);g.add(glow);g.userData.glow=glow;
+// models/crate.glb (user asset, 10/29) when loaded: longest side CRATE_S world units, centred; otherwise the plain box
+let CRATE_GLTF=null;const CRATE_S=5.2;
+function crateMesh(g,glowC){if(CRATE_GLTF){const o=CRATE_GLTF.scene.clone(true);let mat=null;o.traverse(m=>{if(m.isMesh){m.material=m.material.clone();m.material.envMap=ENV;m.material.envMapIntensity=.9;m.material.emissive=new THREE.Color(0);if(!mat)mat=m.material}});
+    o.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(o),sz=box.getSize(new V3()),c=box.getCenter(new V3()),k=CRATE_S/Math.max(sz.x,sz.y,sz.z);o.scale.multiplyScalar(k);o.position.sub(c).multiplyScalar(k);g.add(o);g.userData.mat=mat}
+  else{const mat=new THREE.MeshStandardMaterial({color:0xd8a040,metalness:.5,roughness:.45,envMap:ENV,emissive:0x000000});g.add(new THREE.Mesh(CRATE_GEO,mat));g.userData.mat=mat;
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(CRATE_GEO),new THREE.LineBasicMaterial({color:0xffd070,transparent:true,opacity:.9})))}
+  const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:TX.glow,color:glowC,transparent:true,opacity:.6,blending:THREE.AdditiveBlending,depthWrite:false}));glow.scale.setScalar(CRATE_GLTF?9:7);g.add(glow);g.userData.glow=glow;return glow}
+function spawnCrate(pos){const g=new THREE.Group();crateMesh(g,0xa070ff);
   const e=foeAdd(g,pos,{crate:true,rad:3.4,life:20});popText("보급 컨테이너 · 부수면 중력탄 획득");return e}
 function crateAI(e,dt,T){const em=e.m;e.phase+=dt;em.rotation.y+=dt*.6;em.rotation.x=Math.sin(e.phase*.7)*.2;em.position.y+=Math.sin(e.phase*1.2)*dt*.6;
   const gl=em.userData.glow;if(gl)gl.material.opacity=.4+.3*Math.sin(T*5);
