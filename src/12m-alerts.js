@@ -23,7 +23,7 @@ function bossCineCam(rdt){BCINE.t+=rdt;const b=BOSS.e,t=BCINE.t;if(!b||S.ended||
   const want=S.pos.clone().addScaledVector(dir,-14+e*5).addScaledVector(side,4).add(new V3(0,5,0));
   camera.position.lerp(want,1-Math.pow(.002,rdt));camera.lookAt(bp.clone().lerp(S.pos,.08));
   const fv=BCINE.fov0-14*e;if(Math.abs(camera.fov-fv)>.05){camera.fov=fv;camera.updateProjectionMatrix()}}
-["keydown","mousedown"].forEach(ev=>addEventListener(ev,e=>{if(!BCINE.on||BCINE.t<2.2)return;if(ev==="keydown"&&!["Space","Enter","Escape"].includes(e.code))return;e.preventDefault();e.stopImmediatePropagation();bossCineEnd()},{capture:true}));
+["keydown","mousedown"].forEach(ev=>addEventListener(ev,e=>{if(!BCINE.on||BCINE.t<2.2)return;if(ev==="keydown"&&!["Space","Enter"].includes(e.code))return;e.preventDefault();e.stopImmediatePropagation();bossCineEnd()},{capture:true}));
 
 // ---- edge / on-screen markers ----
 const ALR={els:[],box:null,v:new V3(),run:null,kamiSaid:false,downMax:5};
@@ -38,7 +38,7 @@ function alertsTick(){requestAnimationFrame(alertsTick);
     if(e.isWP&&!(BOSS.e&&BOSS.e.down>0))list.push({p:e.m.position,k:"wp",t:"약점"});
     else if(e.kami&&e.launched<=0)list.push({p:e.m.position,k:"kami",t:"자폭"})}
   // first kamikaze drone of the sortie: one clear warning
-  if(!ALR.kamiSaid&&list.some(x=>x.k==="kami")){ALR.kamiSaid=true;cutin("자폭 드론 접근","붉게 깜빡이며 돌진 · 가까이 오기 전에 쏴서 터뜨리세요");S.slow=Math.max(S.slow,.9);popText("화면 가장자리 붉은 화살표 = 자폭 드론이 오는 방향")}
+  if(!ALR.kamiSaid&&!BCINE.on&&list.some(x=>x.k==="kami")){ALR.kamiSaid=true;cutin("자폭 드론 접근","붉게 깜빡이며 돌진 · 가까이 오기 전에 쏴서 터뜨리세요");S.slow=Math.max(S.slow,.9);popText("화면 가장자리 붉은 화살표 = 자폭 드론이 오는 방향")}
   const W=innerWidth,H=innerHeight,cx=W/2,cy=H*.46,rx=W/2-70,ry=H/2-90;let n=0;
   list.sort((a,b)=>a.p.distanceTo(S.pos)-b.p.distanceTo(S.pos));
   for(const x of list){if(n>=ALR.els.length)break;const d=x.p.distanceTo(S.pos);if(x.k==="kami"&&d>140)continue;

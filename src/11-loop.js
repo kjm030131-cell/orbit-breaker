@@ -19,7 +19,7 @@ function update(rdt){
   if(S.demo){S.demoT+=rdt;S.yaw=Math.sin(S.demoT*.15)*.9+Math.PI*.15;titleYaw()}
   else if(VS&&G.focus&&SCREEN==="play"){vsFocusCamera(rdt)}
   else if(G.focus&&SCREEN==="play"&&targetable(G.focus)){focusCamera(rdt)}
-  else if(!locked&&!VS){if(Math.abs(mouseX)>.25)S.yaw-=Math.sign(mouseX)*(Math.abs(mouseX)-.25)*1.8*rdt}
+  else if(!locked&&!VS&&SCREEN!=="play"){if(Math.abs(mouseX)>.25)S.yaw-=Math.sign(mouseX)*(Math.abs(mouseX)-.25)*1.8*rdt}
   tutFrame(dt);
   if(!VS&&!TUT.on&&S.started&&!S.ended&&SCREEN==="play"){if(!DEV.notime)S.time-=dt;const sc=Math.ceil(S.time);if(sc!==S.lastSec){S.lastSec=sc;if(sc<=10&&sc>0)sfx("tickLow",null,sc);if(!DUEL){if(sc===30)radio("이클립스 CIC · 최지우 중위","추진제 30초 남았습니다. 전력으로 몰아붙이세요.","vo_op27");if(sc===10)radio("이클립스 CIC · 최지우 중위","추진제 한계입니다! 10초 후 강제 귀환합니다.","vo_op28");if(sc===118)radio("이클립스 함장 · 이진태 대령","전 기체 전투 배치. 적 편대, 헬리오스 방위선으로 진입한다.","vo_cap01")}}if(S.time<30&&MUS.inten===0&&MUS.track==="battle"){MUS.inten=1;MUS.bpm=150}if(S.time<=0){S.time=0;finishRun()}}
 
@@ -175,7 +175,7 @@ function perfWatch(rdt){if(QUALITY!=="auto"||document.hidden||rdt>.25||QLEVEL===
   PERF.ema+=(rdt-PERF.ema)*.05;if(PERF.ema>1/45)PERF.slow+=rdt;else PERF.slow=Math.max(0,PERF.slow-rdt*.5);
   if(PERF.slow>2.5){QLEVEL=QLEVEL==="high"?"mid":"low";PERF.slow=0;PERF.ema=1/60;try{localStorage.setItem("ob.qauto",QLEVEL)}catch(e){}
     applyQuality();if(SCREEN==="play")popText("화질 자동 조정 · "+QL[QLEVEL].name)}}
-function frame(){const rdt=clock.getDelta();try{if(!PAUSED||VS)update(rdt)}catch(err){console.error(err)}
+function frame(){const rdt=clock.getDelta();try{if(!PAUSED||VS)update(rdt)}catch(err){console.error(err);const L=window.ARC_ERR=window.ARC_ERR||[];if(L.length<50)L.push(String(err&&err.stack||err).slice(0,400));if(L.length===1&&typeof DEV!=="undefined"&&DEV.on)try{popText("오류 발생 · 콘솔 확인 (ARC_ERR)")}catch(_){}}
   if(useBloom())composer.render();else renderer.render(scene,camera);perfWatch(rdt);perfHud(rdt);requestAnimationFrame(frame)}
 addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();applyQuality()});
 document.querySelectorAll("[data-quality]").forEach(b=>b.addEventListener("click",()=>{const o=["auto","high","mid","low"];setQuality(o[(o.indexOf(QUALITY)+1)%4]);sfx("ui")}));setTimeout(applyQuality,0);
