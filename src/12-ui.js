@@ -1,5 +1,5 @@
 /* ================= records (shared db, local fallback) ================= */
-const MAX_SORTIE=1,LS_KEY="orbitbreaker.players.v1";
+const MAX_SORTIE=3,LS_KEY="orbitbreaker.players.v1";
 let DB=null,BOARD=[];
 // SERVER: the deployed build talks to the Cloudflare ranking API (authoritative sortie count + best score)
 let SERVER=false,RUN=null,MYRANK=null,TOTAL=0;
@@ -124,7 +124,7 @@ $("pilotForm").addEventListener("submit",async e=>{
   if(!/^\d{8,10}$/.test(sid)){fSid.focus();return err("학번은 숫자 8~10자리로 입력하세요.")}
   err("");$("fGo").disabled=true;const rec=await getRec(sid);$("fGo").disabled=false;
   if(rec&&rec.name&&rec.name!==name)return err(`이 학번은 '${rec.name}' 이름으로 등록돼 있습니다. 학번을 다시 확인하세요.`);
-  if(rec&&(rec.attempts||0)>=MAX_SORTIE)return err("이 학번은 이미 출격했습니다. 출격은 학번당 한 번이에요.");
+  if(rec&&(rec.attempts||0)>=MAX_SORTIE)return err("이 학번은 출격 3회를 모두 사용했습니다.");
   Object.assign(PILOT,{name,dept,sid,rec:rec||{name,dept,sid,best:0,attempts:0,chain:0,kills:0}});
   if(rec&&rec.unit&&UNITS[rec.unit])G.unit=rec.unit;
   sfx("uiok");show("load");
@@ -162,7 +162,7 @@ async function launch(){
   show("launch");
   await playCatapult();
   show("play");S.started=true;launching=false;phaseBanner(PHASES[0]);sfx("phase");
-  setTimeout(()=>{if(SCREEN==="play"&&!S.ended&&!TUT.on)cutin("예비기 3기","3번 격추되면 작전 종료 · 기회는 이번 한 번")},2600);
+  setTimeout(()=>{if(SCREEN==="play"&&!S.ended&&!TUT.on)cutin("예비기 3기","3번 격추되면 이번 출격 종료")},2600);
 }
 function debriefLine(lost,score){const n=S.kills||0;
   if(lost)return `우리엘 1, 기체 반응 소실… 회수정 보냈어요. 오늘 밤 서울 하늘엔 유성이 ${n}개. 다음엔 조준선 깜빡임을 놓치지 마세요.`;

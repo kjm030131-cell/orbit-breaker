@@ -37,20 +37,19 @@ T('admin needs the right key (and a configured key)',async()=>{
   assert.equal((await call('GET','admin/overview')).status,200);
 });
 
-T('one sortie per student id: a refunded delete lets them fly again, restore brings the run back',async()=>{
+T('deleting a single run recomputes best, optionally refunds the sortie, and can be restored',async()=>{
   const DB=d1(),call=client(DB);
-  await play(DB,call,'20260001','가',1000);
-  assert.equal((await play(DB,call,'20260001','가',9999)).status,403); // 2nd sortie refused
-  let o=(await call('GET','admin/overview')).j;assert.equal(o.players[0].best,1000);assert.equal(o.players[0].attempts,1);assert.equal(o.players[0].runs,1);
-  const run=(await call('GET','admin/runs?sid=20260001')).j.runs[0];
-  assert.equal((await call('POST','admin/run/delete',{id:run.id,refund:true})).status,200);
-  o=(await call('GET','admin/overview')).j;assert.equal(o.players[0].best,0);assert.equal(o.players[0].attempts,0);
-  await play(DB,call,'20260001','가',5000);
-  o=(await call('GET','admin/overview')).j;assert.equal(o.players[0].best,5000);assert.equal(o.players[0].attempts,1);
-  const board=(await onRequest({request:new Request('https://x/api/board'),env:{DB},params:{route:['board']}}));assert.equal((await board.json()).rows[0].best,5000);
+  await play(DB,call,'20260001','가',1000);await play(DB,call,'20260001','가',5000);await play(DB,call,'20260001','가',3000);
+  assert.equal((await play(DB,call,'20260001','가',9999)).status,403); // 4th sortie refused
+  let o=(await call('GET','admin/overview')).j;assert.equal(o.players[0].best,5000);assert.equal(o.players[0].attempts,3);assert.equal(o.players[0].runs,3);
+  const runs=(await call('GET','admin/runs?sid=20260001')).j.runs;assert.equal(runs.length,3);
+  const top=runs.find(r=>r.score===5000);
+  assert.equal((await call('POST','admin/run/delete',{id:top.id,refund:true})).status,200);
+  o=(await call('GET','admin/overview')).j;assert.equal(o.players[0].best,3000);assert.equal(o.players[0].attempts,2);
+  const board=(await onRequest({request:new Request('https://x/api/board'),env:{DB},params:{route:['board']}}));assert.equal((await board.json()).rows[0].best,3000);
   const bk=(await call('GET','admin/backups')).j.backups;assert.equal(bk[0].kind,'run');
   assert.equal((await call('POST','admin/restore',{id:bk[0].id})).status,200);
-  o=(await call('GET','admin/overview')).j;assert.equal(o.players[0].best,5000);assert.equal(o.players[0].attempts,1);assert.equal(o.players[0].runs,2);
+  o=(await call('GET','admin/overview')).j;assert.equal(o.players[0].best,5000);assert.equal(o.players[0].attempts,3);assert.equal(o.players[0].runs,3);
 });
 
 T('delete without refund keeps the sortie used; deleting the only scoring run drops the player off the board',async()=>{
