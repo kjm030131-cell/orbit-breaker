@@ -6,7 +6,7 @@ const stage=$("stage");
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
 // quality: high = DPR<=1.5 + full bloom, mid = DPR 1 + half-res bloom, low = DPR .75, no bloom.
 // "auto" starts from the last level this browser settled on and steps down when frames drop.
-const QL={high:{pr:1.5,bloom:1,name:"높음"},mid:{pr:1,bloom:.5,name:"중간"},low:{pr:.75,bloom:0,name:"낮음"}};
+const QL={high:{pr:1.5,bloom:.6,name:"높음"},mid:{pr:1,bloom:.5,name:"중간"},low:{pr:.75,bloom:0,name:"낮음"}};
 let QUALITY="auto",QLEVEL="high";try{QUALITY=localStorage.getItem("ob.quality")||"auto";QLEVEL=QUALITY==="auto"?(localStorage.getItem("ob.qauto")||"high"):QUALITY}catch(e){}
 if(!QL[QLEVEL])QLEVEL="high";
 renderer.setPixelRatio(Math.min(devicePixelRatio,QL[QLEVEL].pr));

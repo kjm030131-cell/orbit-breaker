@@ -27,13 +27,14 @@ function update(rdt){
   const boosting=(keys.ShiftLeft||keys.ShiftRight)&&S.boost>0&&acc.lengthSq()>0&&SCREEN==="play";
   // responsive handling: same top speeds as before (≈15 m/s cruise, ≈36 m/s boost) but reached in ~0.3 s, and the frame
   // brakes hard when the keys are released. Dodges / knockbacks set S.freeT so they keep their old, longer glide.
-  const moving=acc.lengthSq()>0;S.freeT=Math.max(0,(S.freeT||0)-dt);const drag=S.freeT>0?1.715:moving?2.6:4.2;
+  const moving=acc.lengthSq()>0;S.freeT=Math.max(0,(S.freeT||0)-dt);const drag=S.freeT>0?1.715:moving?4:6; /* 10/29: snappier — same top speeds, reached in ~0.25 s, stops in ~0.17 s */
   // 1:1 chase: boosting toward the opponent is 25% faster, so a retreating player can be run down
   let chase=1;if(VS&&boosting&&moving&&VS.remote){const to=VS.remote.root.position.clone().sub(S.pos),L=to.length();
     if(L>4&&keys.KeyW&&!keys.Space&&!keys.KeyC&&camFwd().dot(to.clone().normalize())>.82){chase=1.25;acc.y+=clamp(to.y/12,-1,1)} // looking at them + W: track their height
     else{const h=to.clone().setY(0),ah=acc.clone().setY(0);if(h.lengthSq()>1&&ah.lengthSq()>.01&&ah.normalize().dot(h.normalize())>.7)chase=1.25}}
   S.chase=chase>1;
-  if(moving)acc.normalize().multiplyScalar((boosting&&!S.guard?94*chase:39.5)*(VS?vsSpeed()*(S.guard?.45:1):1)*((G.mega&&G.mega.slow)||G.vsBeam?.6:1));
+  if(moving){acc.normalize();if(!boosting)acc.y*=1.45;} /* up/down (Space / C) without boost felt sluggish */
+  if(moving)acc.multiplyScalar((boosting&&!S.guard?145*chase:61)*(VS?vsSpeed()*(S.guard?.45:1):1)*((G.mega&&G.mega.slow)||G.vsBeam?.6:1));
   S.boost=clamp(S.boost+(boosting?-20:36*(VS?vsRegen():1))*dt,0,100);
   S.vel.addScaledVector(acc,dt);S.vel.multiplyScalar(Math.exp(-drag*dt));
   // buffered inputs: a click that lands up to ~0.2 s before the current swing / shot recovers fires as soon as it can

@@ -157,7 +157,7 @@ function tutPass(why){if(TUT.busy)return;TUT.busy=true;const s=TUT_STEPS[TUT.ste
   if(why){popText(why);sfx("ui")}else{sfx("specReady");popText("목표 달성");o.classList.add("ok")}
   setTimeout(()=>{TUT.busy=false;o.classList.remove("ok");if(TUT.on&&TUT_STEPS[TUT.step]===s)tutStep(TUT.step+1)},why?900:1500)}
 function tutFrame(dt){if(!TUT.on||SCREEN!=="play"||TUT.step<0){if(!$("tutKeys").hidden&&!TUT.on&&!VST.on){tutKeysSet(null);tutHl(null);$("tutMark").hidden=$("tutCue").hidden=true}return}
-  const s=TUT_STEPS[TUT.step];if(!s)return;TUT.t+=dt;TUT.dt=dt;
+  const s=TUT_STEPS[TUT.step];if(!s)return;TUT.t+=dt;TUT.dt=dt;G.unitCd=0; /* no option-unit cooldown anywhere in the tutorial */
   if(s.tick)s.tick();tutKeep(s,dt);tutText(s);tutMarkTick(s);if(!TUT.busy)tutCueTick(s);
   if(s.prog){const v=s.prog();if(v!==TUT.lastProg){TUT.lastProg=v;$("tutObjProg").textContent=v}}
   if(TUT.wp&&TUT.wp.visible){TUT.wp.userData.ring.lookAt(camera.position);TUT.wp.userData.ring.scale.setScalar(1+Math.sin(TUT.t*4)*.08)}

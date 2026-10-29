@@ -19,7 +19,12 @@ glb("enemy","ENEMY_GLB_B64",g=>{buildEnemyTemplate(g);for(const e of enemies)dis
 glb("mech","MECH_GLB_B64",g=>{FRAMES.mk2.gltf=g;FRAMES.mk2.obj=P=buildPlayer(g,"mk2");scene.add(P.root);okLoad()});
 // boss + weak-point pod models (deployed build only; without them the boss falls back to the procedural hulk)
 setTimeout(()=>voPreload(INTRO_LINES.map(L=>L.vo)),4000); // opening narration ready before the tutorial is clicked
-if(window.GLB_BASE)setTimeout(()=>{glb("boss","",g=>{BOSS_GLTF=g});glb("boss_pod","",g=>{POD_GLTF=g});glb("crate","",g=>{CRATE_GLTF=g});for(const k of ["mega","missile","pods","shield"])glb("u_"+k,"",g=>{UNIT_GLTF[k]=g;if(BIT.kind===k)buildBits(k)})},2500);
+// late models: compile their shaders right away (one hidden frame in front of the camera) so the first boss / crate / unit
+// appearance mid-fight does not stall the frame while WebGL builds programs
+function prewarm(build){try{const o=build();if(!o)return;const g=new THREE.Group();g.add(o);g.position.copy(camera.position).addScaledVector(camFwd(),30);scene.add(g);renderer.compile(scene,camera);scene.remove(g)}catch(e){console.warn("prewarm",e)}}
+if(window.GLB_BASE)setTimeout(()=>{glb("boss","",g=>{BOSS_GLTF=g;prewarm(()=>{const h=new THREE.Group();bossBuildModel(h);return h})});glb("boss_pod","",g=>{POD_GLTF=g;prewarm(()=>{const h=new THREE.Group();podBuild(h);return h})});
+  glb("crate","",g=>{CRATE_GLTF=g;prewarm(()=>{const h=new THREE.Group();crateMesh(h,0xa070ff);return h})});
+  for(const k of ["mega","missile","pods","shield"])glb("u_"+k,"",g=>{UNIT_GLTF[k]=g;if(BIT.kind===k)buildBits(k);prewarm(()=>unitModel(k))})},2500);
 frame();
 
 /* ================= installable app (Chrome / Edge) ================= */

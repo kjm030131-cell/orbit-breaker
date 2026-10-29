@@ -162,6 +162,7 @@ async function launch(){
   show("launch");
   await playCatapult();
   show("play");S.started=true;launching=false;phaseBanner(PHASES[0]);sfx("phase");
+  setTimeout(()=>{if(SCREEN==="play"&&!S.ended&&!TUT.on)cutin("예비기 3기","3번 격추되면 작전 종료 · 기회는 이번 한 번")},2600);
 }
 function debriefLine(lost,score){const n=S.kills||0;
   if(lost)return `우리엘 1, 기체 반응 소실… 회수정 보냈어요. 오늘 밤 서울 하늘엔 유성이 ${n}개. 다음엔 조준선 깜빡임을 놓치지 마세요.`;

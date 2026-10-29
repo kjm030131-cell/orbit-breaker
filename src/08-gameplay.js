@@ -157,7 +157,7 @@ function dodge(){
     if(vsCanAct()&&S.over<=0&&S.boost>=20&&(G.dodgeCd>0||S.attackCd>0||S.shotCd>0)){S.buf="d";S.bufT=.25;return} // pressed during recovery: dodge as soon as it opens
     if(!vsCanAct()||S.over>0||G.dodgeCd>0||S.attackCd>0||S.shotCd>0||S.boost<20)return;
     G.dodgeCd=.65;S.boost-=20;G.iframe=Math.max(G.iframe,.18);const d=new V3(),f=fwd(),r=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw));
-    if(keys.KeyW)d.add(f);if(keys.KeyS)d.sub(f);if(keys.KeyA)d.add(r);if(keys.KeyD)d.sub(r);if(keys.Space)d.y+=1;if(keys.KeyC)d.y-=1;if(!d.lengthSq())d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(72));S.freeT=.32;vsSend({t:"dodge"});sfx("dodge");return;
+    if(keys.KeyW)d.add(f);if(keys.KeyS)d.sub(f);if(keys.KeyA)d.add(r);if(keys.KeyD)d.sub(r);if(keys.Space)d.y+=1;if(keys.KeyC)d.y-=1;if(!d.lengthSq())d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(63));S.freeT=.3;vsSend({t:"dodge"});sfx("dodge");return;
   }
   if(SCREEN==="play"&&!S.ended&&!PAUSED&&G.stagger>0&&G.dead<=0&&!G.broke){ // stagger break-out
     if(S.boost<BREAK_COST){popText("부스트 부족 · 경직 풀기 불가");sfx("deny");return}
@@ -168,7 +168,7 @@ function dodge(){
   G.dodgeCd=.4;S.boost-=12;G.iframe=Math.max(G.iframe,.22);
   const f=fwd(),r=new V3(Math.cos(S.yaw),0,-Math.sin(S.yaw)),d=new V3();
   if(keys.KeyW)d.add(f);if(keys.KeyS)d.sub(f);if(keys.KeyA)d.add(r);if(keys.KeyD)d.sub(r);if(keys.Space)d.y+=1;if(keys.KeyC)d.y-=1;
-  if(d.lengthSq()===0)d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(72));S.freeT=.32;sfx("dodge");tutCount("dodge");
+  if(d.lengthSq()===0)d.copy(r).negate();d.normalize();bodyDodge(d);S.vel.copy(d.multiplyScalar(63));S.freeT=.3;sfx("dodge"); /* 72 → 63: a slightly shorter quick dodge */tutCount("dodge");
   for(let i=0;i<10;i++){const k=i/10;emit(ADD,{pos:S.pos.clone().addScaledVector(d,-k*6/72).add(new V3(0,.8,0)),tex:TX.streak,color:0x7fe0ff,s0:5,s1:1,life:.25+k*.2,a:.45*(1-k)})}
   for(let i=0;i<6;i++)emit(ADD,{pos:S.pos.clone().add(new V3((Math.random()-.5)*1.5,Math.random()*2.5-.5,(Math.random()-.5)*1.5)),color:0x7fe0ff,s0:2,s1:.3,life:.35,a:.5});
   let just=false;
