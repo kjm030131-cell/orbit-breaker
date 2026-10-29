@@ -224,7 +224,7 @@ function schedStep(t,step){
 }
 /* ---- recorded BGM (bgm/*.mp3): a track listed here replaces the generative score once it has loaded;
    until then (or if loading fails, e.g. the artifact build) the generative score keeps playing ---- */
-const BGM={cur:null,src:null,gain:null,tracks:{title:{url:"bgm/title.mp3",vol:.62,buf:null,loading:false}}};
+const BGM={cur:null,src:null,gain:null,tracks:{title:{url:"bgm/title.mp3",vol:.62,buf:null,loading:false},battle:{url:"bgm/battle.mp3",vol:.55,buf:null,loading:false}}};
 // the mp3 bytes are fetched as soon as the page loads (before the first click unlocks audio), so decoding is the only wait
 function bgmFetch(e){if(!e.pre)e.pre=fetch(e.url).then(r=>{if(!r.ok)throw new Error(r.status);return r.arrayBuffer()});return e.pre}
 for(const k in BGM.tracks)bgmFetch(BGM.tracks[k]).catch(()=>{});
@@ -239,6 +239,7 @@ function musTick(){if(!AUD.ready||!MUS.track)return;{const e=BGM.tracks[MUS.trac
   if(MUS.next<AC.currentTime-.5)MUS.next=AC.currentTime+.05;
   while(MUS.next<AC.currentTime+.15){schedStep(MUS.next,MUS.step);MUS.step++;MUS.next+=60/MUS.bpm/4}}
 function music(track){if(!AUD.ready){MUS.want=track;return}if(MUS.track===track)return;
+  if(track==="title")setTimeout(()=>bgmLoad("battle"),4000);
   if(BGM.tracks[track]){if(bgmOn(track))bgmStart(track);else{bgmStop();bgmLoad(track)}}else bgmStop();
   MUS.track=track;MUS.step=0;MUS.next=AC.currentTime+.08;MUS.bpm=track==="battle"?138:76;MUS.inten=0;
   if(!MUS.timer)MUS.timer=setInterval(musTick,30)}
