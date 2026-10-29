@@ -14,7 +14,16 @@ let SENS=1;try{SENS=clamp(+localStorage.getItem("ob.sens")||1,.3,2.5)}catch(e){}
 function setSens(v){SENS=clamp(+v||1,.3,2.5);try{localStorage.setItem("ob.sens",SENS)}catch(e){}document.querySelectorAll(".sensIn").forEach(i=>{i.value=SENS});document.querySelectorAll(".sensV").forEach(s=>s.textContent=SENS.toFixed(2))}
 document.querySelectorAll(".sens").forEach(l=>{l.addEventListener("click",e=>e.stopPropagation());l.addEventListener("pointerdown",e=>e.stopPropagation())});
 document.querySelectorAll(".sensIn").forEach(i=>i.addEventListener("input",()=>setSens(i.value)));setSens(SENS);
-addEventListener("mousemove",e=>{if(SCREEN!=="play")return;if(locked){const fk=G.focus&&targetable(G.focus)?.35:1; /* while E-tracking the camera keeps pulling to the target; the mouse still nudges it */const mx=e.movementX,my=e.movementY;if(Math.abs(mx)>260||Math.abs(my)>260)return; /* Chrome pointer-lock spike */S.yaw-=clamp(mx,-120,120)*.0019*SENS*fk;S.pitch=clamp(S.pitch-clamp(my,-120,120)*.0015*SENS*fk,-.7,.5) /* 10/29: base mouse speed roughly halved (.0026 rad/count was ~0.15 deg per count — very twitchy, a motion-sickness source) */}else mouseX=(e.clientX/innerWidth-.5)*2});
+/* mouse look (10/29 19:20): events only add up counts; update() turns the camera once per frame (mouseLook). Applying each event
+   directly made the per-frame turn uneven (mouse report rate != frame rate: 2 events one frame, 3 the next) = small judder while turning.
+   Base speed .0025/.0019 rad/count (was .0019/.0015 — players found it too slow). Spike guard only for Chrome's huge bogus jumps. */
+const MLOOK={x:0,y:0};
+addEventListener("mousemove",e=>{if(SCREEN!=="play")return;if(locked){const mx=e.movementX,my=e.movementY;if(Math.abs(mx)>600||Math.abs(my)>600)return; /* Chrome pointer-lock spike */MLOOK.x+=clamp(mx,-300,300);MLOOK.y+=clamp(my,-300,300)}else mouseX=(e.clientX/innerWidth-.5)*2});
+// most of the pending counts go in this frame, the rest carries over (~10 ms smoothing): even steps without felt lag
+function mouseLook(rdt){if(!locked||SCREEN!=="play"){MLOOK.x=MLOOK.y=0;return}if(!MLOOK.x&&!MLOOK.y)return;
+  const k=rdt>=.05?1:1-Math.exp(-rdt/.01),mx=MLOOK.x*k,my=MLOOK.y*k;MLOOK.x-=mx;MLOOK.y-=my;if(Math.abs(MLOOK.x)<.01)MLOOK.x=0;if(Math.abs(MLOOK.y)<.01)MLOOK.y=0;
+  const fk=G.focus&&targetable(G.focus)?.35:1; /* while E-tracking the camera keeps pulling to the target; the mouse still nudges it */
+  S.yaw-=mx*.0025*SENS*fk;S.pitch=clamp(S.pitch-my*.0019*SENS*fk,-.7,.5)}
 document.addEventListener("pointerdown",()=>{const a=ac();if(a&&a.state!=="running")a.resume().catch(()=>{})});
 
 const UI={key(){}};

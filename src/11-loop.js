@@ -14,6 +14,7 @@ function update(rdt){
   if(VS){S.hitstop=Math.min(S.hitstop,.12);S.slow=Math.min(S.slow,.4)}
   if(S.hitstop>0){S.hitstop-=rdt;dt=0}else if(S.slow>0){S.slow-=rdt;dt*=.3}
   clockT+=rdt;const T=clock.elapsedTime;
+  if(!S.demo)mouseLook(rdt); // mouse counts gathered by the mousemove handler (04-input) turn the camera here, once per frame
   if(S.demo){S.demoT+=rdt;S.yaw=Math.sin(S.demoT*.15)*.9+Math.PI*.15;titleYaw()}
   else if(VS&&G.focus&&SCREEN==="play"){vsFocusCamera(rdt)}
   else if(G.focus&&SCREEN==="play"&&targetable(G.focus)){focusCamera(rdt)}
