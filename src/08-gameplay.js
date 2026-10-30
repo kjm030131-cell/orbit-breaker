@@ -143,7 +143,7 @@ function stepEBolts(dt){
     if(dt>0&&(!b.vsVisual||b.trailT<=0)){b.trailT=1/30;emit(ADD,{pos:b.g.position.clone().addScaledVector(b.dir,-1.6),color:b.color,s0:1.2,s1:.1,life:.16,a:b.dead?.25:.7});}
     if(b.vsVisual){}
     else if(!b.dead&&!b.refl&&SCREEN==="play"&&boltDefense(b)){}
-    else if(b.refl){if(b.home&&b.home.alive&&b.home.launched<=0){const to=b.home.m.position.clone().sub(b.g.position).normalize();b.dir.lerp(to,Math.min(1,dt*8)).normalize();b.g.lookAt(b.g.position.clone().add(b.dir))}for(const e of enemies){if(!targetable(e)||e.isBoss)continue;if(e.m.position.distanceTo(b.g.position)<3.2){if(e.isWP)wpDamage(e,2,b.g.position.clone());else{knock(e,b.dir,32,1.8);hitFlash(e);addScore(220,e.m.position.clone(),"cyan")}fxImpact(b.g.position,0x8dff7a);skillBlast(b.g.position.clone(),9,"shield",e);b.life=0;b.dead=true;break}}}
+    else if(b.refl){if(b.home&&b.home.alive&&b.home.launched<=0){const to=b.home.m.position.clone().sub(b.g.position).normalize();b.dir.lerp(to,Math.min(1,dt*8)).normalize();b.g.lookAt(b.g.position.clone().add(b.dir))}for(const e of enemies){if(!targetable(e)||e.isBoss)continue;if(e.m.position.distanceTo(b.g.position)<3.2){if(e.isWP)wpDamage(e,2,b.g.position.clone());else{knock(e,b.dir,32,1.8);hitFlash(e);addScore(220,e.m.position.clone(),"cyan")}fxImpact(b.g.position,0x8dff7a);skillBlast(b.g.position.clone(),6,"shield",e);b.life=0;b.dead=true;break}}}
     else if(!b.dead&&SCREEN==="play"){const c=S.pos.clone().add(new V3(0,.4,0));const seg=b.g.position.clone().sub(p0),L=seg.length()||1e-6;
       const tt=clamp(c.clone().sub(p0).dot(seg)/(L*L),0,1);const dd=p0.clone().addScaledVector(seg,tt).distanceTo(c);
       if(dd<2.3){if(G.iframe>0){b.dead=true}else{hurt(b);b.life=0}}}
@@ -160,7 +160,7 @@ function hurt(b){
   if(G.dead>0)return;
   fxImpact(S.pos.clone().add(new V3(0,.8,0)),0xff4030);sparks(S.pos,b.dir,0xffb080,20,.4,24);sfx("hurt");
   // HP system: armour points; a hit knocks you back and flashes, but never takes control away (10/29: stagger is 1:1 only)
-  const dmg=Math.round((b.dmg||(b.ram?34:24))*(G.cfield>0?.5:1));G.hp=Math.max(0,(G.hp??HP_MAX)-dmg);G.clean=0;G.hpT=0;if(G.kc>0){G.kc=0;G.kcT=0;comboBreak(true)}
+  const dmg=Math.round((b.dmg||(b.ram?34:24))*1);G.hp=Math.max(0,(G.hp??HP_MAX)-dmg);G.clean=0;G.hpT=0;if(G.kc>0){G.kc=0;G.kcT=0;comboBreak(true)}
   crackHit();
   if(G.hp>0){G.iframe=Math.max(G.iframe,.55);S.hitstop=Math.max(S.hitstop,.06);S.shake=Math.max(S.shake,.55);
     if(b.dir){S.vel.copy(b.dir).multiplyScalar(18);S.freeT=.3}S.act=null;S.dash=0;S.dashT=null;S.pending=null;flash(.15);

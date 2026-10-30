@@ -13,8 +13,8 @@ const UNITS={
     f:"풀 버스트",fd:"110m 안의 적 최대 15기에 미사일 일제 사격 3연속, 마지막에 적이 몰린 곳에 대폭발",
     p:"라이플 연사 간격 −25%"},
   shield:{name:"실드 비트 유닛",en:"SB-4",color:0x8dff7a,css:"#8dff7a",
-    r:"반사 장벽",rd:"전개 순간 주변 충격파, 4초간 닿는 적탄을 쏜 적에게 되돌려 폭발시킴",cd:8,
-    f:"카운터 필드",fd:"6초간 필드 전개 (앞 3초 무적, 이후 피해 절반) · 적탄 추적 반사 · 1초마다 충격파, 종료 시 초대형 충격파",
+    r:"반사 장벽",rd:"전개 순간 주변 충격파, 2.5초간 닿는 적탄을 쏜 적에게 되돌려 폭발시킴",cd:11,
+    f:"카운터 필드",fd:"6초간 필드 전개 (앞 3초 무적) · 적탄 추적 반사 · 1.5초마다 충격파, 종료 시 대형 충격파",
     p:"저스트 회피 시 1회 피격 무효 (25초마다)"}};
 const UNIT_KEYS=Object.keys(UNITS);
 Object.assign(G,{unitCd:0,proj:[],marks:[],marking:false,markT:0,mega:null,barrier:0,cfield:0,podGuard:0,podsOut:0,podsPull:null});
@@ -117,8 +117,8 @@ function unitSkill(){
   }else if(u==="missile"){
     G.marking=true;G.markT=0;G.marks=[];const t=target;if(t){G.marks.push(t);sfx("lock")}
   }else if(u==="shield"){
-    G.unitCd=UNITS.shield.cd;G.barrier=4;sfx("gravOn");popText("반사 장벽 전개");
-    emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x8dff7a,s0:2,s1:16,life:.35});cfieldWave(18,.5);
+    G.unitCd=UNITS.shield.cd;G.barrier=2.5;sfx("gravOn");popText("반사 장벽 전개");
+    emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x8dff7a,s0:2,s1:16,life:.35});cfieldWave(10,.5);
   }
 }
 function unitSkillUp(){
@@ -197,10 +197,10 @@ function unitsTick(dt,rdt,T){
   lockCountHud();
   // shield
   G.barrier=Math.max(0,G.barrier-dt);
-  if(G.cfield>0){G.cfPulse=(G.cfPulse||0)-dt;if(G.cfPulse<=0&&G.cfield>.6){G.cfPulse=1;cfieldWave(40,.6)}}
+  if(G.cfield>0){G.cfPulse=(G.cfPulse||0)-dt;if(G.cfPulse<=0&&G.cfield>.6){G.cfPulse=1.5;cfieldWave(25,.6)}}
   if(G.cfield>0){const was=G.cfield;G.cfield-=dt;if(was>0&&G.cfield<=0){G.cfield=0;
     const c=S.pos.clone();S.shake=1;flash(.3);sfx("specBurst");emit(ADD,{pos:c,tex:TX.ring,color:0x8dff7a,s0:3,s1:60,life:.55});
-    emit(ADD,{pos:c,tex:TX.ring,color:0xcaffc0,s0:5,s1:120,life:.8});flashLight(c,0x8dff7a,16,120,.6);S.hitstop=Math.max(S.hitstop||0,.14);S.slow=Math.max(S.slow,.4);fxBigExplosion(c.clone().add(new V3(0,1,0)),60);cfieldWave(80,1)}}
+    emit(ADD,{pos:c,tex:TX.ring,color:0xcaffc0,s0:5,s1:120,life:.8});flashLight(c,0x8dff7a,16,120,.6);S.hitstop=Math.max(S.hitstop||0,.14);S.slow=Math.max(S.slow,.4);fxBigExplosion(c.clone().add(new V3(0,1,0)),60);cfieldWave(45,1)}}
   const bOn=G.barrier>0||G.cfield>0;barrier.visible=bOn;
   if(bOn){barrier.position.copy(S.pos).add(new V3(0,.8,0));barrier.rotation.y+=rdt*.6;barrierTex.offset.y=(barrierTex.offset.y+rdt*.15)%1;
     const k=G.cfield>0?1.5:1;barrier.scale.setScalar(k);barrier.material.opacity=(G.cfield>0?.36:.28)+.07*Math.sin(T*14)}
@@ -217,7 +217,7 @@ function unitsTick(dt,rdt,T){
 // counter field shockwave (pulses every 1.5 s, last one big): knocks drones, damages weak-point pods
 function cfieldWave(R,k){const c=S.pos.clone();S.shake=Math.max(S.shake,.5+k*.5);flash(.15+k*.2);sfx("specBurst");emit(ADD,{pos:c,tex:TX.ring,color:0x8dff7a,s0:3,s1:R*1.1,life:.5});fxShockwave(c.clone().add(new V3(0,.5,0)),R*2.2,.55,0,"hexwave");flashLight(c,0x8dff7a,10+k*6,R*1.5,.4);S.hitstop=Math.max(S.hitstop||0,.03+k*.05);impactPunch(.4+k*.8);
   let n=0;for(const e of enemies){if(!e.alive||e.launched>0||e.isBoss||e.isRemote)continue;const d=e.m.position.clone().sub(c),dist=d.length();if(dist>R)continue;
-    if(e.isWP){wpDamage(e,k>=1?4:2,e.m.position.clone());continue}knock(e,dist<.5?new V3().randomDirection():d.normalize(),34+k*8,1.9);e.rad=Math.max(e.rad,4.4);hitFlash(e);n++}
+    if(e.isWP){if(k>=1)wpDamage(e,3,e.m.position.clone());continue} /* 10/30 nerf: only the closing blast hurts weak points (it used to break every pod in one special) */knock(e,dist<.5?new V3().randomDirection():d.normalize(),34+k*8,1.9);e.rad=Math.max(e.rad,4.4);hitFlash(e);n++}
 }
 function resetUnits(){
   for(const p of G.proj){scene.remove(p.s);p.s.material.dispose()}
