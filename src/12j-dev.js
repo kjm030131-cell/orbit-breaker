@@ -41,7 +41,7 @@ if(DEV.on){
     else if(d==="boss"&&live()){S.time=Math.min(S.time,60.2)}
     else if(d==="t30"&&live())S.time=30.2;
     else if(d==="notime")DEV.notime=!DEV.notime;else if(d==="god")DEV.god=!DEV.god;else if(d==="nocd")DEV.nocd=!DEV.nocd;
-    else if(d==="spec"&&live()){G.specT=-1;G.spec=99;addSpec(1)}
+    else if(d==="spec"&&live()){G.specT=-1;G.spec=99;addSpec(2)}
     else if(d==="grav")G.grav=3;
     else if(d==="kill"&&live()){for(const e2 of enemies)if(e2.alive&&!e2.isBoss&&!e2.isWP&&!e2.isRemote){e2.alive=false;disposeEnemy(e2)}}
     else if(d==="foes"&&live()){const f=camFwd(),at=k=>S.pos.clone().addScaledVector(f,k);spawnKami(at(45));spawnSniper(at(85));spawnFormation();spawnCrate(at(30))}
