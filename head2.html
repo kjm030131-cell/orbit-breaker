@@ -1111,6 +1111,12 @@ body.bossguide #bossBar{top:calc(128px + env(safe-area-inset-top,0px))} /* below
 .rulesDlg[hidden]{display:none}
 .rulesDlg>.pane{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;animation:rdIn .35s cubic-bezier(.2,.8,.2,1)}
 @keyframes rdIn{from{opacity:0;transform:translateY(18px) scale(.98)}}
+/* combo read-out by the reticle (score v2) */
+#comboNow{position:fixed;left:calc(50% + 70px);top:calc(44% + 24px);z-index:5;pointer-events:none;min-width:120px;font-family:var(--f-kdisp);text-shadow:0 1px 4px #000}
+#comboNow[hidden]{display:none}#comboNow b{display:block;font:900 26px var(--f-kdisp);color:var(--bone);line-height:1}
+#comboNow span{display:block;font:800 15px var(--f-kdisp);color:var(--muted);margin-top:2px}#comboNow.hot b{color:#ffd48a}#comboNow.hot span{color:#ffb21a;font-size:18px}
+#comboNow i{display:block;height:4px;margin-top:5px;background:rgba(255,255,255,.18)}#comboNow u{display:block;height:100%;background:#ffb21a}
+#comboNow.pop{animation:cnPop .45s cubic-bezier(.2,.8,.2,1)}@keyframes cnPop{from{transform:scale(1.6)}}
 </style>
 <div id="hud" hidden>
   <div class="reticle"></div><div id="hitm"></div><div id="tutObj" hidden><span class="lbl">목표<i id="tutObjN"></i><s id="tutSkip">Tab 건너뛰기</s></span><b id="tutObjTxt"></b><span id="tutObjHow"></span><em id="tutObjProg"></em></div><div id="feed"></div><div id="aimPart" hidden></div><div id="postBar" hidden><i></i><span>자세</span></div><div id="tutKeys" hidden></div><div id="tutCue" hidden></div><div id="tutMark" hidden><i></i><span>목표</span></div><div id="tutUnits" hidden></div><div id="tutEquip" hidden></div><div id="tutEquipFx"></div><div id="lockWarn"><b>피격 경고</b></div>
@@ -1132,7 +1138,6 @@ body.bossguide #bossBar{top:calc(128px + env(safe-area-inset-top,0px))} /* below
     <div class="sRow"><span class="lbl">점수</span><b class="num" id="score">0</b></div>
     <div class="rRow"><span class="lbl">1위</span><span id="topScore">—</span><span id="gap"></span></div>
     <div class="comboBox" id="comboBox"><div class="kcRow"><b id="kcNum">0</b><span class="lbl">콤보</span><span id="kcMult">×1.0</span></div><div class="kcTrack"><i id="kcBar"></i></div></div>
-    <div class="cleanBox" id="cleanBox"><span class="lbl">무피격</span><b id="cleanV">×1.0</b><div class="kcTrack"><i id="cleanF"></i></div></div>
     <div class="phaseTag lbl" id="phaseTag">PHASE 1 / 4</div>
     <div class="critTag" id="critTag" hidden>크리티컬 준비</div>
   </div>
@@ -1214,11 +1219,11 @@ body.bossguide #bossBar{top:calc(128px + env(safe-area-inset-top,0px))} /* below
       <div class="sortieMeter" id="sortieMeter"><i class="used"></i><i class="used"></i><i class="used"></i></div>
       <p class="note" id="fNote">같은 학번이면 기록이 이어집니다.</p>
       <div class="tipBox" id="tipBox">
-        <div class="tbH"><span class="lbl">ECLIPSE CIC · 전술 메모</span><em>최지우 중위</em></div>
-        <ol><li>베어 날린 적이 부딪히면 <b>유폭</b>이 번져요</li><li>연속 격추 · 무피격이면 <b>전과가 불어나요</b></li><li>지휘기 출현 뒤엔 <b>전과 2배</b></li></ol>
-        <div class="tbH t2"><span class="lbl">특수 위협 · 아르고스 신형</span></div>
-        <div class="tbT"><i class="k">자폭</i><span>붉게 깜빡이며 돌진 → <b>붙기 전에 사격</b></span></div>
-        <div class="tbT"><i class="s">저격</i><span>보라색 조준선 → <b>보이는 즉시 회피</b></span></div>
+        <div class="tbH"><span class="lbl">점수 얻는 법</span></div>
+        <ol><li>2분 동안 적을 최대한 많이 잡으세요 (1기 <b>300점</b>)</li><li><b>3.5초 안에 이어 잡으면 콤보</b> · 5킬 ×1.5, 10킬 ×2 · 맞으면 끊겨요</li><li>베어 날린 적이 다른 적에 부딪히면 <b>1기당 +500</b></li><li>보스 격파 <b>최대 +31,000</b> · 끝까지 살아남으면 <b>+3,000</b></li></ol>
+        <div class="tbH t2"><span class="lbl">조심할 적</span></div>
+        <div class="tbT"><i class="k">자폭</i><span>빨갛게 깜빡이며 날아와요 → <b>가까이 오기 전에 쏘세요</b></span></div>
+        <div class="tbT"><i class="s">저격</i><span>보라색 선이 보이면 → <b>바로 피하세요</b></span></div>
       </div>
           <div class="btns" style="margin-top:18px"><button class="btn primary" type="button" id="rulesOk">확인했습니다 <kbd>Enter</kbd></button><button class="btn" type="button" id="rulesBack">다시 입력 <kbd>Esc</kbd></button></div>
     </div>
@@ -1320,7 +1325,7 @@ body.bossguide #bossBar{top:calc(128px + env(safe-area-inset-top,0px))} /* below
       <ul class="rules">
         <li><b>1</b><span>베어 날린 적이 다른 적이나 잔해에 부딪히면 <b class="hl">연쇄 폭발</b>.</span></li>
         <li><b>2</b><span><b class="hl">붉은 조준선</b>이 깜빡이면 Shift로 회피. 타이밍이 맞으면 다음 공격이 크리티컬.</span></li>
-        <li><b>3</b><span>15초 동안 안 맞으면 점수 배율이 오릅니다. 최대 ×2.</span></li>
+        <li><b>3</b><span>3.5초 안에 이어 잡으면 콤보 배율(최대 ×2). 맞으면 콤보가 끊겨요.</span></li>
         <li><b>4</b><span>70초에 보스 등장. 붉은 약점 3곳을 부수고, 멈추면 베어 날리세요. 이걸 3번 하면 격파.</span></li>
       </ul>
       <div class="btns" style="margin-top:22px" id="briefBtns">

@@ -40,7 +40,7 @@ function kamiBlast(p,self){fxExplosion(p,1.9);sfx("boom",p,2);flashLight(p,0xff6
   if(self){if(G.iframe<=0)hurt({dir:S.pos.clone().sub(p).normalize(),dmg:30});return}
   let n=0;for(const o of enemies){if(!o.alive||o.launched>0||o.isBoss||o.isRemote)continue;const dv=o.m.position.clone().sub(p),dd=dv.length();if(dd>17)continue;
     if(o.isWP){wpDamage(o,3,o.m.position.clone());continue}knock(o,dd<.5?new V3().randomDirection():dv.normalize(),34,1.9);o.rad=Math.max(o.rad,4.4);hitFlash(o);n++}
-  if(n){addScore(250*n,p.clone().add(new V3(0,4,0)),"big");popText(`유폭 ×${n}`)}}
+  if(n){addScore(CHAIN_PTS*n,p.clone().add(new V3(0,4,0)),"big");popText(`유폭 ×${n}`)}}
 
 /* ---- sniper ---- */
 const SNIPE_TELE=1.8,SNIPE_LOCK=.45;

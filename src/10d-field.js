@@ -53,13 +53,13 @@ function fieldBreak(o){const d=o.def,c=o.center.clone();o.alive=false;o.respawn=
   for(const e of enemies){if(!e.alive||e.launched>0||e.isRemote)continue;const dv=e.m.position.clone().sub(c),dist=dv.length();if(dist>d.blast)continue;
     if(e.isWP){wpDamage(e,2,e.m.position.clone());continue}if(e.isBoss)continue;
     if(dv.lengthSq()<1e-4)dv.set(0,1,0);knock(e,dv.normalize(),55+(d.blast-dist)*2,1.1);n++}
-  addScore(d.pts+n*150,c,"big");popText(n?`${d.name} 유폭 · 휘말림 ×${n}`:`${d.name} 폭파`);if(n>=2){S.hitstop=.08;S.slow=.35}}
+  addScore(d.pts+n*CHAIN_PTS,c,"big");popText(n?`${d.name} 유폭 · 휘말림 ×${n}`:`${d.name} 폭파`);if(n>=2){S.hitstop=.08;S.slow=.35}}
 
 // hooks called from combat / loop
 function fieldCrash(e){ // launched drone hits an object: crushed, bonus
   if(!FIELD.ready||inVS())return;const o=fieldHitAt(e.m.position,e.isBoss?6:1.6);if(!o)return;
   if(e.isBoss){const nrm=e.m.position.clone().sub(o.center).normalize();e.v.reflect(nrm).multiplyScalar(.5);S.shake=Math.max(S.shake,.8);sfx("heavy",e.m.position);fieldDamage(o,3,e.m.position);return}
-  e.launched=0;fieldDamage(o,2,e.m.position);addScore(250+e.chain*120,e.m.position.clone(),"big");popText(e.chain?`충돌 격파 · 연쇄 ×${e.chain}`:"충돌 격파");S.hitstop=Math.max(S.hitstop,.05)}
+  e.launched=0;fieldDamage(o,2,e.m.position);addScore(CHAIN_PTS,e.m.position.clone(),"big");popText(e.chain?`충돌 격파 · 연쇄 ×${e.chain}`:"충돌 격파");S.hitstop=Math.max(S.hitstop,.05)}
 function fieldBolt(b){ // player beam vs object: cover blocks it, breakables take damage
   if(inVS()){if(!vsCoverAt(b.g.position,.2))return false;fxImpact(b.g.position,0x40e8ff);b.target=null;b.cover=true;b.life=0;return true}
   if(!FIELD.ready)return false;const o=fieldHitAt(b.g.position,.4);if(!o)return false;

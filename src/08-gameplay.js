@@ -10,11 +10,13 @@ function cleanMult(){return Math.min(2,1+Math.floor(G.clean/CLEAN_STEP)*.2)}
 const G={phase:0,kc:0,kcT:0,maxKC:0,crit:0,iframe:0,stagger:0,dodgeCd:0,ebolts:[],aimN:0,focus:null,lives:3,dead:0,clean:0,guardCd:0,unit:"mega",spawnT:0,bigT:0};
 const MAX_LIVES=1; // 10/29: one frame per sortie (3 sorties per student id), with a bigger armour pool instead
 const KC_WINDOW=3.5;
-function comboMult(){const k=G.kc;return k>=35?3:k>=20?2.5:k>=10?2:k>=5?1.5:1}
-function mult(){return comboMult()*cleanMult()*(G.phase>=3?2:1)}
+function comboMult(){const k=G.kc;return k>=10?2:k>=5?1.5:1} /* 10/30 score v2: the only multiplier (5 kills ×1.5, 10 kills ×2) */
+function mult(){return comboMult()}
+const KILL_PTS=300,CHAIN_PTS=500,SURVIVE_PTS=3000; /* score v2: every kill 300 whatever the weapon, each enemy caught in a chain +500, finishing alive +3000 */
 function addScore(n,pos,cls){if(S.ended)return 0;const v=Math.round(n*mult());S.score+=v;if(pos&&SCREEN==="play")scorePop(pos,"+"+v.toLocaleString(),cls);return v}
 function onKill(e){if(SCREEN!=="play")return;tutCount("kill");{const src=HIT_SRC||e.hitBy||"other";tutCount("kill_"+src);if(e.elite)tutCount("elite_"+src);if(src==="blade"&&TUT.on&&(TUT.c.grav||0)>0)tutCount("gravSlash");if(TUT.on)tutWrongKill(e,src)}hitMark("kill");sfx("killmark");impactPunch(.35);addSpec(4);G.kc++;G.kcT=KC_WINDOW;G.maxKC=Math.max(G.maxKC,G.kc);
-  if(G.kc===5||G.kc===10||G.kc===20||G.kc===35)popText(`콤보 ×${comboMult()}`);
+  if(!e.isBoss&&!e.isWP)addScore(KILL_PTS,e.m.position.clone());
+  if(G.kc===5||G.kc===10){popText(`콤보 ×${comboMult()}`);comboPop()}
   if(e.elite){tutCount("elite");addScore(1500,e.m.position.clone(),"big");popText("정예기 격파")}
   if(e.ms&&!e.blade)tutCount("ms");
   if(e.ms){addScore(e.blade?1800:1200,e.m.position.clone(),"big");popText(e.blade?"검투기 격파":"적 MS 격파")}}
@@ -148,7 +150,7 @@ function hurt(b){
   if(G.dead>0)return;
   fxImpact(S.pos.clone().add(new V3(0,.8,0)),0xff4030);sparks(S.pos,b.dir,0xffb080,20,.4,24);sfx("hurt");
   // HP system: armour points; a hit knocks you back and flashes, but never takes control away (10/29: stagger is 1:1 only)
-  const dmg=Math.round((b.dmg||(b.ram?34:24))*(G.cfield>0?.5:1));G.hp=Math.max(0,(G.hp??HP_MAX)-dmg);G.clean=0;G.hpT=0;
+  const dmg=Math.round((b.dmg||(b.ram?34:24))*(G.cfield>0?.5:1));G.hp=Math.max(0,(G.hp??HP_MAX)-dmg);G.clean=0;G.hpT=0;if(G.kc>0){G.kc=0;G.kcT=0;comboBreak(true)}
   crackHit();
   if(G.hp>0){G.iframe=Math.max(G.iframe,.55);S.hitstop=Math.max(S.hitstop,.06);S.shake=Math.max(S.shake,.55);
     if(b.dir){S.vel.copy(b.dir).multiplyScalar(18);S.freeT=.3}S.act=null;S.dash=0;S.dashT=null;S.pending=null;flash(.15);
@@ -210,9 +212,8 @@ function updateAim(T){
 function gameplayTick(dt,rdt,T){
   if(SCREEN==="play"&&!S.ended){const el=120-S.time;let ph=0;for(let i=0;i<PHASES.length;i++)if(el>=PHASES[i].at)ph=i;
     if(ph!==G.phase&&!VS){G.phase=ph;phaseBanner(PHASES[ph]);sfx("phase");if(ph===2&&EN_MESH){spawnEnemy(aroundPlayer(28,34,6),true)}if(ph===3)spawnBoss()}}
-  if(G.kcT>0){G.kcT-=dt;if(G.kcT<=0){if(G.kc>=5)popText("콤보 종료");G.kc=0}}
+  if(G.kcT>0){G.kcT-=dt;if(G.kcT<=0){G.kcT=0;if(G.kc>=2)comboBreak(false);G.kc=0}}
   if(G.dead>0){G.dead-=rdt;if(G.dead<=0)respawnMech()}
-  else if(SCREEN==="play"&&S.started&&!S.ended){const was=cleanMult();G.clean+=dt;const now=cleanMult();if(now>was){popText(`무피격 ×${now.toFixed(1)}`);sfx("chain",null,2)}}
   if(!VS&&G.dead<=0&&SCREEN==="play"&&S.started){G.hpT=(G.hpT||0)+dt;if(G.hpT>HP_REGEN_AFTER&&G.hp<HP_MAX)G.hp=Math.min(HP_MAX,G.hp+HP_REGEN*dt)}
   {const low=!VS&&SCREEN==="play"&&S.started&&!S.ended&&G.hp<HP_MAX*.35&&G.dead<=0; // only during a live sortie (never on menus after a run ends)
   if(low!==document.body.classList.contains("dmg")){document.body.classList.toggle("dmg",low);if(!low)crackClear()}if(low){const t=$("dmgTxt"),x=`장갑 위험 · ${Math.ceil(G.hp)}`;if(t.textContent!==x)t.textContent=x}}
@@ -294,3 +295,13 @@ function enemyMarks(){if(!EMK.box){const b=document.createElement("div");b.id="e
       const el=EMK.els[n++],c=e.crate?"#7dff8a":e.kami?"#ff8a20":e.sniper?"#c070ff":e.elite?"#48c8ff":"#ff4040",sc=clamp(1.4-d/160,.6,1.25);
       if(el.hidden)el.hidden=false;el.style.setProperty("--c",c);el.style.left=((v.x+1)/2*W)+"px";el.style.top=((1-v.y)/2*H)+"px";el.style.transform=`translate(-50%,-100%) scale(${sc.toFixed(2)})`}}
   for(let i=n;i<EMK.els.length;i++)if(!EMK.els[i].hidden)EMK.els[i].hidden=true}
+
+/* ---- combo read-out next to the reticle (score v2): count, multiplier and the 3.5 s window draining ---- */
+function comboHud(){let el=$("comboNow");const on=SCREEN==="play"&&!VS&&!TUT.on&&S.started&&!S.ended&&G.kc>=2;
+  if(!el){if(!on)return;el=document.createElement("div");el.id="comboNow";el.innerHTML="<b></b><span></span><i><u></u></i>";$("hud").appendChild(el)}
+  if(el.hidden===on)el.hidden=!on;if(!on)return;const m=comboMult(),t=`콤보 ${G.kc}`,x=m>1?`×${m}`:"5킬부터 ×1.5";
+  if(el.children[0].textContent!==t)el.children[0].textContent=t;if(el.children[1].textContent!==x)el.children[1].textContent=x;
+  el.classList.toggle("hot",m>1);el.lastChild.firstChild.style.width=(clamp(G.kcT/KC_WINDOW,0,1)*100).toFixed(1)+"%"}
+function comboPop(){const el=$("comboNow");if(!el)return;el.classList.remove("pop");void el.offsetWidth;el.classList.add("pop")}
+function comboBreak(hit){if(SCREEN!=="play"||VS||TUT.on)return;popText(hit?"피격 · 콤보 끊김":"콤보 끊김")}
+setInterval(()=>{try{comboHud()}catch(_){}},50);

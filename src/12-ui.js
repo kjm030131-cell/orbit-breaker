@@ -1,4 +1,5 @@
 /* ================= records (shared db, local fallback) ================= */
+const GRADE={S:120000,A:80000,B:40000}; /* score v2 (10/30): retune after play data */
 const MAX_SORTIE=3,LS_KEY="orbitbreaker.players.v1";
 let DB=null,BOARD=[];
 // SERVER: the deployed build talks to the Cloudflare ranking API (authoritative sortie count + best score)
@@ -196,7 +197,7 @@ function finishRun(reason){
   if(TUT.on){tutExit("title");return}
   if(S.ended)return;S.ended=true;if(document.pointerLockElement)document.exitPointerLock();
   const lost=reason==="lost";let bonus=0;
-  const rate=lost?0:G.lives*.1+(G.lives===MAX_LIVES?.1:0);if(!lost){bonus=Math.round(S.score*rate);S.score+=bonus}
+  const rate=0;if(!lost&&!DUEL){bonus=SURVIVE_PTS;S.score+=bonus}
   G.focus=null;resultMode(false);
   if(DUEL){duelFinish(lost,bonus,rate);return}
   if(DEV.run){devFinish(lost);return} // developer mode: nothing is recorded
@@ -205,8 +206,8 @@ function finishRun(reason){
   rec.at=new Date().toISOString();putRec({...rec});
   if(SERVER&&RUN){const runId=RUN;RUN=null;api("finish",{runId,score,kills:S.kills||0,chain:S.best,combo:G.maxKC,boss:!!BOSS.dead,bossT:BOSS.killT||0}).then(j=>{bossCard(j.boss);rec.best=j.best;rec.attempts=j.attempts;$("rBest").textContent=(j.best||0).toLocaleString();applyBoard(j);updateRankLine()}).catch(e=>{$("rRank").innerHTML='<span class="note" style="color:var(--red)">기록 서버 전송 실패 — 운영진에게 화면을 보여주세요.</span>'})}
   music(null);sfx("end");if(pb&&score>0)sfx("pb");setTimeout(()=>{if(SCREEN==="result"){music("title");muffle(true)}},2600);
-  $("rScore").textContent=score.toLocaleString();{const g=score>=250000?"S":score>=150000?"A":score>=70000?"B":"C",im=$("rGrade");im.hidden=false;im.src=`ui/grade_${g}.webp`;im.alt=g+" 등급";im.style.animation="none";void im.offsetWidth;im.style.animation=""}$("rKills").textContent=S.kills||0;$("rCombo").textContent=G.maxKC;$("rChain").textContent=S.best;$("rBest").textContent=(rec.best||0).toLocaleString();
-  $("rPb").innerHTML=(pb&&score>0?'<span class="pb">개인 최고 기록 갱신</span> ':"")+(lost?'<span class="note">기체 대파 · 작전 조기 종료</span>':`<span class="note">생존 보너스 +${bonus.toLocaleString()} (전투 점수의 ${Math.round(rate*100)}% · 남은 기체 ${G.lives}${G.lives===MAX_LIVES?" · 무피격 클리어":""})</span>`);
+  $("rScore").textContent=score.toLocaleString();{const g=score>=GRADE.S?"S":score>=GRADE.A?"A":score>=GRADE.B?"B":"C",im=$("rGrade");im.hidden=false;im.src=`ui/grade_${g}.webp`;im.alt=g+" 등급";im.style.animation="none";void im.offsetWidth;im.style.animation=""}$("rKills").textContent=S.kills||0;$("rCombo").textContent=G.maxKC;$("rChain").textContent=S.best;$("rBest").textContent=(rec.best||0).toLocaleString();
+  $("rPb").innerHTML=(pb&&score>0?'<span class="pb">개인 최고 기록 갱신</span> ':"")+(lost?'<span class="note">기체 대파 · 작전 조기 종료</span>':`<span class="note">생존 보너스 +${bonus.toLocaleString()} (끝까지 살아남음)</span>`);
   bossCard(BOSS.dead?{pending:true,t:BOSS.killT||0}:null);
   $("rDebrief").innerHTML='<span class="who">이클립스 CIC · 최지우 중위</span>'+debriefLine(lost,score);
   $("rSortie").textContent=`출격 ${rec.attempts} / ${MAX_SORTIE}`;
@@ -242,7 +243,6 @@ function hudUpdate(){
   const sl=S.act&&S.act.startsWith("slash");setT("chainNow",sl?`콤보 ${S.combo+1} / 3`:"록온 돌진");
   setC("wBlade","act",S.bladeOn>0||sl);setC("wRifle","act",S.shotCd>0);setW("rifleCd",S.shotCd>0?(1-S.shotCd/(G.unit==="missile"?.24:.32))*100:100);
   setT("warn",G.dead>0?(G.lives>0?"기체 대파 — 예비기 발진 준비":"기체 대파"):G.stagger>0?(G.broke?"자세 회복 중":"경직 — Shift로 풀기 (부스트 30)"):VS&&S.over>0?"과열 정지":VS&&S.heat>=80?"과열 임박":S.boost<15?"부스트 부족 — 회피 불가":"");
-  {const cm=cleanMult(),nx=cm>=2?1:(G.clean%CLEAN_STEP)/CLEAN_STEP;setT("cleanV","×"+cm.toFixed(1));setW("cleanF",nx*100);setC("cleanBox","max",cm>=2)}
   if(!VS){const hp=Math.ceil(G.hp??HP_MAX);if(HC.hp!==hp){HC.hp=hp;$("hpF").style.width=(hp/HP_MAX*100)+"%";$("hpV").textContent=hp;$("hpRow").classList.toggle("low",hp<HP_MAX*.35);$("ckHpF").style.width=(hp/HP_MAX*100)+"%";$("ckHpV").textContent=hp;$("ckHp").classList.toggle("low",hp<HP_MAX*.35)}}
   setH("ckHp",VS);
   if(HC.lives!==G.lives){HC.lives=G.lives;[...$("lives").children].forEach((c,i)=>{if(c.tagName==="I")c.classList.toggle("lost",i>=G.lives)});$("livesTxt").textContent="기체 "+Math.max(0,G.lives)+" / "+MAX_LIVES}

@@ -127,7 +127,7 @@ function update(rdt){
         if(o.m.position.distanceTo(em.position)<Math.max(e.rad,o.elite?4.5:o.isWP?2.6:o.isBoss?8:3.4)){if(o.isWP){wpDamage(o,3,o.m.position.clone());if(!e.isBoss)e.launched=Math.min(e.launched,.001);continue}e.chain++;const n=e.chain;explode(o,n);addScore(chainPts(n),o.m.position.clone(),n>=3?"big":"");S.best=Math.max(S.best,n);popText(`연쇄 ×${n}`);sfx("chain",null,n);
           if(n>=2)S.hitstop=.06;if(n>=3&&n%3===0){cutin();S.slow=.45;flash(.25)}e.v.multiplyScalar(.92)}}
       fieldCrash(e);
-      if(e.launched<=0){explode(e,e.chain);addScore(100,em.position.clone())}
+      if(e.launched<=0){explode(e,e.chain)}
     }else enemyAI(e,dt,T)}
   for(let i=enemies.length-1;i>=0;i--)if(!enemies[i].alive)enemies.splice(i,1);
   fillEnemies(dt);

@@ -88,12 +88,12 @@ function megaTick(dt,rdt,T){const m=G.mega;if(!m)return;
     const off=rel.clone().addScaledVector(m.dir,-along),dist=off.length();if(dist>c.hitR+(e.isBoss?8:(e.rad||3)*.45))continue;
     const last=m.hits.get(e);if(last!==undefined&&T-last<.35)continue;m.hits.set(e,T);
     if(e.isWP){wpDamage(e,c.wp,p.clone());continue}
-    if(e.isBoss){if(e.down>0&&e.launched<=0){knock(e,m.dir,c.knockV,2.4);addScore(c.score*3,p.clone(),"big")}else{fxImpact(p.clone(),MEGA_C);sparks(p,m.dir.clone().negate(),0xffc8f2,30,.4,12)}continue}
+    if(e.isBoss){if(e.down>0&&e.launched<=0){knock(e,m.dir,c.knockV,2.4)}else{fxImpact(p.clone(),MEGA_C);sparks(p,m.dir.clone().negate(),0xffc8f2,30,.4,12)}continue}
     if(e.launched>0)continue;
     const side=dist>.3?off.normalize():new V3(0,1,0);const dir=m.dir.clone().multiplyScalar(.75).addScaledVector(side,.65);dir.y=Math.max(dir.y,.08);
     if(e.elite&&e.m.userData.shield)shieldFlash(e);
     knock(e,dir.normalize(),c.knockV,2.1);e.rad=Math.max(e.rad,4.8);hitFlash(e);
-    fxImpact(p.clone(),MEGA_C);sfx("thud",p,1);hitMark("hit");addScore(c.score,p.clone(),"big")}
+    fxImpact(p.clone(),MEGA_C);sfx("thud",p,1);hitMark("hit")}
   if(m.t>=life)megaEnd(false);
 }
 // 1:1 showdown: purely visual beam (the room server owns the hit); fired after the same charge delay as the server

@@ -84,8 +84,8 @@ function projHit(p){const e=p.tgt,at=e.m.position.clone();
   if(e.isBoss){fxImpact(at,0xffb080);skillBlast(at,p.kind==="pod"?10:8,p.kind,e);return}
   if(e.launched>0){skillBlast(at,p.kind==="pod"?10:8,p.kind,e);return}
   const dir=p.vel.clone().normalize();dir.y*=.4;
-  if(p.kind==="pod"){knock(e,dir.normalize(),40,1.9);e.rad=Math.max(e.rad,4.2);addScore(220,at,"cyan");fxImpact(at,0x48d8ff);sfx("hit",at)}
-  else{knock(e,dir.normalize(),30,1.6);addScore(160,at,"");fxImpact(at,0xff8a40);sparks(at,dir,0xffc080,22,.35,12);sfx("impact",at)}
+  if(p.kind==="pod"){knock(e,dir.normalize(),40,1.9);e.rad=Math.max(e.rad,4.2);fxImpact(at,0x48d8ff);sfx("hit",at)}
+  else{knock(e,dir.normalize(),30,1.6);fxImpact(at,0xff8a40);sparks(at,dir,0xffc080,22,.35,12);sfx("impact",at)}
   hitFlash(e);skillBlast(at,p.kind==="pod"?10:8,p.kind,e);
 }
 // splash around a skill hit: knocks nearby drones (chains into collisions), big flash/ring so every hit reads as a blast
@@ -98,7 +98,7 @@ function skillBlast(c,R,kind,skip){
   fxShockwave(c,R*2.4,.5,0,kind==="shield"?"hexwave":null);S.hitstop=Math.max(S.hitstop||0,.045);S.shake=Math.max(S.shake,.45);impactPunch(.5);
   let n=0;for(const e of enemies){if(e===skip||!isMob(e))continue;const d=e.m.position.clone().sub(c),dist=d.length();if(dist>R)continue;
     d.y=Math.abs(d.y)*.4+.15;knock(e,d.normalize(),30,1.7);e.rad=Math.max(e.rad,4.2);hitFlash(e);n++}
-  if(n)addScore(140*n,c.clone().add(new V3(0,3,0)),"big");return n}
+  return n}
 
 /* ---- R skill ---- */
 function unitSkill(){
@@ -178,7 +178,7 @@ function unitSpecialBurst(){ // called at the special's strike frame
     let n=0;for(const e of enemies){if(!isMob(e))continue;const d=e.m.position.clone().sub(c),dist=d.length();if(dist>55)continue;
       knock(e,dist<.5?new V3().randomDirection():d.normalize(),36,2);e.rad=Math.max(e.rad,4.6);hitFlash(e);n++}
     fxBigExplosion(c,70);fxFlipK("podhit",c,90,1);S.slow=Math.max(S.slow,.45);impactPunch(1.4);sfx("boom",c,4);for(const e of enemies)if(e.isWP&&e.alive&&e.m.position.distanceTo(c)<55)wpDamage(e,2,e.m.position.clone());
-    if(n)addScore(200*n,c.clone().add(new V3(0,4,0)),"big");G.podsPull=null;G.podStorm={t:4.5,next:.12};emit(ADD,{pos:c,tex:TX.ring,color:0x9ff0ff,s0:6,s1:110,life:.8});return}
+    G.podsPull=null;G.podStorm={t:4.5,next:.12};emit(ADD,{pos:c,tex:TX.ring,color:0x9ff0ff,s0:6,s1:110,life:.8});return}
   if(u==="missile"){S.shake=.8;flash(.25);sfx("specBurst");fxShockwave(S.pos.clone().add(new V3(0,1,0)),40,.6,0);return}
   if(u==="shield"){sfx("gravOn");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x8dff7a,s0:3,s1:30,life:.5});cfieldWave(30,.6)}
 }
@@ -218,7 +218,7 @@ function unitsTick(dt,rdt,T){
 function cfieldWave(R,k){const c=S.pos.clone();S.shake=Math.max(S.shake,.5+k*.5);flash(.15+k*.2);sfx("specBurst");emit(ADD,{pos:c,tex:TX.ring,color:0x8dff7a,s0:3,s1:R*1.1,life:.5});fxShockwave(c.clone().add(new V3(0,.5,0)),R*2.2,.55,0,"hexwave");flashLight(c,0x8dff7a,10+k*6,R*1.5,.4);S.hitstop=Math.max(S.hitstop||0,.03+k*.05);impactPunch(.4+k*.8);
   let n=0;for(const e of enemies){if(!e.alive||e.launched>0||e.isBoss||e.isRemote)continue;const d=e.m.position.clone().sub(c),dist=d.length();if(dist>R)continue;
     if(e.isWP){wpDamage(e,k>=1?4:2,e.m.position.clone());continue}knock(e,dist<.5?new V3().randomDirection():d.normalize(),34+k*8,1.9);e.rad=Math.max(e.rad,4.4);hitFlash(e);n++}
-  if(n)addScore((k>=1?180:120)*n,c.clone().add(new V3(0,4,0)),"big")}
+}
 function resetUnits(){
   for(const p of G.proj){scene.remove(p.s);p.s.material.dispose()}
   megaEnd(true);Object.assign(G,{unitCd:0,proj:[],marks:[],marking:false,markT:0,mega:null,barrier:0,cfield:0,cfPulse:0,podGuard:0,podsOut:0,podsPull:null,podStorm:null});

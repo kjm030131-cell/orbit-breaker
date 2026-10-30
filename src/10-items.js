@@ -24,7 +24,6 @@ function specialBurst(){
   sparks(c,null,0xffd090,60,.8,60);flashLight(c,0xffa040,16,120,.6);
   let n=0;for(const e of enemies){if(!isMob(e))continue;const d=e.m.position.clone().sub(c),dist=d.length();if(dist>42)continue;
     d.normalize();knock(e,d,30+(42-dist)*.6,1.9);e.rad=Math.max(e.rad,4.2);hitFlash(e);n++}
-  if(n)addScore(120*n,c.clone().add(new V3(0,4,0)),"big");
 }
 
 /* ---- gravity bomb ---- */
