@@ -55,8 +55,11 @@ function aheadPlayer(rMin,rMax,ySpread){const fa=Math.atan2(Math.sin(S.yaw),Math
 // 10/30: drones come from every side (behind, above, below), always inside the operation area, nudged toward its centre
 // so flying straight ahead no longer drags the fight to the edge of the map
 function fieldSpawn(rMin,rMax){const C=typeof FIELD!=="undefined"&&FIELD.R?FIELD:null;let best=null,bs=-1e9;
-  for(let i=0;i<10;i++){const d=new V3().randomDirection();d.y*=.55;d.normalize();const p=S.pos.clone().addScaledVector(d,rMin+Math.random()*(rMax-rMin));
-    if(!C)return p;const L=p.distanceTo(C.C),sc=-Math.max(0,L-(C.R-35))*10-L*.15+Math.random()*25;if(sc>bs){bs=sc;best=p}}
+  // 10/30: spread evenly around the player (6 sectors taken in turn) at roughly the player's height (±5 m), inside the area
+  G.spawnSec=((G.spawnSec||0)+1+Math.floor(Math.random()*2))%6;
+  for(let i=0;i<8;i++){const sec=(G.spawnSec+(i>3?3:0))%6,a=sec/6*Math.PI*2+(Math.random()-.5)*.9,r=rMin+Math.random()*(rMax-rMin);
+    const p=new V3(S.pos.x+Math.sin(a)*r,S.pos.y+(Math.random()-.5)*10,S.pos.z+Math.cos(a)*r);
+    if(!C)return p;const L=p.distanceTo(C.C),sc=-Math.max(0,L-(C.R-35))*10+Math.random()*20;if(sc>bs){bs=sc;best=p}}
   if(C){const L=best.distanceTo(C.C),max=C.R-35;if(L>max)best.copy(C.C).addScaledVector(best.clone().sub(C.C),max/L)}return best}
 function spawnCluster(n){n=n||2+Math.floor(Math.random()*2);const c=fieldSpawn(40,70);
   for(let i=0;i<n;i++){const e=spawnEnemy(c.clone().add(new V3().randomDirection().multiplyScalar(5+Math.random()*4)),false);if(e&&S.started)e.fireT=Math.max(e.fireT,2.5+Math.random()*2);
