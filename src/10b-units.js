@@ -215,9 +215,12 @@ function unitsTick(dt,rdt,T){
   stepProj(dt);stepBits(rdt,T);
 }
 // counter field shockwave (pulses every 1.5 s, last one big): knocks drones, damages weak-point pods
+/* 10/30 shield tune (hidden values only; durations / cooldown / invulnerability in the design doc unchanged):
+   shockwaves look the same but push in a smaller radius and less hard (fewer chain reactions), smaller reflected-bolt blast */
+const SHIELD_TUNE={waveR:.7,waveKnock:.75,reflBlast:4};
 function cfieldWave(R,k){const c=S.pos.clone();S.shake=Math.max(S.shake,.5+k*.5);flash(.15+k*.2);sfx("specBurst");emit(ADD,{pos:c,tex:TX.ring,color:0x8dff7a,s0:3,s1:R*1.1,life:.5});fxShockwave(c.clone().add(new V3(0,.5,0)),R*2.2,.55,0,"hexwave");flashLight(c,0x8dff7a,10+k*6,R*1.5,.4);S.hitstop=Math.max(S.hitstop||0,.03+k*.05);impactPunch(.4+k*.8);
-  let n=0;for(const e of enemies){if(!e.alive||e.launched>0||e.isBoss||e.isRemote)continue;const d=e.m.position.clone().sub(c),dist=d.length();if(dist>R)continue;
-    if(e.isWP){if(k>=1)wpDamage(e,3,e.m.position.clone());continue} /* 10/30 nerf: only the closing blast hurts weak points (it used to break every pod in one special) */knock(e,dist<.5?new V3().randomDirection():d.normalize(),34+k*8,1.9);e.rad=Math.max(e.rad,4.4);hitFlash(e);n++}
+  let n=0;for(const e of enemies){if(!e.alive||e.launched>0||e.isBoss||e.isRemote)continue;const d=e.m.position.clone().sub(c),dist=d.length();if(dist>R*SHIELD_TUNE.waveR)continue;
+    if(e.isWP){if(k>=1)wpDamage(e,3,e.m.position.clone());continue} /* 10/30 nerf: only the closing blast hurts weak points (it used to break every pod in one special) */knock(e,dist<.5?new V3().randomDirection():d.normalize(),(34+k*8)*SHIELD_TUNE.waveKnock,1.9);e.rad=Math.max(e.rad,4.4);hitFlash(e);n++}
 }
 function resetUnits(){
   for(const p of G.proj){scene.remove(p.s);p.s.material.dispose()}
