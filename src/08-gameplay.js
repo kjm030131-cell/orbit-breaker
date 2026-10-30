@@ -66,7 +66,9 @@ function spawnCluster(n){n=n||2+Math.floor(Math.random()*2);const c=fieldSpawn(4
     if(e&&SCREEN==="play")emit(ADD,{pos:e.m.position.clone(),tex:TX.ring,color:0xff4030,s0:2,s1:9,life:.35,a:.6})}}
 // waves trickle in: the field is topped up one small cluster at a time with a per-phase gap, not refilled the instant something dies.
 // Before the sortie starts (title demo / catapult) the field is filled at once.
-function fillEnemies(dt){if(VS||S.demo||CINE.on||TUT.on||INTRO.on)return;const ph=PHASES[G.phase];let alive=0,el=0,rm=0,ms=0,bl=0;for(const e of enemies)if(e.alive&&e.launched<=0&&!e.isBoss&&!e.isWP){alive++;if(e.elite)el++;if(e.ram)rm++;if(e.blade)bl++;else if(e.ms)ms++}
+function fillEnemies(dt){if(VS||S.demo||CINE.on||TUT.on||INTRO.on)return;
+  /* 10/30: once the boss is destroyed the field fills back up like before the boss (3단계 mix, 24 drones, refilled fast) */
+  const bossDown=G.phase>=3&&typeof BOSS!=="undefined"&&BOSS.dead,ph=bossDown?PHASES[2]:PHASES[G.phase];let alive=0,el=0,rm=0,ms=0,bl=0;for(const e of enemies)if(e.alive&&e.launched<=0&&!e.isBoss&&!e.isWP){alive++;if(e.elite)el++;if(e.ram)rm++;if(e.blade)bl++;else if(e.ms)ms++}
   const live=SCREEN==="play"&&S.started;
   if(!live){let guard=0;while(alive<ph.count&&guard++<8){spawnCluster(3);alive+=3}return}
   dt=dt||0;foesTick(dt);G.spawnT-=dt;G.bigT-=dt;
@@ -75,9 +77,9 @@ function fillEnemies(dt){if(VS||S.demo||CINE.on||TUT.on||INTRO.on)return;const p
     if(ms<(ph.ms||0)&&spawnMS(aheadPlayer(36,48,8))){G.bigT=6;return}
     if(EN_MESH&&el<ph.elites){spawnEnemy(aheadPlayer(32,42,8),true);G.bigT=6;return}
     if(EN_MESH&&rm<ph.rams){spawnEnemy(aheadPlayer(48,62,10),false,true);G.bigT=3.5;return}}
-  const el2=120-S.time,cnt=G.phase>=3?((typeof BOSS!=="undefined"&&(BOSS.stage||0)>=1)?6:3):Math.round(11+clamp((el2-20)/40,0,1)*13); /* 10/30: 11 drones until 20 s, then up to 24 by the boss (60 s) */
+  const el2=120-S.time,cnt=bossDown?24:G.phase>=3?((typeof BOSS!=="undefined"&&(BOSS.stage||0)>=1)?6:3):Math.round(11+clamp((el2-20)/40,0,1)*13); /* 10/30: 11 drones until 20 s, then up to 24 by the boss (60 s) */
   if(G.spawnT>0||alive>=cnt)return;
-  const need=cnt-alive;spawnCluster(Math.min(need,need>4?3:2));G.spawnT=ph.gap[0]+Math.random()*(ph.gap[1]-ph.gap[0])}
+  const need=cnt-alive;spawnCluster(Math.min(need,need>4?3:2));G.spawnT=(ph.gap[0]+Math.random()*(ph.gap[1]-ph.gap[0]))*(bossDown&&need>8?.4:1)}
 function eliteBlocks(e,from){if(!e.elite)return false;const to=from.clone().sub(e.m.position).setY(0).normalize();
   return to.dot(new V3(Math.sin(e.yaw),0,Math.cos(e.yaw)))>.3}
 function shieldFlash(e){const s=e.m.userData.shield;if(s)s.hit=1;fxElectric(e.m.position.clone().add(new V3(0,1,0)),6)}
