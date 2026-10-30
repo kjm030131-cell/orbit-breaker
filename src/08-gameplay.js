@@ -52,7 +52,13 @@ function aroundPlayer(rMin,rMax,ySpread){const a=Math.random()*Math.PI*2,r=rMin+
 // mostly in front of the camera (within ~100 deg), so new waves are seen arriving instead of appearing behind the player
 function aheadPlayer(rMin,rMax,ySpread){const fa=Math.atan2(Math.sin(S.yaw),Math.cos(S.yaw)),a=Math.random()<.75?fa+(Math.random()-.5)*1.75:Math.random()*Math.PI*2,r=rMin+Math.random()*(rMax-rMin);
   return new V3(S.pos.x+Math.sin(a)*r,S.pos.y+(Math.random()-.5)*ySpread,S.pos.z+Math.cos(a)*r)}
-function spawnCluster(n){n=n||2+Math.floor(Math.random()*2);const c=aheadPlayer(40,62,12);
+// 10/30: drones come from every side (behind, above, below), always inside the operation area, nudged toward its centre
+// so flying straight ahead no longer drags the fight to the edge of the map
+function fieldSpawn(rMin,rMax){const C=typeof FIELD!=="undefined"&&FIELD.R?FIELD:null;let best=null,bs=-1e9;
+  for(let i=0;i<10;i++){const d=new V3().randomDirection();d.y*=.55;d.normalize();const p=S.pos.clone().addScaledVector(d,rMin+Math.random()*(rMax-rMin));
+    if(!C)return p;const L=p.distanceTo(C.C),sc=-Math.max(0,L-(C.R-35))*10-L*.15+Math.random()*25;if(sc>bs){bs=sc;best=p}}
+  if(C){const L=best.distanceTo(C.C),max=C.R-35;if(L>max)best.copy(C.C).addScaledVector(best.clone().sub(C.C),max/L)}return best}
+function spawnCluster(n){n=n||2+Math.floor(Math.random()*2);const c=fieldSpawn(40,70);
   for(let i=0;i<n;i++){const e=spawnEnemy(c.clone().add(new V3().randomDirection().multiplyScalar(5+Math.random()*4)),false);if(e&&S.started)e.fireT=Math.max(e.fireT,2.5+Math.random()*2);
     if(e&&SCREEN==="play")emit(ADD,{pos:e.m.position.clone(),tex:TX.ring,color:0xff4030,s0:2,s1:9,life:.35,a:.6})}}
 // waves trickle in: the field is topped up one small cluster at a time with a per-phase gap, not refilled the instant something dies.
@@ -66,8 +72,9 @@ function fillEnemies(dt){if(VS||S.demo||CINE.on||TUT.on||INTRO.on)return;const p
     if(ms<(ph.ms||0)&&spawnMS(aheadPlayer(36,48,8))){G.bigT=6;return}
     if(EN_MESH&&el<ph.elites){spawnEnemy(aheadPlayer(32,42,8),true);G.bigT=6;return}
     if(EN_MESH&&rm<ph.rams){spawnEnemy(aheadPlayer(48,62,10),false,true);G.bigT=3.5;return}}
-  if(G.spawnT>0||alive>=ph.count)return;
-  const need=ph.count-alive;spawnCluster(Math.min(need,need>4?3:2));G.spawnT=ph.gap[0]+Math.random()*(ph.gap[1]-ph.gap[0])}
+  const el2=120-S.time,cnt=G.phase>=3?3:ph.count+(el2>=30?3:0); /* more drones from 30 s, fewer while the boss is up */
+  if(G.spawnT>0||alive>=cnt)return;
+  const need=cnt-alive;spawnCluster(Math.min(need,need>4?3:2));G.spawnT=ph.gap[0]+Math.random()*(ph.gap[1]-ph.gap[0])}
 function eliteBlocks(e,from){if(!e.elite)return false;const to=from.clone().sub(e.m.position).setY(0).normalize();
   return to.dot(new V3(Math.sin(e.yaw),0,Math.cos(e.yaw)))>.3}
 function shieldFlash(e){const s=e.m.userData.shield;if(s)s.hit=1;fxElectric(e.m.position.clone().add(new V3(0,1,0)),6)}
