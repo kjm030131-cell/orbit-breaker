@@ -11,7 +11,7 @@ $("dUnits").addEventListener("click",e=>{const b=e.target.closest("[data-du]");i
 const dFrameBtns=()=>{$("dFrames").innerHTML=Object.keys(FRAMES).map(k=>{const F=FRAMES[k];return `<button type="button" data-df="${k}" class="${P&&P.frame===k?"sel":""}" ${F.obj?"":"disabled"}>${F.name}${F.obj?"":" · 수신 중"}</button>`}).join("")};
 $("dFrames").addEventListener("click",e=>{const b=e.target.closest("[data-df]");if(!b||b.disabled||VS&&!["wait","lobby"].includes(VS.phase))return;if(setFrame(b.dataset.df)){sfx("ui");PILOT.frame=b.dataset.df;buildBits(G.unit);if(VS)vsLoadout()}dFrameBtns()});
 function duelOpen(){dUnitBtns();dFrameBtns();vsLobby();if(!$("dName").value&&PILOT.name)$("dName").value=PILOT.name;
-  $("dErr").textContent=SERVER?"":"쇼다운은 배포된 서버 버전(arclight-game.pages.dev)에서만 가능합니다.";
+  $("dErr").textContent=SERVER?"":"쇼다운은 배포된 서버 버전(arcligh.site)에서만 가능합니다.";
   ["dCreate","dJoin"].forEach(id=>$(id).disabled=!SERVER&&!window.PVP_URL);if(!DUEL)duelRoomView(null);dxStep(VS&&!VS.local||DUEL?3:1)}
 function duelErr(m){$("dErr").textContent=m;sfx("deny")}
 function duelRoomView(v){
@@ -27,7 +27,7 @@ async function duelCreate(){const name=$("dName").value.trim();if(!name)return d
 async function duelJoin(){const name=$("dName").value.trim(),code=$("dCode").value.trim();if(!name)return duelErr("이름을 입력하세요.");if(!/^\d{4}$/.test(code))return duelErr("방 번호 4자리를 입력하세요.");
   if(DMODE==="vs"){$("dErr").textContent="";sfx("uiok");vsOpen(code,name);return}
   try{const v=await api("duel/join",{name,code});duelStart(v,"b",name)}catch(e){duelErr(e.message)}}
-function duelStart(v,side,name){$("dErr").textContent="";sfx("uiok");
+function duelStart(v,side,name){$("dErr").textContent="";sfx("uiok");DUELDONE=false;
   DUEL={code:v.code,side,name,opp:side==="a"?"b":"a",v,ready:false,started:false,oppScore:0,oppState:"wait",oppName:""};duelOff=v.now-Date.now();
   duelRoomView(v);clearInterval(duelPoll);duelPoll=setInterval(duelTick,800)}
 async function duelTick(){if(!DUEL)return;
@@ -54,7 +54,7 @@ setInterval(()=>{if(DUEL&&!DUEL.started&&DUEL.v&&DUEL.v.startAt)duelCountdown(DU
 function duelHud(){if(!DUEL||SCREEN!=="play")return;const me=S.score,op=DUEL.oppScore,d=me-op;
   setT("duMe",me.toLocaleString());setT("duOp",op.toLocaleString());setT("duOpN",(DUEL.oppName||"상대")+(DUEL.oppState==="lost"?" · 격추":DUEL.oppState==="done"?" · 종료":DUEL.oppState==="left"?" · 이탈":""));
   setT("duLead",d>0?"+"+d.toLocaleString():d<0?d.toLocaleString():"VS");setC("duLead","win",d>0);setC("duLead","lose",d<0)}
-function duelFinish(lost,bonus,rate){DUEL.lost=lost;DUELDONE=true;$("duelBar").hidden=true;
+function duelFinish(lost,bonus,rate){DUEL.lost=lost;DUELDONE=true;$("duelBar").hidden=true;$("scrResult").classList.add("duelres");
   music(null);sfx("end");duelTick();
   $("rScore").textContent=S.score.toLocaleString();$("rKills").textContent=S.kills||0;$("rCombo").textContent=G.maxKC;$("rChain").textContent=S.best;$("rBest").textContent="—";
   $("rSortie").textContent="1:1 SHOWDOWN · 비순위";$("rDebrief").innerHTML="";
