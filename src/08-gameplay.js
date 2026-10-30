@@ -61,7 +61,8 @@ function fieldSpawn(rMin,rMax){const C=typeof FIELD!=="undefined"&&FIELD.R?FIELD
     const p=new V3(S.pos.x+Math.sin(a)*r,S.pos.y+(Math.random()-.5)*10,S.pos.z+Math.cos(a)*r);
     if(!C)return p;const L=p.distanceTo(C.C),sc=-Math.max(0,L-(C.R-35))*10+Math.random()*20;if(sc>bs){bs=sc;best=p}}
   if(C){const L=best.distanceTo(C.C),max=C.R-35;if(L>max)best.copy(C.C).addScaledVector(best.clone().sub(C.C),max/L)}return best}
-function spawnCluster(n){n=n||2+Math.floor(Math.random()*2);const c=fieldSpawn(40,70);
+/* 10/31: mix of close groups (22-40 m, reachable inside the 3.5 s combo window) and far ones (45-75 m) */
+function spawnCluster(n){n=n||2+Math.floor(Math.random()*2);const c=Math.random()<.45?fieldSpawn(22,40):fieldSpawn(45,75);
   for(let i=0;i<n;i++){const e=spawnEnemy(c.clone().add(new V3().randomDirection().multiplyScalar(5+Math.random()*4)),false);if(e&&S.started)e.fireT=Math.max(e.fireT,2.5+Math.random()*2);
     if(e&&SCREEN==="play")emit(ADD,{pos:e.m.position.clone(),tex:TX.ring,color:0xff4030,s0:2,s1:9,life:.35,a:.6})}}
 // waves trickle in: the field is topped up one small cluster at a time with a per-phase gap, not refilled the instant something dies.
@@ -72,14 +73,17 @@ function fillEnemies(dt){if(VS||S.demo||CINE.on||TUT.on||INTRO.on)return;
   const live=SCREEN==="play"&&S.started;
   if(!live){let guard=0;while(alive<ph.count&&guard++<8){spawnCluster(3);alive+=3}return}
   dt=dt||0;foesTick(dt);G.spawnT-=dt;G.bigT-=dt;
-  if(G.bigT<=0){
-    if(bl<(ph.blade||0)&&spawnMS(aheadPlayer(40,52,6),true)){G.bigT=7;return}
-    if(ms<(ph.ms||0)&&spawnMS(aheadPlayer(36,48,8))){G.bigT=6;return}
-    if(EN_MESH&&el<ph.elites){spawnEnemy(aheadPlayer(32,42,8),true);G.bigT=6;return}
-    if(EN_MESH&&rm<ph.rams){spawnEnemy(aheadPlayer(48,62,10),false,true);G.bigT=3.5;return}}
-  const el2=120-S.time,cnt=bossDown?24:G.phase>=3?((typeof BOSS!=="undefined"&&(BOSS.stage||0)>=1)?6:3):Math.round(11+clamp((el2-20)/40,0,1)*13); /* 10/30: 11 drones until 20 s, then up to 24 by the boss (60 s) */
+  /* 10/31 fix: each big kind has its own timer (one shared timer let the duelist take every turn, so normal MS almost never came) */
+  if(G.bigT<=0){const bt=G.bt||(G.bt={bl:0,ms:0,el:0,rm:0});bt.bl-=1;bt.ms-=1;bt.el-=1;bt.rm-=1;G.bigT=1;
+    if(bt.bl<=0&&bl<(ph.blade||0)&&spawnMS(aheadPlayer(40,52,6),true))bt.bl=7;
+    else if(bt.ms<=0&&ms<(ph.ms||0)&&spawnMS(aheadPlayer(36,48,8)))bt.ms=6;
+    else if(EN_MESH&&bt.el<=0&&el<ph.elites){spawnEnemy(aheadPlayer(32,42,8),true);bt.el=6}
+    else if(EN_MESH&&bt.rm<=0&&rm<ph.rams){spawnEnemy(aheadPlayer(48,62,10),false,true);bt.rm=3.5}}
+  const el2=120-S.time,cnt=bossDown?28:G.phase>=3?((typeof BOSS!=="undefined"&&(BOSS.stage||0)>=1)?6:3):Math.round(14+clamp((el2-20)/40,0,1)*14); /* 10/31: 14 → 28 */ /* 10/30: 11 drones until 20 s, then up to 24 by the boss (60 s) */
   if(G.spawnT>0||alive>=cnt)return;
-  const need=cnt-alive;spawnCluster(Math.min(need,need>4?3:2));G.spawnT=(ph.gap[0]+Math.random()*(ph.gap[1]-ph.gap[0]))*(bossDown&&need>8?.4:1)}
+  const need=cnt-alive,fill=alive/cnt,r=Math.random(),grp=r<.35?1:r<.75?2:3;spawnCluster(Math.min(need,grp));
+  /* 10/31: the emptier the field, the sooner the next group (skilled players no longer wait for targets) */
+  G.spawnT=(ph.gap[0]+Math.random()*(ph.gap[1]-ph.gap[0]))*(fill<.5?.3:fill<.75?.55:1)*(bossDown&&need>8?.6:1)}
 function eliteBlocks(e,from){if(!e.elite)return false;const to=from.clone().sub(e.m.position).setY(0).normalize();
   return to.dot(new V3(Math.sin(e.yaw),0,Math.cos(e.yaw)))>.3}
 function shieldFlash(e){const s=e.m.userData.shield;if(s)s.hit=1;fxElectric(e.m.position.clone().add(new V3(0,1,0)),6)}
@@ -238,7 +242,7 @@ function phaseBanner(p){const b=$("phase");$("phaseName").textContent=p.name;$("
 function resetGameplay(){document.body.classList.remove("dmg");
   for(const b of G.ebolts){scene.remove(b.g);b.g.children.forEach(c=>c.material.dispose())}
   for(const e of enemies)clearTele(e);
-  Object.assign(G,{hp:HP_MAX,hpT:0,broke:false,spawnT:1.5,bigT:4,phase:0,kc:0,kcT:0,maxKC:0,crit:0,iframe:0,stagger:0,dodgeCd:0,ebolts:[],aimN:0,focus:null,lives:MAX_LIVES,dead:0,clean:0,guardCd:0});
+  Object.assign(G,{hp:HP_MAX,hpT:0,broke:false,spawnT:1.5,bigT:4,bt:null,phase:0,kc:0,kcT:0,maxKC:0,crit:0,iframe:0,stagger:0,dodgeCd:0,ebolts:[],aimN:0,focus:null,lives:MAX_LIVES,dead:0,clean:0,guardCd:0});
   AIM_DOTS.forEach(s=>s.visible=false);resetItems();resetUnits();resetBoss();if(P)P.root.visible=true;
 }
 
