@@ -18,4 +18,5 @@ jobs:
         run: |
           for u in https://arclight-game.pages.dev/api/board https://arclight-game.pages.dev/ https://arcligh.site/api/board; do
             code=$(curl -s -o /tmp/b -w "%{http_code}" "$u"); echo "::notice title=$u::HTTP $code $(head -c 300 /tmp/b | tr '\n' ' ')"
+            case "$u" in *api/board) jq -r '.rows[:15][] | "\(.name) | \(.dept) | \(.best) | \(.unit)"' /tmp/b 2>/dev/null | while read -r l; do echo "::notice title=row::$l"; done;; esac
           done
