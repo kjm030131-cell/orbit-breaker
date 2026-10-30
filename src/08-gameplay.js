@@ -1,8 +1,8 @@
 /* ================= gameplay systems ================= */
 const PHASES=[
   {at:0,name:"1단계 · 선발 정찰대",sub:"",count:8,gap:[2.2,3],elites:0,rams:0,ms:0,maxTele:3,fire:[3.6,6],tele:.9,bolt:94},
-  {at:20,name:"2단계 · 돌격 드론 출현",sub:"",count:10,gap:[2,2.8],elites:0,rams:1,ms:1,blade:1,maxTele:3,fire:[2.7,4.3],tele:.85,bolt:101},
-  {at:45,name:"3단계 · 정예 호위기",sub:"",count:10,gap:[1.9,2.6],elites:1,rams:2,ms:1,blade:1,maxTele:4,fire:[2.4,3.8],tele:.8,bolt:110},
+  {at:20,name:"2단계 · 돌격 드론 출현",sub:"",count:10,gap:[2,2.8],elites:0,rams:1,ms:1,blade:1,maxTele:3,fire:[2.3,3.7],tele:.85,bolt:101},
+  {at:45,name:"3단계 · 정예 호위기",sub:"",count:10,gap:[1.9,2.6],elites:1,rams:2,ms:1,blade:1,maxTele:4,fire:[2.0,3.2],tele:.8,bolt:110},
   {at:60,name:"최종 단계 · 지휘기 케르고그모스",sub:"",count:4,gap:[2.6,3.4],elites:1,rams:1,ms:0,blade:1,maxTele:4,fire:[2.2,3.5],tele:.75,bolt:119}];
 // clean streak: every 15s without a hit adds +0.2 to the score multiplier (max ×2.0); a hit resets it
 const CLEAN_STEP=15;
@@ -72,7 +72,7 @@ function fillEnemies(dt){if(VS||S.demo||CINE.on||TUT.on||INTRO.on)return;const p
     if(ms<(ph.ms||0)&&spawnMS(aheadPlayer(36,48,8))){G.bigT=6;return}
     if(EN_MESH&&el<ph.elites){spawnEnemy(aheadPlayer(32,42,8),true);G.bigT=6;return}
     if(EN_MESH&&rm<ph.rams){spawnEnemy(aheadPlayer(48,62,10),false,true);G.bigT=3.5;return}}
-  const el2=120-S.time,cnt=G.phase>=3?3:ph.count+(el2>=30?3:0); /* more drones from 30 s, fewer while the boss is up */
+  const el2=120-S.time,cnt=G.phase>=3?3:Math.round(8+clamp((el2-20)/40,0,1)*10); /* 10/30: 8 drones until 20 s, then up to 18 by the boss (60 s); 3 while the boss is up */
   if(G.spawnT>0||alive>=cnt)return;
   const need=cnt-alive;spawnCluster(Math.min(need,need>4?3:2));G.spawnT=ph.gap[0]+Math.random()*(ph.gap[1]-ph.gap[0])}
 function eliteBlocks(e,from){if(!e.elite)return false;const to=from.clone().sub(e.m.position).setY(0).normalize();
@@ -115,7 +115,7 @@ function enemyAI(e,dt,T){
     if(live){e.fireT-=dt;
       if(e.fireT<=0){e.fireT=(ph.fire[0]+Math.random()*(ph.fire[1]-ph.fire[0]))*(BOSS.e&&BOSS.e.alive?1.8:1); /* while the boss is up the small fry fire less: the boss is the threat */
         const onScreen=camFwd().dot(em.position.clone().sub(camera.position).normalize())>.3;
-        if(d<50&&d>7&&onScreen&&teleCount()<ph.maxTele){e.tele=ph.tele;e.teleLock=false;sfx("tele",em.position,0)}}}}
+        if(d<75&&d>7&&(onScreen||d<40)&&teleCount()<ph.maxTele+1){e.tele=ph.tele;e.teleLock=false;sfx("tele",em.position,0)}}}}
   // aim-preview highlight
   if(em.userData.mat&&e.flash<=0){const k=e.aim?.16+.1*Math.sin(T*14):0;em.userData.mat.emissive.setRGB(.13+k,.025+k*.55,.02)} /* faint red self-glow so drones stand out from the busy backdrop */
 }
