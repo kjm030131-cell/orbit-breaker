@@ -118,7 +118,7 @@ function slashStrike0(){ // called on the strike frame of a slash action
 }
 function disposeEnemy(e){clearTele(e);if(e.arc){scene.remove(e.arc.mesh);e.arc.mat.dispose();e.arc.geo.dispose();e.arc=null}scene.remove(e.m);e.m.traverse(o=>{if(o.material)o.material.dispose()})}
 function chainPts(n){return CHAIN_PTS} /* score v2: +500 for every enemy caught in a chain, no tiers */
-function explode(e,chainN){if(e.isWP){wpDamage(e,3,e.m.position.clone());return}if(e.isBoss){bossDie(e,chainN);return}e.alive=false;if(e.kami)kamiBlast(e.m.position.clone(),false);if(e.crate)crateReward(e);if(SCREEN==="play")S.kills=(S.kills||0)+1;disposeEnemy(e);fxExplosion(e.m.position,(e.elite?1.7:1)+Math.min(chainN,6)*.12);onKill(e);sfx("boom",e.m.position,chainN);S.shake=Math.max(S.shake,.5)}
+function explode(e,chainN){if(e.isWP){wpDamage(e,3,e.m.position.clone());return}if(e.isBoss){if(e.launched>0||(BOSS.stage||0)>=BOSS_WAVES-1)bossDie(e,chainN);else if(e.down>0)bossPhase2(e);return} /* 10/30: a hit on the stalled boss only counts as one wave cut */e.alive=false;if(e.kami)kamiBlast(e.m.position.clone(),false);if(e.crate)crateReward(e);if(SCREEN==="play")S.kills=(S.kills||0)+1;disposeEnemy(e);fxExplosion(e.m.position,(e.elite?1.7:1)+Math.min(chainN,6)*.12);onKill(e);sfx("boom",e.m.position,chainN);S.shake=Math.max(S.shake,.5)}
 function restart(){POPN=0;G.nf=null;{const f=$("feed");if(f)f.textContent=""}for(const e of enemies)disposeEnemy(e);enemies.length=0;fieldReset();
   Object.assign(S,{score:0,best:0,kills:0,time:120,started:false,ended:false,heat:0,over:0,boost:100,act:null,combo:0,dash:0,dashT:null,pending:null,bladeOn:0,hitstop:0,slow:0});
   S.pos.set(0,0,0);S.vel.set(0,0,0);resetGameplay();fillEnemies()}

@@ -78,10 +78,11 @@ function bossAI0(b,dt,T){
   // approach, then circle at a fixed stand-off
   /* 10/29: holds a stand-off band and manoeuvres instead of running: slow arcing strafes, a short side-step every few seconds,
      only an easy backstep (slower than your cruise speed) when you are right on top of it */
-  const big=!!m.userData.anim,keep=big?95:40;if(d>keep+6)m.position.addScaledVector(to,dt*(BOSS.introT>0?26:7));else if(d<(big?45:keep-8))m.position.addScaledVector(to,-dt*(big?4.5:6));
+  const big=!!m.userData.anim,keep=big?95:40,flee=big&&(BOSS.stage||0)>=BOSS_WAVES-1&&BOSS.introT<=0; /* 10/30 final wave: runs from you (≈11 m/s, cruise 15, boost 36) but stays inside the area */
+  if(d>keep+6)m.position.addScaledVector(to,dt*(BOSS.introT>0?26:7));else if(flee&&d<80){m.position.addScaledVector(to,-dt*11);m.position.addScaledVector(new V3(-to.z,0,to.x),dt*4*Math.sin(b.phase*.5))}else if(d<(big?45:keep-8))m.position.addScaledVector(to,-dt*(big?4.5:6));
   const side=new V3(-to.z,0,to.x);if(big){b.sstep=(b.sstep||4)-dt;if(b.sstep<=0){b.sstep=4+Math.random()*3;b.sdir=Math.random()<.5?-1:1;b.sT=1.2}if(b.sT>0)b.sT-=dt}
   m.position.addScaledVector(side,dt*(big?(4*Math.sin(b.phase*.3)+(b.sT>0?5*b.sdir*Math.sin(Math.PI*b.sT/1.2):0)):4*Math.sin(b.phase*.35)));m.position.y+=(S.pos.y+(big?23:6)-m.position.y)*dt*(big?.25:.6);
-  bossKeepIn(m.position);if((BOSS.stage||0)>=BOSS_WAVES-1&&!BOSS.saidRun&&big&&d<45&&BOSS.introT<=0){BOSS.saidRun=true;radio("이클립스 CIC · 최지우 중위","놈이 도망갑니다! 놓치지 마세요!","vo_op32")}
+  bossKeepIn(m.position);if((BOSS.stage||0)>=BOSS_WAVES-1&&!BOSS.saidRun&&big&&d<80&&BOSS.introT<=0){BOSS.saidRun=true;radio("이클립스 CIC · 최지우 중위","놈이 도망갑니다! 놓치지 마세요!","vo_op32")}
   BOSS.introT=Math.max(0,BOSS.introT-dt);
   const want=Math.atan2(S.pos.x-m.position.x,S.pos.z-m.position.z);let dy=Math.atan2(Math.sin(want-b.yaw),Math.cos(want-b.yaw));const yr=m.userData.anim?.22:.9;b.yaw+=clamp(dy,-yr*dt,yr*dt); /* the big hulk turns slowly: its wing-tip pods swung ~40 m/s when it snapped to face you */
   m.rotation.set(0,b.yaw,Math.sin(b.phase*.6)*.05);if(ring)ring.rotation.z+=dt*.5;
