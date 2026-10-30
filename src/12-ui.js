@@ -55,7 +55,7 @@ function renderBoards(){
   $("fullBoard").innerHTML=tableHTML(BOARD);$("rankCount").textContent=BOARD.length+"명 참가";
   const me=BOARD.findIndex(r=>r.me||(r.sid&&r.sid===PILOT.sid));
   $("rBoard").innerHTML=tableHTML(BOARD.slice(0,10),me>=10?`<tr><td colspan="4" class="d" style="text-align:center;padding:4px">⋯</td></tr>`+rowsHTML([BOARD[me]],me):"");
-  if(SCREEN==="result")updateRankLine();
+  if(SCREEN==="result"&&!DUELDONE)updateRankLine(); /* 10/30 fix: a showdown result keeps its own "비순위" line (the 30 s board refresh used to overwrite it with a solo rank) */
 }
 function updateRankLine(){
   const best=PILOT.rec?PILOT.rec.best||0:0;const i=BOARD.findIndex(x=>x.me||(x.sid&&x.sid===PILOT.sid));
@@ -70,6 +70,9 @@ const menuItems=[...document.querySelectorAll("#menu .mi")];
 function markMenu(){menuItems.forEach((m,i)=>m.classList.toggle("sel",i===menuSel))}
 function show(name){
   const prev=SCREEN;
+  /* 10/30 fix: the "showdown finished" mark used to be cleared only by the 쇼다운 로비로 button, so leaving with Esc / 메인 left it on
+     and the next player's solo 재출격 went to the showdown lobby (and a later score duel ended as a solo result). Clear it on any exit. */
+  if(prev==="result"&&name!=="result"){DUELDONE=false;if(DUEL&&DUEL.started){clearInterval(duelPoll);DUEL=null}}
   for(const k in SCR)$(SCR[k]).hidden=k!==name;
   $("hud").hidden=name!=="play";
   SCREEN=name;S.demo=!(name==="play"||name==="launch");
@@ -164,7 +167,7 @@ $("loadBack").addEventListener("click",()=>{sfx("uiback");if(RELOAD){RELOAD=fals
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 let launching=false;
 async function launch(){
-  if(launching||!P||!PILOT.rec||PILOT.rec.attempts>=MAX_SORTIE)return;launching=true;
+  if(launching||!P||!PILOT.rec||PILOT.rec.attempts>=MAX_SORTIE)return;launching=true;DUELDONE=false;
   lock();
   const rec=PILOT.rec;
   if(SERVER){try{const j=await api("start",{sid:PILOT.sid,name:PILOT.name,dept:PILOT.dept,unit:G.unit,frame:P?P.frame:"mk2"});RUN=j.runId;rec.attempts=j.attempts-1;rec.best=Math.max(rec.best||0,j.best||0)}
@@ -190,7 +193,7 @@ function debriefLine(lost,score){const n=S.kills||0;
 }
 
 // result screen layout: solo / score duel (score, stats, board) or the 1:1 machine battle outcome (vsres)
-function resultMode(vs){const r=$("scrResult");r.classList.toggle("vsres",vs);const h=r.querySelector(".pHead h2"),l=r.querySelector(".pane>.lbl");
+function resultMode(vs){const r=$("scrResult");r.classList.toggle("vsres",vs);r.classList.remove("duelres");const h=r.querySelector(".pHead h2"),l=r.querySelector(".pane>.lbl");
   if(h)h.textContent=vs?"기체 대전 종료":"작전 종료";if(l)l.textContent=vs?"라운드 스코어 (나 : 상대)":"이번 출격 점수"}
 function finishRun(reason){
   if(VS){vsTimeUp();return}
