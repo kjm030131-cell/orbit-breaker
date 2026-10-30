@@ -575,6 +575,7 @@ body.versus #hpRow,body.tut #hpRow{display:none}
 #scrTitle .event,#scrTitle .tRight [data-settings],#installBtn{display:none!important}
 #netStatus:not(.off){display:none}
 #loadStatus:not(.err){display:none}
+#playTip{display:flex;align-items:center;gap:12px;font:500 14px var(--f-k,Pretendard),sans-serif;color:rgba(232,230,223,.82);background:rgba(8,10,14,.55);border:1px solid rgba(255,178,26,.35);padding:7px 14px;letter-spacing:.01em}#playTip b{color:#ffb21a;font-weight:700}#playTip i{width:1px;height:14px;background:rgba(255,255,255,.25)}#playTip kbd{font:600 12px var(--f-mono,monospace);color:#1a1205;background:#ffb21a;padding:1px 6px;margin-right:4px;border-radius:2px}
 #loadStatus.err{font-size:15px;color:#fff;background:rgba(120,20,14,.85);border:1px solid var(--red);padding:9px 14px}
 /* ARCLIGHT wordmark (ui/logo_arclight.webp, 1707x251, letters only) + the light beam that forms the A's crossbar, drawn in CSS so it can fire */
 .logo{position:relative;width:fit-content;max-width:100%;--lw:min(600px,100%)}
@@ -1193,7 +1194,7 @@ body.bossguide #bossBar{top:calc(128px + env(safe-area-inset-top,0px))} /* below
     <div class="lbRows" id="miniBoard"></div>
     <button class="lbAll" data-go="rank" type="button"><span>전체 순위 보기</span><span>›</span></button>
   </aside>
-  <div class="tFoot"><div class="status" id="loadStatus">TA-07 아크라이트 기체 데이터 로딩 중…</div></div>
+  <div class="tFoot"><div class="playTip" id="playTip"><span><b>Chrome</b> 브라우저 권장</span><i></i><span><kbd>F11</kbd> 눌러 전체 화면으로 플레이하세요</span></div><div class="status" id="loadStatus">TA-07 아크라이트 기체 데이터 로딩 중…</div></div>
 </section>
 
 <!-- pilot registration -->
