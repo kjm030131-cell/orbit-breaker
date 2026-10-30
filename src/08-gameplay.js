@@ -10,13 +10,13 @@ function cleanMult(){return Math.min(2,1+Math.floor(G.clean/CLEAN_STEP)*.2)}
 const G={phase:0,kc:0,kcT:0,maxKC:0,crit:0,iframe:0,stagger:0,dodgeCd:0,ebolts:[],aimN:0,focus:null,lives:3,dead:0,clean:0,guardCd:0,unit:"mega",spawnT:0,bigT:0};
 const MAX_LIVES=1; // 10/29: one frame per sortie (3 sorties per student id), with a bigger armour pool instead
 const KC_WINDOW=3.5;
-function comboMult(){const k=G.kc;return k>=10?2:k>=5?1.5:1} /* 10/30 score v2: the only multiplier (5 kills ×1.5, 10 kills ×2) */
+function comboMult(){const k=G.kc;return k>=20?3:k>=15?2.5:k>=10?2:k>=5?1.5:1} /* 10/30 score v2: the only multiplier (5 kills ×1.5, 10 kills ×2) */
 function mult(){return comboMult()}
 const KILL_PTS=300,CHAIN_PTS=500,SURVIVE_PTS=3000; /* score v2: every kill 300 whatever the weapon, each enemy caught in a chain +500, finishing alive +3000 */
 function addScore(n,pos,cls){if(S.ended)return 0;const v=Math.round(n*mult());S.score+=v;if(pos&&SCREEN==="play")scorePop(pos,"+"+v.toLocaleString(),cls);return v}
 function onKill(e){if(SCREEN!=="play")return;tutCount("kill");{const src=HIT_SRC||e.hitBy||"other";tutCount("kill_"+src);if(e.elite)tutCount("elite_"+src);if(src==="blade"&&TUT.on&&(TUT.c.grav||0)>0)tutCount("gravSlash");if(TUT.on)tutWrongKill(e,src)}hitMark("kill");sfx("killmark");impactPunch(.35);addSpec(4);G.kc++;G.kcT=KC_WINDOW;G.maxKC=Math.max(G.maxKC,G.kc);
   if(!e.isBoss&&!e.isWP)addScore(KILL_PTS,e.m.position.clone());
-  if(G.kc===5||G.kc===10){popText(`콤보 ×${comboMult()}`);comboPop()}
+  if(G.kc===5||G.kc===10||G.kc===15||G.kc===20){popText(`콤보 ×${comboMult()}`);comboPop()}
   if(e.elite){tutCount("elite");addScore(1500,e.m.position.clone(),"big");popText("정예기 격파")}
   if(e.ms&&!e.blade)tutCount("ms");
   if(e.ms){addScore(e.blade?1800:1200,e.m.position.clone(),"big");popText(e.blade?"검투기 격파":"적 MS 격파")}}
