@@ -1,5 +1,5 @@
 /* ================= records (shared db, local fallback) ================= */
-const GRADE={S:120000,A:80000,B:40000}; /* score v2 (10/30): retune after play data */
+const GRADE={S:130000,A:85000,B:45000}; /* score v2 (10/30): retune after play data */
 const MAX_SORTIE=3,LS_KEY="orbitbreaker.players.v1";
 let DB=null,BOARD=[];
 // SERVER: the deployed build talks to the Cloudflare ranking API (authoritative sortie count + best score)
