@@ -71,7 +71,7 @@ function bossAI(b,dt,T){bossAI0(b,dt,T);bossAnim(b,dt,T)}
 function bossAI0(b,dt,T){
   const m=b.m,to=S.pos.clone().sub(m.position),d=to.length();to.normalize();b.phase+=dt;
   const ring=m.userData.ring;
-  if(b.down>0){b.down-=dt;m.rotation.z=Math.sin(b.phase*3)*.12;m.position.y-=dt*1.2;if(ring)ring.rotation.z+=dt*.2;
+  if(b.down>0){b.down-=dt;bossKeepIn(m.position);m.rotation.z=Math.sin(b.phase*3)*.12;m.position.y-=dt*1.2;if(ring)ring.rotation.z+=dt*.2;
     m.userData.eye.material.opacity=.15+.15*Math.random();m.userData.mat.emissive.setRGB(.25*Math.random(),.05,0);
     if(dt>0&&Math.random()<.25)emit(NORM,{pos:m.position.clone().add(new V3().randomDirection().multiplyScalar(4)),tex:TX.smoke,color:0x2a2b2e,s0:2,s1:7,life:1.2,a:.4});
     if(b.down<=0){b.down=0;buildWPs();sfx("phase");popText("케르고그모스 재기동 · 약점 포드 복구");m.userData.mat.emissive.setRGB(0,0,0)}
@@ -166,4 +166,4 @@ function bossClang(b){const p=b.m.position.clone().lerp(S.pos,.35);sparks(p,null
 
 // the boss backs off and side-steps but never leaves the operation area (it used to drift out and drag the player into the edge push);
 // at the edge it simply slides along it, so it still retreats - just inside the map
-function bossKeepIn(p){if(typeof FIELD==="undefined"||!FIELD.R)return;const d=p.clone().sub(FIELD.C),L=d.length(),max=FIELD.R-45;if(L>max)p.copy(FIELD.C).addScaledVector(d,max/L)}
+function bossKeepIn(p){if(typeof FIELD==="undefined"||!FIELD.R)return;const d=p.clone().sub(FIELD.C),L=d.length(),max=FIELD.R-90;if(L>max)p.copy(FIELD.C).addScaledVector(d,max/L)}

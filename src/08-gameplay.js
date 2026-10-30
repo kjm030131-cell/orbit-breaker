@@ -75,7 +75,7 @@ function fillEnemies(dt){if(VS||S.demo||CINE.on||TUT.on||INTRO.on)return;const p
     if(ms<(ph.ms||0)&&spawnMS(aheadPlayer(36,48,8))){G.bigT=6;return}
     if(EN_MESH&&el<ph.elites){spawnEnemy(aheadPlayer(32,42,8),true);G.bigT=6;return}
     if(EN_MESH&&rm<ph.rams){spawnEnemy(aheadPlayer(48,62,10),false,true);G.bigT=3.5;return}}
-  const el2=120-S.time,cnt=G.phase>=3?((typeof BOSS!=="undefined"&&(BOSS.stage||0)>=1)?6:3):Math.round(8+clamp((el2-20)/40,0,1)*10); /* 10/30: 8 drones until 20 s, then up to 18 by the boss (60 s); 3 while the boss is up */
+  const el2=120-S.time,cnt=G.phase>=3?((typeof BOSS!=="undefined"&&(BOSS.stage||0)>=1)?6:3):Math.round(11+clamp((el2-20)/40,0,1)*13); /* 10/30: 11 drones until 20 s, then up to 24 by the boss (60 s) */
   if(G.spawnT>0||alive>=cnt)return;
   const need=cnt-alive;spawnCluster(Math.min(need,need>4?3:2));G.spawnT=ph.gap[0]+Math.random()*(ph.gap[1]-ph.gap[0])}
 function eliteBlocks(e,from){if(!e.elite)return false;const to=from.clone().sub(e.m.position).setY(0).normalize();
