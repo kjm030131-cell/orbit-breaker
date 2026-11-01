@@ -166,7 +166,8 @@ function hurt(b){
   if(G.dead>0)return;
   fxImpact(S.pos.clone().add(new V3(0,.8,0)),0xff4030);sparks(S.pos,b.dir,0xffb080,20,.4,24);sfx("hurt");
   // HP system: armour points; a hit knocks you back and flashes, but never takes control away (10/29: stagger is 1:1 only)
-  const dmg=Math.round((b.dmg||(b.ram?34:24))*1);G.hp=Math.max(0,(G.hp??HP_MAX)-dmg);G.clean=0;G.hpT=0;if(G.kc>0){G.kc=0;G.kcT=0;comboBreak(true)}
+  // 11/02: hits from ordinary enemies deal 75% (first-time players should reach the boss at 60 s); the boss and its pods keep full damage
+  const boss=!!(b.owner&&(b.owner.isBoss||b.owner.isWP)),dmg=Math.round((b.dmg||(b.ram?34:24))*(boss?1:SOLO_DMG_K));G.hp=Math.max(0,(G.hp??HP_MAX)-dmg);G.clean=0;G.hpT=0;if(G.kc>0){G.kc=0;G.kcT=0;comboBreak(true)}
   crackHit();
   if(G.hp>0){G.iframe=Math.max(G.iframe,.55);S.hitstop=Math.max(S.hitstop,.06);S.shake=Math.max(S.shake,.55);
     if(b.dir){S.vel.copy(b.dir).multiplyScalar(18);S.freeT=.3}S.act=null;S.dash=0;S.dashT=null;S.pending=null;flash(.15);
@@ -263,6 +264,7 @@ function respawnMech(){
 
 /* ---- rammer drones: hunt, arm (flashing orange line), then charge in a straight line ---- */
 const RAM_SPEED=72;
+const SOLO_DMG_K=.75; // single: damage taken from non-boss enemies (bolt 24->18, ram 34->26, duelist 36->27, kamikaze 30->23, rush 26->20)
 const HP_MAX=180,HP_REGEN_AFTER=8,HP_REGEN=3.5; // armour HP, slow regen when untouched (single has no stagger since 10/29)
 function ramAI(e,dt,T){
   const em=e.m,eye=em.userData.eye,live=SCREEN==="play"&&!S.ended&&S.started;e.phase+=dt;
