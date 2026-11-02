@@ -111,3 +111,13 @@ T('live presence: ping upserts per tab, admin/live counts recent tabs by screen,
   assert.equal((await call('GET','admin/live',null,'nope')).status,401);
   assert.equal(DB.db.prepare('SELECT COUNT(*) AS n FROM players').get().n,0);assert.equal(DB.db.prepare('SELECT COUNT(*) AS n FROM runs').get().n,0);
 });
+T('live history: pings record the peak of each 10-minute slot; admin/livehist returns it with the key only',async()=>{
+  const DB=d1(),call=client(DB);
+  for(const id of ['histaaaaaa1','histaaaaaa2','histaaaaaa3'])await call('POST','ping',{id,m:'play'},null);
+  const h=await call('GET','admin/livehist');assert.equal(h.status,200);assert.equal(h.j.slotMs,600000);assert.ok(h.j.slots.length>=1);
+  const last=h.j.slots[h.j.slots.length-1];assert.ok(last.n>=1&&last.n<=3);
+  // a lower count later in the same slot must not lower the stored peak
+  DB.db.prepare('UPDATE presence_hist SET total=9 WHERE slot=?').run(Math.floor(last.t/600000));
+  assert.equal((await call('GET','admin/livehist',null,'nope')).status,401);
+  assert.equal(DB.db.prepare('SELECT total FROM presence_hist ORDER BY slot DESC LIMIT 1').get().total,9);
+});
