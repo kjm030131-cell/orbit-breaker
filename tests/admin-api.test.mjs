@@ -102,3 +102,12 @@ T('boss kills: badge on the board, Nth slayer, fastest list; deleting the run re
   const f2=await (await onRequest({request:new Request('https://x/api/fame'),env:{DB},params:{route:['fame']}})).json();assert.equal(f2.total,1);
   assert.equal((await call('GET','admin/overview')).j.players.find(p=>p.sid==='20261001').boss_t,70);
 });
+T('live presence: ping upserts per tab, admin/live counts recent tabs by screen, needs the key, never touches players/runs',async()=>{
+  const DB=d1(),call=client(DB);
+  for(const [id,m] of [['tabaaaaaaaa','title'],['tabbbbbbbbb','vs'],['tabccccccccc','vs'],['tabaaaaaaaa','play']])assert.equal((await call('POST','ping',{id,m},null)).status,200);
+  assert.equal((await call('POST','ping',{id:'x',m:'title'},null)).status,400);
+  DB.db.prepare("INSERT INTO presence(id,at,mode) VALUES('oldoldold1',?,'title')").run(Date.now()-120000);
+  const L=await call('GET','admin/live');assert.equal(L.status,200);assert.equal(L.j.total,3);assert.deepEqual(L.j.by,{play:1,vs:2});
+  assert.equal((await call('GET','admin/live',null,'nope')).status,401);
+  assert.equal(DB.db.prepare('SELECT COUNT(*) AS n FROM players').get().n,0);assert.equal(DB.db.prepare('SELECT COUNT(*) AS n FROM runs').get().n,0);
+});
