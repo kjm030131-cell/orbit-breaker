@@ -99,6 +99,7 @@ export async function onRequest({ request, env, params }) {
     }
     if (route.startsWith("duel")) return duel(DB, request, route, url);
     if (route.startsWith("admin/")) return admin(DB, env, request, route, url);
+    if (route === "ping" && request.method === "POST") return ping(DB, request);
     if (request.method !== "POST") return bad("not found", 404);
     const body = await request.json().catch(() => ({}));
 
@@ -268,6 +269,7 @@ async function admin(DB, env, request, route, url) {
     for (const p of players) { p.rank = p.best > 0 ? ++rank : null; const k = kills.get(p.sid); p.boss_t = k ? k.t : null; }
     return J({ players, stats: { players: players.length, ranked: rank, runs: runs.n || 0, flagged: runs.f || 0, unfinished: runs.u || 0 }, closed: await isClosed(DB), maxSortie: MAX_SORTIE });
   }
+  if (GET && route === "admin/live") return J(await live(DB));
   if (GET && route === "admin/runs") {
     const { results } = sid
       ? await DB.prepare("SELECT * FROM runs WHERE sid=? ORDER BY started ASC").bind(sid).all()
@@ -334,4 +336,31 @@ async function admin(DB, env, request, route, url) {
     return J({ ok: true, closed: !!body.closed });
   }
   return bad("not found", 404);
+}
+
+/* ---- live presence for the admin page: each open game tab POSTs /api/ping every 30 s (fire-and-forget on the client).
+   One row per tab id, overwritten in place; rows older than 75 s are "gone". Separate table: never touches players/runs. */
+const LIVE_MS = 75000, PING_MODES = ["title", "play", "tut", "vs", "vstut", "duel", "other"];
+let presenceReady = false;
+async function presenceInit(DB) {
+  if (presenceReady) return;
+  await DB.prepare("CREATE TABLE IF NOT EXISTS presence(id TEXT PRIMARY KEY, at INTEGER NOT NULL, mode TEXT)").run();
+  presenceReady = true;
+}
+async function ping(DB, request) {
+  const body = await request.json().catch(() => ({}));
+  const id = String(body.id || "").replace(/[^a-z0-9]/gi, "").slice(0, 24);
+  if (id.length < 8) return bad("bad id");
+  const mode = PING_MODES.includes(body.m) ? body.m : "other", now = Date.now();
+  await presenceInit(DB);
+  await DB.prepare("INSERT INTO presence(id,at,mode) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET at=excluded.at, mode=excluded.mode").bind(id, now, mode).run();
+  if (Math.random() < 0.05) await DB.prepare("DELETE FROM presence WHERE at<?").bind(now - 10 * 60000).run();
+  return J({ ok: 1 });
+}
+async function live(DB) {
+  await presenceInit(DB);
+  const { results } = await DB.prepare("SELECT mode, COUNT(*) AS n FROM presence WHERE at>? GROUP BY mode").bind(Date.now() - LIVE_MS).all();
+  const by = {};let total = 0;
+  for (const r of results) { by[r.mode] = r.n; total += r.n; }
+  return { total, by, at: Date.now() };
 }
