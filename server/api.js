@@ -270,6 +270,11 @@ async function admin(DB, env, request, route, url) {
     return J({ players, stats: { players: players.length, ranked: rank, runs: runs.n || 0, flagged: runs.f || 0, unfinished: runs.u || 0 }, closed: await isClosed(DB), maxSortie: MAX_SORTIE });
   }
   if (GET && route === "admin/live") return J(await live(DB));
+  if (GET && route === "admin/livehist") {
+    await presenceInit(DB);
+    const { results } = await DB.prepare("SELECT slot,total,bymode FROM presence_hist WHERE slot>=? ORDER BY slot").bind(Math.floor(Date.now() / SLOT_MS) - HIST_DAYS * 144).all();
+    return J({ slotMs: SLOT_MS, slots: results.map((r) => ({ t: r.slot * SLOT_MS, n: r.total, by: JSON.parse(r.bymode || "{}") })) });
+  }
   if (GET && route === "admin/runs") {
     const { results } = sid
       ? await DB.prepare("SELECT * FROM runs WHERE sid=? ORDER BY started ASC").bind(sid).all()
@@ -341,11 +346,12 @@ async function admin(DB, env, request, route, url) {
 /* ---- live presence for the admin page: each open game tab POSTs /api/ping every 30 s (fire-and-forget on the client).
    One row per tab id, overwritten in place; rows older than 75 s are "gone". Separate table: never touches players/runs. */
 const LIVE_MS = 75000, PING_MODES = ["title", "play", "tut", "vs", "vstut", "duel", "other"];
-let presenceReady = false;
+const presenceReady = new WeakSet();
 async function presenceInit(DB) {
-  if (presenceReady) return;
+  if (presenceReady.has(DB)) return;
   await DB.prepare("CREATE TABLE IF NOT EXISTS presence(id TEXT PRIMARY KEY, at INTEGER NOT NULL, mode TEXT)").run();
-  presenceReady = true;
+  await DB.prepare("CREATE TABLE IF NOT EXISTS presence_hist(slot INTEGER PRIMARY KEY, total INTEGER NOT NULL, bymode TEXT)").run();
+  presenceReady.add(DB);
 }
 async function ping(DB, request) {
   const body = await request.json().catch(() => ({}));
@@ -355,7 +361,17 @@ async function ping(DB, request) {
   await presenceInit(DB);
   await DB.prepare("INSERT INTO presence(id,at,mode) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET at=excluded.at, mode=excluded.mode").bind(id, now, mode).run();
   if (Math.random() < 0.05) await DB.prepare("DELETE FROM presence WHERE at<?").bind(now - 10 * 60000).run();
+  // history: at most once a minute per server instance, keep the PEAK concurrent count of each 10-minute slot
+  if (now - (lastSnap.get(DB) || 0) > 60000) { lastSnap.set(DB, now); await snapshot(DB, now).catch(() => {}); }
   return J({ ok: 1 });
+}
+const lastSnap = new WeakMap(); // per D1 binding (one per server instance)
+const SLOT_MS = 600000, HIST_DAYS = 14;
+async function snapshot(DB, now) {
+  const L = await live(DB);
+  await DB.prepare("INSERT INTO presence_hist(slot,total,bymode) VALUES(?,?,?) ON CONFLICT(slot) DO UPDATE SET bymode=CASE WHEN excluded.total>presence_hist.total THEN excluded.bymode ELSE presence_hist.bymode END, total=MAX(presence_hist.total,excluded.total)")
+    .bind(Math.floor(now / SLOT_MS), L.total, JSON.stringify(L.by)).run();
+  if (Math.random() < 0.02) await DB.prepare("DELETE FROM presence_hist WHERE slot<?").bind(Math.floor(now / SLOT_MS) - HIST_DAYS * 144).run();
 }
 async function live(DB) {
   await presenceInit(DB);
