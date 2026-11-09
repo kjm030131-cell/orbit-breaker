@@ -95,7 +95,7 @@ function skillBlast(c,R,kind,skip){
   else{if(kind==="pod")fxFlipK("podhit",c,R*1.9,.7);emit(ADD,{pos:c.clone(),tex:TX.flare,color:0xffffff,s0:5,s1:11,life:.14});emit(ADD,{pos:c.clone(),tex:TX.ring,color:col,s0:2,s1:R*2.2,life:.4,a:.9});
     for(let i=0;i<14;i++){const o=new V3().randomDirection().multiplyScalar(1+Math.random()*1.5);emit(ADD,{pos:c.clone().add(o),color:col,vel:o.multiplyScalar(9),s0:1.2,s1:.1,life:.35+Math.random()*.2,a:.9,drag:2})}
     flashLight(c,col,10,50,.35)}
-  fxShockwave(c,R*2.4,.5,0,kind==="shield"?"hexwave":null);S.hitstop=Math.max(S.hitstop||0,.045);S.shake=Math.max(S.shake,.45);impactPunch(.5);
+  fxShockwave(c,R*2.4,.5,0,kind==="shield"?"hexwave":null);if(!ultBusy())S.hitstop=Math.max(S.hitstop||0,.045); /* 11/09: 궁극기 중 탄 하나하나 멈춤 제거 (포드 폭풍·풀 버스트 끊김) */S.shake=Math.max(S.shake,.45);impactPunch(.5);
   let n=0;for(const e of enemies){if(e===skip||!isMob(e))continue;const d=e.m.position.clone().sub(c),dist=d.length();if(dist>R)continue;
     d.y=Math.abs(d.y)*.4+.15;knock(e,d.normalize(),30,1.7);e.rad=Math.max(e.rad,4.2);hitFlash(e);n++}
   return n}
@@ -161,23 +161,23 @@ function unitSpecial(){
   if(u==="missile"){cutin("풀 버스트","MP-12");G.fBusyT=clockT+3.2;
     /* 10/29 buff: two waves, up to 15 targets each within 110 m (weak-point pods included), slow motion on launch */
     const pick=()=>enemies.filter(e=>targetable(e)&&!e.isBoss&&e.m.position.distanceTo(S.pos)<110).sort((a,b)=>a.m.position.distanceTo(S.pos)-b.m.position.distanceTo(S.pos)).slice(0,15);
-    setTimeout(()=>{if(S.ended)return;fireMissiles(pick(),1);S.slow=Math.max(S.slow,.5)},420);setTimeout(()=>{if(!S.ended){fireMissiles(pick(),1);S.shake=Math.max(S.shake,.6)}},1050);
+    setTimeout(()=>{if(S.ended)return;fireMissiles(pick(),1)},420); /* 11/09: 발사 슬로우 제거 */setTimeout(()=>{if(!S.ended){fireMissiles(pick(),1);S.shake=Math.max(S.shake,.6)}},1050);
     setTimeout(()=>{if(!S.ended){fireMissiles(pick(),1);S.shake=Math.max(S.shake,.7)}},1680);
     // finale: one huge blast where the enemies are packed tightest
     setTimeout(()=>{if(S.ended||SCREEN!=="play")return;const l=enemies.filter(e=>isMob(e)&&e.m.position.distanceTo(S.pos)<110);
       let c=S.pos.clone().addScaledVector(aimDir(),30),bn=-1;for(const a of l){let k=0;for(const b of l)if(a.m.position.distanceTo(b.m.position)<25)k++;if(k>bn){bn=k;c=a.m.position.clone()}}
-      fxBigExplosion(c,55);fxExplosion(c,2.4);sfx("boom",c,4);sfx("specBurst");S.hitstop=Math.max(S.hitstop||0,.12);S.slow=Math.max(S.slow,.35);S.shake=1.3;flash(.4);impactPunch(1.3);
+      fxBigExplosion(c,55);fxExplosion(c,2.4);sfx("boom",c,4);sfx("specBurst");S.hitstop=Math.max(S.hitstop||0,.12);S.slow=Math.max(S.slow,.2); /* 11/09: 피날레 슬로우 .35→.2 */S.shake=1.3;flash(.4);impactPunch(1.3);
       for(const e of enemies)if(e.isWP&&e.alive&&e.m.position.distanceTo(c)<25)wpDamage(e,2,e.m.position.clone());skillBlast(c,25,"missile")},2500);return}
   if(u==="shield"){cutin("카운터 필드","SB-4");G.cfield=6;G.cfPulse=.8;G.iframe=Math.max(G.iframe,3)}
 }
 function unitSpecialBurst(){ // called at the special's strike frame
   const u=G.unit;
   if(u==="mega")return; // the beam itself does the work (megaTick)
-  if(u==="pods"){const c=G.podsPull?G.podsPull.c:S.pos.clone();S.hitstop=.12;S.shake=1.2;flash(.4);sfx("specBurst");
+  if(u==="pods"){const c=G.podsPull?G.podsPull.c:S.pos.clone();S.hitstop=.08; /* 11/09: .12→.08 */S.shake=1.2;flash(.4);sfx("specBurst");
     emit(ADD,{pos:c,tex:TX.ring,color:0x48d8ff,s0:3,s1:70,life:.6});emit(ADD,{pos:c,tex:TX.flare,color:0xffffff,s0:14,s1:26,life:.2});flashLight(c,0x48d8ff,14,100,.5);
     let n=0;for(const e of enemies){if(!isMob(e))continue;const d=e.m.position.clone().sub(c),dist=d.length();if(dist>55)continue;
       knock(e,dist<.5?new V3().randomDirection():d.normalize(),36,2);e.rad=Math.max(e.rad,4.6);hitFlash(e);n++}
-    fxBigExplosion(c,70);fxFlipK("podhit",c,90,1);S.slow=Math.max(S.slow,.45);impactPunch(1.4);sfx("boom",c,4);for(const e of enemies)if(e.isWP&&e.alive&&e.m.position.distanceTo(c)<55)wpDamage(e,2,e.m.position.clone());
+    fxBigExplosion(c,70);fxFlipK("podhit",c,90,1); /* 11/09: 폭발 슬로우 제거 */impactPunch(1.4);sfx("boom",c,4);for(const e of enemies)if(e.isWP&&e.alive&&e.m.position.distanceTo(c)<55)wpDamage(e,2,e.m.position.clone());
     G.podsPull=null;G.podStorm={t:4.5,next:.12};emit(ADD,{pos:c,tex:TX.ring,color:0x9ff0ff,s0:6,s1:110,life:.8});return}
   if(u==="missile"){S.shake=.8;flash(.25);sfx("specBurst");fxShockwave(S.pos.clone().add(new V3(0,1,0)),40,.6,0);return}
   if(u==="shield"){sfx("gravOn");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x8dff7a,s0:3,s1:30,life:.5});cfieldWave(30,.6)}
