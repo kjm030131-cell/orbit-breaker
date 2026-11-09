@@ -199,8 +199,8 @@ function finishRun(reason){
   if(VS){vsTimeUp();return}
   if(TUT.on){tutExit("title");return}
   if(S.ended)return;S.ended=true;if(document.pointerLockElement)document.exitPointerLock();
-  const lost=reason==="lost";let bonus=0;
-  const rate=0;if(!lost&&!DUEL){bonus=SURVIVE_PTS;S.score+=bonus}
+  const lost=reason==="lost",quit=reason==="quit";let bonus=0; /* 11/09: 작전 종료(중도 포기)는 생존 보너스 없음 */
+  const rate=0;if(!lost&&!quit&&!DUEL){bonus=SURVIVE_PTS;S.score+=bonus}
   G.focus=null;resultMode(false);
   if(DUEL){duelFinish(lost,bonus,rate);return}
   if(DEV.run){devFinish(lost);return} // developer mode: nothing is recorded
@@ -210,7 +210,7 @@ function finishRun(reason){
   if(SERVER&&RUN){const runId=RUN;RUN=null;api("finish",{runId,score,kills:S.kills||0,chain:S.best,combo:G.maxKC,boss:!!BOSS.dead,bossT:BOSS.killT||0}).then(j=>{bossCard(j.boss);rec.best=j.best;rec.attempts=j.attempts;$("rBest").textContent=(j.best||0).toLocaleString();applyBoard(j);updateRankLine()}).catch(e=>{$("rRank").innerHTML='<span class="note" style="color:var(--red)">기록 서버 전송 실패 — 운영진에게 화면을 보여주세요.</span>'})}
   music(null);sfx("end");if(pb&&score>0)sfx("pb");setTimeout(()=>{if(SCREEN==="result"){music("title");muffle(true)}},2600);
   $("rScore").textContent=score.toLocaleString();{const g=score>=GRADE.S?"S":score>=GRADE.A?"A":score>=GRADE.B?"B":"C",im=$("rGrade");im.hidden=false;im.src=`ui/grade_${g}.webp`;im.alt=g+" 등급";im.style.animation="none";void im.offsetWidth;im.style.animation=""}$("rKills").textContent=S.kills||0;$("rCombo").textContent=G.maxKC;$("rChain").textContent=S.best;$("rBest").textContent=(rec.best||0).toLocaleString();
-  $("rPb").innerHTML=(pb&&score>0?'<span class="pb">개인 최고 기록 갱신</span> ':"")+(lost?'<span class="note">기체 대파 · 작전 조기 종료</span>':`<span class="note">생존 보너스 +${bonus.toLocaleString()} (끝까지 살아남음)</span>`);
+  $("rPb").innerHTML=(pb&&score>0?'<span class="pb">개인 최고 기록 갱신</span> ':"")+(lost?'<span class="note">기체 대파 · 작전 조기 종료</span>':quit?'<span class="note">작전 중도 종료 · 생존 보너스 없음</span>':`<span class="note">생존 보너스 +${bonus.toLocaleString()} (끝까지 살아남음)</span>`);
   bossCard(BOSS.dead?{pending:true,t:BOSS.killT||0}:null);
   $("rDebrief").innerHTML='<span class="who">이클립스 CIC · 최지우 중위</span>'+debriefLine(lost,score);
   $("rSortie").textContent=`출격 ${rec.attempts} / ${MAX_SORTIE}`;

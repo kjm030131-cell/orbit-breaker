@@ -158,7 +158,7 @@ function unitSpecial(){
   const u=G.unit;
   if(u==="mega"){cutin("하이퍼 메가 빔","HM-1");megaStart("f");return}
   if(u==="pods"){cutin("올 레인지","RF-6");G.podsPull={t:0,c:S.pos.clone().addScaledVector(aimDir(),18)};G.podsOut=3.6;return}
-  if(u==="missile"){cutin("풀 버스트","MP-12");G.fBusyT=clockT+3.2;
+  if(u==="missile"){cutin("풀 버스트","MP-12");G.fBusyT=clockT+4; /* 11/09: 3.2→4 (피날레·늦게 맞는 미사일까지 충전 잠금) */
     /* 10/29 buff: two waves, up to 15 targets each within 110 m (weak-point pods included), slow motion on launch */
     const pick=()=>enemies.filter(e=>targetable(e)&&!e.isBoss&&e.m.position.distanceTo(S.pos)<110).sort((a,b)=>a.m.position.distanceTo(S.pos)-b.m.position.distanceTo(S.pos)).slice(0,15);
     setTimeout(()=>{if(S.ended)return;fireMissiles(pick(),1)},420); /* 11/09: 발사 슬로우 제거 */setTimeout(()=>{if(!S.ended){fireMissiles(pick(),1);S.shake=Math.max(S.shake,.6)}},1050);
@@ -177,7 +177,7 @@ function unitSpecialBurst(){ // called at the special's strike frame
     emit(ADD,{pos:c,tex:TX.ring,color:0x48d8ff,s0:3,s1:70,life:.6});emit(ADD,{pos:c,tex:TX.flare,color:0xffffff,s0:14,s1:26,life:.2});flashLight(c,0x48d8ff,14,100,.5);
     let n=0;for(const e of enemies){if(!isMob(e))continue;const d=e.m.position.clone().sub(c),dist=d.length();if(dist>55)continue;
       knock(e,dist<.5?new V3().randomDirection():d.normalize(),36,2);e.rad=Math.max(e.rad,4.6);hitFlash(e);n++}
-    fxBigExplosion(c,70);fxFlipK("podhit",c,90,1); /* 11/09: 폭발 슬로우 제거 */impactPunch(1.4);sfx("boom",c,4);for(const e of enemies)if(e.isWP&&e.alive&&e.m.position.distanceTo(c)<55)wpDamage(e,2,e.m.position.clone());
+    fxBigExplosion(c,48);fxFlipK("podhit",c,60,1); /* 11/09: 화면 덮는 폭발 축소 70/90→48/60 */ /* 11/09: 폭발 슬로우 제거 */impactPunch(1.4);sfx("boom",c,4);for(const e of enemies)if(e.isWP&&e.alive&&e.m.position.distanceTo(c)<55)wpDamage(e,2,e.m.position.clone());
     G.podsPull=null;G.podStorm={t:4.5,next:.12};emit(ADD,{pos:c,tex:TX.ring,color:0x9ff0ff,s0:6,s1:110,life:.8});return}
   if(u==="missile"){S.shake=.8;flash(.25);sfx("specBurst");fxShockwave(S.pos.clone().add(new V3(0,1,0)),40,.6,0);return}
   if(u==="shield"){sfx("gravOn");emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x8dff7a,s0:3,s1:30,life:.5});cfieldWave(30,.6)}
@@ -203,7 +203,7 @@ function unitsTick(dt,rdt,T){
     emit(ADD,{pos:c,tex:TX.ring,color:0xcaffc0,s0:5,s1:120,life:.8});flashLight(c,0x8dff7a,16,120,.6);S.hitstop=Math.max(S.hitstop||0,.14);S.slow=Math.max(S.slow,.4);fxBigExplosion(c.clone().add(new V3(0,1,0)),60);cfieldWave(45,1)}}
   const bOn=G.barrier>0||G.cfield>0;barrier.visible=bOn;
   if(bOn){barrier.position.copy(S.pos).add(new V3(0,.8,0));barrier.rotation.y+=rdt*.6;barrierTex.offset.y=(barrierTex.offset.y+rdt*.15)%1;
-    const k=G.cfield>0?1.5:1;barrier.scale.setScalar(k);barrier.material.opacity=(G.cfield>0?.36:.28)+.07*Math.sin(T*14)}
+    const k=G.cfield>0?1.5:1;barrier.scale.setScalar(k);barrier.material.opacity=G.cfield>0?.15+.03*Math.sin(T*14):.28+.07*Math.sin(T*14)} /* 11/09: 카운터 필드 구체 흐리게 .36→.15 */
   // all-range pull
   if(G.podsPull){G.podsPull.t+=dt;const c=G.podsPull.c;
     for(const e of enemies){if(!isMob(e))continue;const d=c.clone().sub(e.m.position),dist=d.length();if(dist>70||dist<2)continue;clearTele(e);e.fireT=Math.max(e.fireT,1);e.m.position.addScaledVector(d.normalize(),dt*Math.min(dist*3,65))}
