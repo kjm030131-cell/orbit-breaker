@@ -74,7 +74,8 @@ function fillEnemies(dt){if(VS||S.demo||CINE.on||TUT.on||INTRO.on)return;
   if(!live){let guard=0;while(alive<ph.count&&guard++<8){spawnCluster(3);alive+=3}return}
   dt=dt||0;foesTick(dt);G.spawnT-=dt;G.bigT-=dt;
   /* 10/31 fix: each big kind has its own timer (one shared timer let the duelist take every turn, so normal MS almost never came) */
-  if(G.bigT<=0){const bt=G.bt||(G.bt={bl:0,ms:0,el:0,rm:0});bt.bl-=1;bt.ms-=1;bt.el-=1;bt.rm-=1;G.bigT=1;
+  {const bt=G.bt||(G.bt={bl:0,ms:0,el:0,rm:0});let ba=0;for(const e of enemies)if(e.alive&&e.blade)ba++;if(G.phase>=3&&!BOSS.dead&&ba<(bt.pbl||0))bt.bl=Math.max(bt.bl,6);bt.pbl=ba} /* 11/09: 보스전 에이스는 처치 후 6초 뒤 재출현 */
+  if(G.bigT<=0){const bt=G.bt;bt.bl-=1;bt.ms-=1;bt.el-=1;bt.rm-=1;G.bigT=1;
     if(bt.bl<=0&&bl<(ph.blade||0)&&spawnMS(aheadPlayer(40,52,6),true))bt.bl=7;
     else if(bt.ms<=0&&ms<(ph.ms||0)&&spawnMS(aheadPlayer(36,48,8)))bt.ms=6;
     else if(EN_MESH&&bt.el<=0&&el<ph.elites){spawnEnemy(aheadPlayer(32,42,8),true);bt.el=6}
