@@ -158,7 +158,7 @@ function unitSpecial(){
   const u=G.unit;
   if(u==="mega"){cutin("하이퍼 메가 빔","HM-1");megaStart("f");return}
   if(u==="pods"){cutin("올 레인지","RF-6");G.podsPull={t:0,c:S.pos.clone().addScaledVector(aimDir(),18)};G.podsOut=3.6;return}
-  if(u==="missile"){cutin("풀 버스트","MP-12");
+  if(u==="missile"){cutin("풀 버스트","MP-12");G.fBusyT=clockT+3.2;
     /* 10/29 buff: two waves, up to 15 targets each within 110 m (weak-point pods included), slow motion on launch */
     const pick=()=>enemies.filter(e=>targetable(e)&&!e.isBoss&&e.m.position.distanceTo(S.pos)<110).sort((a,b)=>a.m.position.distanceTo(S.pos)-b.m.position.distanceTo(S.pos)).slice(0,15);
     setTimeout(()=>{if(S.ended)return;fireMissiles(pick(),1);S.slow=Math.max(S.slow,.5)},420);setTimeout(()=>{if(!S.ended){fireMissiles(pick(),1);S.shake=Math.max(S.shake,.6)}},1050);
