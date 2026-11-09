@@ -91,8 +91,8 @@ function bossAI0(b,dt,T){
   if(SCREEN!=="play"||S.ended||BOSS.introT>0)return;
   bossPods(b,dt);const es=big?BOSS_EYE:3;
   if(BOSS.phase2&&b.down<=0&&typeof spawnKami==="function"){BOSS.escT=(BOSS.escT===undefined?3:BOSS.escT)-dt;
-    {let kk=0;for(const e of enemies)if(e.alive&&e.kami)kk++;if(kk<(BOSS.pk||0))BOSS.escT=Math.max(BOSS.escT,3);BOSS.pk=kk} /* 11/09: 호위 자폭로봇도 처치 후 최소 3초 */
-    if(BOSS.escT<=0){BOSS.escT=8;let k=0;for(const e of enemies)if(e.alive&&e.kami)k++;
+    let k=0;for(const e of enemies)if(e.alive&&e.kami)k++;
+    if(BOSS.escT<=0&&slotReady("kami",k,4)){BOSS.escT=8; /* 11/10: 호위 자폭도 같은 '자폭' 슬롯 (처치 후 대기 RESPAWN.kami) */
       for(let i=0;i<Math.min(2,4-k);i++)spawnKami(m.position.clone().add(new V3((Math.random()-.5)*40,-6+Math.random()*12,(Math.random()-.5)*40)))}}
   if(BOSS.tele>0){BOSS.tele-=dt;const k=1-BOSS.tele/BOSS_TELE;m.userData.eye.scale.setScalar(es*(1+k*1.7)+Math.sin(T*40)*es*.4);
     if(BOSS.tele<=0)bossFire(b)}
@@ -123,7 +123,7 @@ function bossPods(b,dt){if(BOSS.tele>0)return;for(const w of BOSS.wps){if(!w.ali
 function bossTick(dt,rdt,T){placeWPs(T)}
 function resetBoss(){
   if(BOSS.e){disposeEnemy(BOSS.e)}for(const w of BOSS.wps)if(w.alive)disposeEnemy(w);
-  Object.assign(BOSS,{e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0,phase2:false,stage:0,saidRun:false,escT:3,pk:0,guide:BOSS.guide,saidClang:false});
+  Object.assign(BOSS,{e:null,wps:[],atkT:0,mode:0,tele:0,down:0,downs:0,dead:false,introT:0,phase2:false,stage:0,saidRun:false,escT:3,guide:BOSS.guide,saidClang:false});
 }
 // radio chatter overlay (reuses the cutscene subtitle style, but small, top-centre)
 // portraits: ui/face_op.webp (CIC), face_ace.webp (enemy), face_cap.webp (captain) when present

@@ -66,20 +66,27 @@ function spawnCluster(n){n=n||2+Math.floor(Math.random()*2);const c=Math.random(
   for(let i=0;i<n;i++){const e=spawnEnemy(c.clone().add(new V3().randomDirection().multiplyScalar(5+Math.random()*4)),false);if(e&&S.started)e.fireT=Math.max(e.fireT,2.5+Math.random()*2);
     if(e&&SCREEN==="play")emit(ADD,{pos:e.m.position.clone(),tex:TX.ring,color:0xff4030,s0:2,s1:9,life:.35,a:.6})}}
 // waves trickle in: the field is topped up one small cluster at a time with a per-phase gap, not refilled the instant something dies.
+/* 11/10 리젠 정리: 큰 적·특수 적은 모두 같은 '슬롯' 규칙을 쓴다.
+   - 최대 수는 살아 있는 적으로 센다 (베기·폭발로 날아가는 중인 적도 포함 → 정원 초과 없음)
+   - 다음 등장 대기는 '처치(퇴장) 순간'부터 센다 (오래 싸운 적이 죽자마자 바로 다시 나오지 않음)
+   대기 시간(초)은 이 표 하나에서만 바꾼다: [보스 전·보스 처치 후, 보스전] */
+const RESPAWN={ace:[4,6],ms:[3.5,3.5],elite:[3.5,6],ram:[2.5,4],kami:[8,3],sniper:[6,6]};
+function slotTrack(k,alive){const s=G.slots||(G.slots={}),o=s[k]||(s[k]={prev:0,ready:0});
+  if(alive<o.prev)o.ready=Math.max(o.ready,(G.gt||0)+RESPAWN[k][G.phase>=3&&typeof BOSS!=="undefined"&&!BOSS.dead?1:0]);o.prev=alive}
+function slotReady(k,alive,cap){const o=G.slots&&G.slots[k];return alive<cap&&(!o||(G.gt||0)>=o.ready)}
 // Before the sortie starts (title demo / catapult) the field is filled at once.
 function fillEnemies(dt){if(VS||S.demo||CINE.on||TUT.on||INTRO.on)return;
   /* 10/30: once the boss is destroyed the field fills back up like before the boss (3단계 mix, 24 drones, refilled fast) */
-  const bossDown=G.phase>=3&&typeof BOSS!=="undefined"&&BOSS.dead,ph=bossDown?PHASES[2]:PHASES[G.phase];let alive=0,el=0,rm=0,ms=0,bl=0;for(const e of enemies)if(e.alive&&e.launched<=0&&!e.isBoss&&!e.isWP){alive++;if(e.elite)el++;if(e.ram)rm++;if(e.blade)bl++;else if(e.ms)ms++}
+  const bossDown=G.phase>=3&&typeof BOSS!=="undefined"&&BOSS.dead,ph=bossDown?PHASES[2]:PHASES[G.phase];let alive=0,el=0,rm=0,ms=0,bl=0;for(const e of enemies)if(e.alive&&!e.isBoss&&!e.isWP){if(e.launched<=0)alive++;if(e.elite)el++;if(e.ram)rm++;if(e.blade)bl++;else if(e.ms)ms++} /* 11/10: 큰 적은 날아가는 중에도 센다 (드론 채우기 수는 그대로) */
   const live=SCREEN==="play"&&S.started;
   if(!live){let guard=0;while(alive<ph.count&&guard++<8){spawnCluster(3);alive+=3}return}
-  dt=dt||0;foesTick(dt);G.spawnT-=dt;G.bigT-=dt;
+  dt=dt||0;G.gt=(G.gt||0)+dt;slotTrack("ace",bl);slotTrack("ms",ms);slotTrack("elite",el);slotTrack("ram",rm);foesTick(dt);G.spawnT-=dt;G.bigT-=dt;
   /* 10/31 fix: each big kind has its own timer (one shared timer let the duelist take every turn, so normal MS almost never came) */
-  {const bt=G.bt||(G.bt={bl:0,ms:0,el:0,rm:0});let ba=0;for(const e of enemies)if(e.alive&&e.blade)ba++;if(G.phase>=3&&!BOSS.dead&&ba<(bt.pbl||0))bt.bl=Math.max(bt.bl,6);bt.pbl=ba} /* 11/09: 보스전 에이스는 처치 후 6초 뒤 재출현 */
-  if(G.bigT<=0){const bt=G.bt;bt.bl-=1;bt.ms-=1;bt.el-=1;bt.rm-=1;G.bigT=1;
-    if(bt.bl<=0&&bl<(ph.blade||0)&&spawnMS(aheadPlayer(40,52,6),true))bt.bl=7;
-    else if(bt.ms<=0&&ms<(ph.ms||0)&&spawnMS(aheadPlayer(36,48,8)))bt.ms=6;
-    else if(EN_MESH&&bt.el<=0&&el<ph.elites){spawnEnemy(aheadPlayer(32,42,8),true);bt.el=6}
-    else if(EN_MESH&&bt.rm<=0&&rm<ph.rams){spawnEnemy(aheadPlayer(48,62,10),false,true);bt.rm=3.5}}
+  if(G.bigT<=0){G.bigT=1; // at most one big enemy per second, in this priority order
+    if(slotReady("ace",bl,ph.blade||0)&&spawnMS(aheadPlayer(40,52,6),true)){}
+    else if(slotReady("ms",ms,ph.ms||0)&&spawnMS(aheadPlayer(36,48,8))){}
+    else if(EN_MESH&&slotReady("elite",el,ph.elites))spawnEnemy(aheadPlayer(32,42,8),true);
+    else if(EN_MESH&&slotReady("ram",rm,ph.rams))spawnEnemy(aheadPlayer(48,62,10),false,true)}
   const el2=120-S.time,cnt=bossDown?28:G.phase>=3?((typeof BOSS!=="undefined"&&(BOSS.stage||0)>=1)?6:3):Math.round(14+clamp((el2-20)/40,0,1)*14); /* 10/31: 14 → 28 */ /* 10/30: 11 drones until 20 s, then up to 24 by the boss (60 s) */
   if(G.spawnT>0||alive>=cnt)return;
   const need=cnt-alive,fill=alive/cnt,r=Math.random(),grp=r<.35?1:r<.75?2:3;spawnCluster(Math.min(need,grp));
@@ -244,7 +251,7 @@ function phaseBanner(p){const b=$("phase");$("phaseName").textContent=p.name;$("
 function resetGameplay(){document.body.classList.remove("dmg");
   for(const b of G.ebolts){scene.remove(b.g);b.g.children.forEach(c=>c.material.dispose())}
   for(const e of enemies)clearTele(e);
-  Object.assign(G,{hp:HP_MAX,hpT:0,broke:false,spawnT:1.5,bigT:4,bt:null,phase:0,kc:0,kcT:0,maxKC:0,crit:0,iframe:0,stagger:0,dodgeCd:0,ebolts:[],aimN:0,focus:null,lives:MAX_LIVES,dead:0,clean:0,guardCd:0});
+  Object.assign(G,{hp:HP_MAX,hpT:0,broke:false,spawnT:1.5,bigT:4,slots:null,gt:0,phase:0,kc:0,kcT:0,maxKC:0,crit:0,iframe:0,stagger:0,dodgeCd:0,ebolts:[],aimN:0,focus:null,lives:MAX_LIVES,dead:0,clean:0,guardCd:0});
   AIM_DOTS.forEach(s=>s.visible=false);resetItems();resetUnits();resetBoss();if(P)P.root.visible=true;
 }
 
