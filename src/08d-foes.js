@@ -8,7 +8,7 @@ const FOE_LIMIT=[{kami:0,sniper:0},{kami:1,sniper:2},{kami:2,sniper:3},{kami:1,s
 function foesReset(){G.nf={kamiT:6,snipeT:4,formT:15,crateT:9}}
 function foesTick(dt){if(TUT.on||VS)return;if(!G.nf)foesReset();const n=G.nf,el=120-S.time,lim=(G.phase>=3&&BOSS.dead?FOE_LIMIT[2]:FOE_LIMIT[G.phase])||FOE_LIMIT[3]; /* 10/30: after the boss dies, 3단계 extras again */
   let k=0,sn=0,cr=0;for(const e of enemies){if(!e.alive)continue;if(e.kami)k++;if(e.sniper)sn++;if(e.crate)cr++}
-  if(G.phase>=3&&!BOSS.dead&&k<(n.pk||0))n.kamiT=Math.max(n.kamiT,4);n.pk=k; /* 11/09: 보스전 자폭로봇은 처치 후 최소 4초 */
+  if(G.phase>=3&&!BOSS.dead&&k<(n.pk||0))n.kamiT=Math.max(n.kamiT,3);n.pk=k; /* 11/09: 보스전 자폭로봇은 처치 후 최소 3초 */
   n.kamiT-=dt;n.snipeT-=dt;n.formT-=dt;n.crateT-=dt;
   if(n.kamiT<=0&&k<lim.kami){const c=aheadPlayer(55,70,10);for(let i=0;i<Math.min(2,lim.kami-k);i++)spawnKami(c.clone().add(new V3().randomDirection().multiplyScalar(6)));n.kamiT=8+Math.random()*4}
   if(n.snipeT<=0&&sn<lim.sniper){spawnSniper(aheadPlayer(78,90,14));n.snipeT=9+Math.random()*4}

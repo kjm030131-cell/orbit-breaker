@@ -91,7 +91,7 @@ function bossAI0(b,dt,T){
   if(SCREEN!=="play"||S.ended||BOSS.introT>0)return;
   bossPods(b,dt);const es=big?BOSS_EYE:3;
   if(BOSS.phase2&&b.down<=0&&typeof spawnKami==="function"){BOSS.escT=(BOSS.escT===undefined?3:BOSS.escT)-dt;
-    {let kk=0;for(const e of enemies)if(e.alive&&e.kami)kk++;if(kk<(BOSS.pk||0))BOSS.escT=Math.max(BOSS.escT,4);BOSS.pk=kk} /* 11/09: 호위 자폭로봇도 처치 후 최소 4초 */
+    {let kk=0;for(const e of enemies)if(e.alive&&e.kami)kk++;if(kk<(BOSS.pk||0))BOSS.escT=Math.max(BOSS.escT,3);BOSS.pk=kk} /* 11/09: 호위 자폭로봇도 처치 후 최소 3초 */
     if(BOSS.escT<=0){BOSS.escT=8;let k=0;for(const e of enemies)if(e.alive&&e.kami)k++;
       for(let i=0;i<Math.min(2,4-k);i++)spawnKami(m.position.clone().add(new V3((Math.random()-.5)*40,-6+Math.random()*12,(Math.random()-.5)*40)))}}
   if(BOSS.tele>0){BOSS.tele-=dt;const k=1-BOSS.tele/BOSS_TELE;m.userData.eye.scale.setScalar(es*(1+k*1.7)+Math.sin(T*40)*es*.4);
