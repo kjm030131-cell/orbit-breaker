@@ -92,7 +92,7 @@ function bossAI0(b,dt,T){
   bossPods(b,dt);const es=big?BOSS_EYE:3;
   if(BOSS.phase2&&b.down<=0&&typeof spawnKami==="function"){BOSS.escT=(BOSS.escT===undefined?3:BOSS.escT)-dt;
     let k=0;for(const e of enemies)if(e.alive&&e.kami)k++;
-    if(BOSS.escT<=0&&slotReady("kami",k,4)){BOSS.escT=8; /* 11/10: 호위 자폭도 같은 '자폭' 슬롯 (처치 후 대기 RESPAWN.kami) */
+    if(BOSS.escT<=0&&slotReady("kami",k,2)){ /* 11/10 R2: 자폭 최대 2 (호위 포함) */BOSS.escT=8; /* 11/10: 호위 자폭도 같은 '자폭' 슬롯 (처치 후 대기 RESPAWN.kami) */
       for(let i=0;i<Math.min(2,4-k);i++)spawnKami(m.position.clone().add(new V3((Math.random()-.5)*40,-6+Math.random()*12,(Math.random()-.5)*40)))}}
   if(BOSS.tele>0){BOSS.tele-=dt;const k=1-BOSS.tele/BOSS_TELE;m.userData.eye.scale.setScalar(es*(1+k*1.7)+Math.sin(T*40)*es*.4);
     if(BOSS.tele<=0)bossFire(b)}

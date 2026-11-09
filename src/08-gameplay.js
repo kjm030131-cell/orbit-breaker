@@ -70,7 +70,7 @@ function spawnCluster(n){n=n||2+Math.floor(Math.random()*2);const c=Math.random(
    - 최대 수는 살아 있는 적으로 센다 (베기·폭발로 날아가는 중인 적도 포함 → 정원 초과 없음)
    - 다음 등장 대기는 '처치(퇴장) 순간'부터 센다 (오래 싸운 적이 죽자마자 바로 다시 나오지 않음)
    대기 시간(초)은 이 표 하나에서만 바꾼다: [보스 전·보스 처치 후, 보스전] */
-const RESPAWN={ace:[4,6],ms:[3.5,3.5],elite:[3.5,6],ram:[2.5,4],kami:[8,3],sniper:[6,6]};
+const RESPAWN={ace:[4,8],ms:[3.5,3.5],elite:[3.5,6],ram:[2.5,4],kami:[8,6],sniper:[6,6]}; /* 11/10 보스전 R2: 에이스 8초, 자폭 6초 */
 function slotTrack(k,alive){const s=G.slots||(G.slots={}),o=s[k]||(s[k]={prev:0,ready:0});
   if(alive<o.prev)o.ready=Math.max(o.ready,(G.gt||0)+RESPAWN[k][G.phase>=3&&typeof BOSS!=="undefined"&&!BOSS.dead?1:0]);o.prev=alive}
 function slotReady(k,alive,cap){const o=G.slots&&G.slots[k];return alive<cap&&(!o||(G.gt||0)>=o.ready)}
