@@ -57,14 +57,14 @@ function bladeContact(e,to){
 const POST_GUARD=20,POST_PERFECT=30,POST_COUNTER=40,POST_REC=25,POST_SHOT=8;
 function bladePost(e,k,at,msg){e.post=Math.min(100,(e.post||0)+k);e.postT=2.2;
   if(e.post>=100&&!e.broken){e.broken=true;e.stun=1.6;e.bs="rec";e.bt=1.6;e.push.set(0,0,0);e.dashV.set(0,0,0);e.flash=1;popText("자세 붕괴! 지금 베어라");sfx("heavy",at);sfx("clash",at);
-    S.slow=Math.max(S.slow,.45);flash(.22);emit(ADD,{pos:e.m.position.clone().add(new V3(0,1.4,0)),tex:TX.ring,color:0xffd060,s0:3,s1:26,life:.5,a:.95});addScore(600,at,"cyan");return true}
+    S.slow=Math.max(S.slow,.2);flash(.22); /* 11/09: 자세 붕괴 슬로우 .45→.2 */emit(ADD,{pos:e.m.position.clone().add(new V3(0,1.4,0)),tex:TX.ring,color:0xffd060,s0:3,s1:26,life:.5,a:.95});addScore(600,at,"cyan");return true}
   if(msg)popText(msg);return false}
 // blades meet: sparks, short freeze, both thrown a little apart
 function bladeClash(e,perfect){const mid=S.pos.clone().lerp(e.m.position,.5).add(new V3(0,1.2,0)),dir=e.m.position.clone().sub(S.pos).normalize();
   sparks(mid,dir,0xffe0a0,38,.6,perfect?44:30);sparks(mid,dir.clone().negate(),0x9fe8ff,38,.6,perfect?32:22);fxImpact(mid,0xffd080);if(typeof fxElectric==="function")fxElectric(mid,perfect?1.6:1.1);
   emit(ADD,{pos:mid,tex:TX.ring,color:0xffe0a0,s0:2,s1:perfect?22:14,life:.32,a:.9});
   sfx("clash",mid);sfx("sizzle",mid);if(perfect){sfx("heavy",mid);sfx("thud",mid,1)}hitMark("block");
-  S.hitstop=perfect?.15:.08;S.slow=Math.max(S.slow,perfect?.35:0);S.shake=Math.max(S.shake,perfect?.7:.4);flash(perfect?.22:.1);impactPunch(perfect?1.1:.6);
+  S.hitstop=perfect?.1:.08; /* 11/09: 칼 부딪힘 슬로우 제거, 맞받아치기 멈춤 .15→.1 */S.shake=Math.max(S.shake,perfect?.7:.4);flash(perfect?.22:.1);impactPunch(perfect?1.1:.6);
   S.vel.copy(dir).multiplyScalar(perfect?-20:-12);e.push.copy(dir).multiplyScalar(perfect?14:7);e.dashV.set(0,0,0);e.flash=1;
   startAct("guard");S.attackCd=.16;S.combo=0;addScore(perfect?500:150,mid,perfect?"cyan":"");addSpec(perfect?3:1);
   if(bladePost(e,perfect?POST_PERFECT:POST_GUARD,mid,null))return;
