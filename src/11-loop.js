@@ -10,20 +10,22 @@ function focusCamera(rdt){const d=G.focus.m.position.clone().sub(S.pos),hz=Math.
   if(Math.abs(dy)>.02){const cap=(S.dash>0||S.vsLunge>0?.75:1.8)*near*dt;S.yaw+=clamp(dy*(1-Math.exp(-5.5*dt)),-cap,cap)} /* 10/29 motion sickness: slower, softer lock-on turn */
   const pt=clamp(Math.atan2(d.y-1.5,hz)*.8-.06,-.6,.45);S.pitch+=clamp((pt-S.pitch)*(1-Math.exp(-4*dt)),-1.25*dt,1.25*dt)}
 /* 11/10 멈춤·슬로우 중앙 관리: 여러 곳에서 거는 히트스톱/슬로우를 '예산'으로 묶는다 (싱글만).
-   멈춤은 최대 0.18초까지 몰아 쓸 수 있고 초당 0.12초씩 다시 찬다, 슬로우도 0.5초 / 초당 0.2초.
+   멈춤은 최대 0.2초까지 몰아 쓸 수 있고 초당 0.08초씩 다시 찬다(평균 8% 이하), 슬로우는 0.5초 / 초당 0.15초.
    예산이 바닥나면 새로 걸린 멈춤·슬로우는 건너뛴다 → 연타·궁극기 중 '멈칫멈칫'이 이어지지 않음.
    S.slowP(보호 슬로우: 저스트 회피·보스 격파·사망 등 의미 있는 순간)는 예산과 상관없이 그대로 쓴다. */
-const IMP={stop:.18,slow:.5,STOP:.18,SLOW:.5,STOP_R:.12,SLOW_R:.2};
-function impReset(){IMP.stop=IMP.STOP;IMP.slow=IMP.SLOW;S.slowP=0}
+const IMP={stop:.2,slow:.5,STOP:.2,SLOW:.5,STOP_R:.08,SLOW_R:.15,hs:0,sl:0};
+function impReset(){IMP.stop=IMP.STOP;IMP.slow=IMP.SLOW;IMP.hs=0;IMP.sl=0;S.slowP=0}
 function update(rdt){
   let dt=Math.min(rdt,.05);
   if(VS){S.hitstop=Math.min(S.hitstop,.12);S.slow=Math.min(S.slow,.4)}
   const bud=!VS&&!TUT.on;
   if(bud){IMP.stop=Math.min(IMP.STOP,IMP.stop+rdt*IMP.STOP_R);IMP.slow=Math.min(IMP.SLOW,IMP.slow+rdt*IMP.SLOW_R);
-    if(S.hitstop>0&&IMP.stop<=0)S.hitstop=0;
-    if(S.slow>0&&!(S.slowP>0)&&IMP.slow<=0)S.slow=0}
+    // a new (longer) stop/slow request is granted only up to what is left in the budget; a sliver (<0.04 s stop, <0.1 s slow) is dropped
+    if(S.hitstop>IMP.hs+1e-4){const ok=Math.min(S.hitstop,IMP.hs+Math.max(0,IMP.stop));S.hitstop=ok-IMP.hs<.04?IMP.hs:ok}
+    if(!(S.slowP>0)&&S.slow>IMP.sl+1e-4){const ok=Math.min(S.slow,IMP.sl+Math.max(0,IMP.slow));S.slow=ok-IMP.sl<.1?IMP.sl:ok}}
   if(S.slowP>0){S.slow=Math.max(S.slow,S.slowP);S.slowP-=rdt}
   if(S.hitstop>0){S.hitstop-=rdt;dt=0;if(bud)IMP.stop-=rdt}else if(S.slow>0){S.slow-=rdt;dt*=.3;if(bud&&!(S.slowP>0))IMP.slow-=rdt}
+  IMP.hs=Math.max(0,S.hitstop);IMP.sl=Math.max(0,S.slow);
   if(typeof BCINE!=="undefined"&&BCINE.on)dt=0; /* boss intro: the world (and the sortie clock) holds still while the camera shows the boss */
   clockT+=rdt;const T=clock.elapsedTime;
   if(!S.demo)mouseLook(rdt); // mouse counts gathered by the mousemove handler (04-input) turn the camera here, once per frame
