@@ -80,7 +80,7 @@ function stepProj(dt){
     if(p.life<=0){scene.remove(p.s);p.s.material.dispose();G.proj.splice(i,1)}}
 }
 function projHit(p){const e=p.tgt,at=e.m.position.clone();
-  if(e.isWP){wpDamage(e,p.kind==="pod"?3:1,at);skillBlast(at,p.kind==="pod"?10:8,p.kind,e);return}
+  if(e.isWP){wpDamage(e,p.kind==="pod"?(p.ult?2:3):1,at); /* 11/10: 포드 궁극기 탄은 보스 약점에 2 (궁 한 번에 약점 3개를 다 부수던 문제), R스킬 포드는 3 그대로 */skillBlast(at,p.kind==="pod"?10:8,p.kind,e);return}
   if(e.isBoss){fxImpact(at,0xffb080);skillBlast(at,p.kind==="pod"?10:8,p.kind,e);return}
   if(e.launched>0){skillBlast(at,p.kind==="pod"?10:8,p.kind,e);return}
   const dir=p.vel.clone().normalize();dir.y*=.4;
@@ -215,7 +215,7 @@ function unitsTick(dt,rdt,T){uqTick(rdt);if(G.mBusy>0)G.mBusy-=rdt;
   // all range, second act: the pods keep striking whatever is left nearby for ~3 s
   if(G.podStorm){const st=G.podStorm;st.t-=dt;st.next-=dt;if(st.t<=0)G.podStorm=null;else if(st.next<=0){st.next=.16;
     let best=null,bd=95;for(const e of enemies){if(!(isMob(e)||e.isWP&&e.alive))continue;const dd=e.m.position.distanceTo(S.pos);if(dd<bd&&!G.proj.some(p=>p.tgt===e)){bd=dd;best=e}}
-    if(best){const r=new V3().randomDirection();r.y=Math.abs(r.y);launchProj(S.pos.clone().add(new V3(0,2.4,0)).addScaledVector(r,3),r.multiplyScalar(30),best,"pod");sfx("dash",null)}}}
+    if(best){const r=new V3().randomDirection();r.y=Math.abs(r.y);launchProj(S.pos.clone().add(new V3(0,2.4,0)).addScaledVector(r,3),r.multiplyScalar(30),best,"pod");G.proj[G.proj.length-1].ult=true;sfx("dash",null)}}}
   stepProj(dt);stepBits(rdt,T);
 }
 // counter field shockwave (pulses every 1.5 s, last one big): knocks drones, damages weak-point pods
