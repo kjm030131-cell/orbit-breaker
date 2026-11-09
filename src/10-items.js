@@ -7,7 +7,7 @@ ACT.special={dur:1.05,strike:1,keys:[
   [0,{armL:[-1.1,0,-.6],foreL:[-1.4,0,0],armR:[-1.1,0,.6],foreR:[-1.4,0,0],torso:[.45,0,0],head:[.3,0,0],thighL:[-.7,0,0],shinL:[1.3,0,0],thighR:[-.6,0,0],shinR:[1.2,0,0]},2.2],
   [.52,{armL:[-.3,0,1.5],foreL:[-.1,0,0],armR:[-.3,0,-1.5],foreR:[-.1,0,0],torso:[-.35,0,0],head:[-.35,0,0],thighL:[.35,0,.3],shinL:[.3,0,0],thighR:[.35,0,-.3],shinR:[.3,0,0]},7],
   [.85,{armL:[-.4,0,1.2],armR:[-.4,0,-1.2],torso:[-.15,0,0]},1.4]]};
-const SPEC_RATE={shield:.85,pods:.6,mega:1.2,missile:.9}; /* 11/09 1차 밸런스: 유닛별 충전 속도 (single only) */
+const SPEC_RATE={shield:.85,pods:.5,mega:1.1,missile:.8}; /* 11/09 1차 밸런스 · 11/10 조정(포드 .6→.5, 메가 1.2→1.1, 미사일 .9→.8): 유닛별 충전 속도 (single only) */
 function ultBusy(){return (G.mega&&G.mega.mode==="f")||!!G.podsPull||!!G.podStorm||(G.cfield||0)>0||(G.mBusy||0)>0} /* 11/09: 궁극기 효과 중 충전 잠금 (single only) */
 function addSpec(n){if(SCREEN!=="play"||G.specT>=0||(!VS&&ultBusy()))return;if(!VS)n*=SPEC_RATE[G.unit]||1;const was=G.spec;G.spec=Math.min(100,G.spec+n);if(was<100&&G.spec>=100){popText(UNITS[G.unit].f+" 준비 완료");sfx("specReady")}}
 
