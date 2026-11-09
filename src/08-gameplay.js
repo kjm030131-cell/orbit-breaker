@@ -211,7 +211,7 @@ function dodge(){
 }
 function justDodge(){tutCount("just");
   addSpec(12);if(G.unit==="shield"&&!G.armor&&G.guardCd<=0){G.armor=1;G.guardCd=25;popText("실드 비트 · 1회 피격 무효")}
-  S.slow=.75;G.crit=2.6;G.iframe=.9;S.boost=Math.min(100,S.boost+40);S.heat=Math.max(0,S.heat-25);
+  S.slow=.75;S.slowP=.75;G.crit=2.6;G.iframe=.9;S.boost=Math.min(100,S.boost+40);S.heat=Math.max(0,S.heat-25);
   popText("저스트 회피 · 반격 찬스!");sfx("just");addScore(300,S.pos.clone().add(new V3(0,2,0)),"cyan");
   const f=$("flash");f.style.background="#7fe0ff";flash(.28);setTimeout(()=>{f.style.background="#fff"},220);
   emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:18,life:.45,a:.9});
@@ -258,7 +258,7 @@ function resetGameplay(){document.body.classList.remove("dmg");
 /* ---- armour, destruction, reserve units ---- */
 function destroyMech(dir){
   megaEnd(true);G.lives--;G.clean=0;G.spec=Math.floor(G.spec*.5);G.dead=2.2;G.stagger=2.4;G.iframe=5;G.focus=null;G.kc=0;G.kcT=0;S.act=null;S.dash=0;S.dashT=null;S.pending=null;S.bladeOn=0;
-  const c=S.pos.clone();fxExplosion(c,2.2);fxExplosion(c.clone().add(new V3(1.5,1,0)),1.3);sfx("destroyed");S.shake=1.6;S.slow=.9;flash(.55);
+  const c=S.pos.clone();fxExplosion(c,2.2);fxExplosion(c.clone().add(new V3(1.5,1,0)),1.3);sfx("destroyed");S.shake=1.6;S.slow=.9;S.slowP=.9;flash(.55);
   if(P)P.root.visible=false;S.vel.multiplyScalar(.15);
   const h=$("hurt");h.classList.remove("on");void h.offsetWidth;h.classList.add("on");
   popText(G.lives>0?`피격 · 기체 대파 — 남은 기체 ${G.lives}`:"기체 대파 · 출격 종료");

@@ -38,7 +38,7 @@ function alertsTick(){requestAnimationFrame(alertsTick);
     if(e.isWP&&!(BOSS.e&&BOSS.e.down>0))list.push({p:e.m.position,k:"wp",t:"약점"});
     else if(e.kami&&e.launched<=0)list.push({p:e.m.position,k:"kami",t:"자폭"})}
   // first kamikaze drone of the sortie: one clear warning
-  if(!ALR.kamiSaid&&!BCINE.on&&list.some(x=>x.k==="kami")){ALR.kamiSaid=true;cutin("자폭 드론 접근","붉게 깜빡이며 돌진 · 가까이 오기 전에 쏴서 터뜨리세요");S.slow=Math.max(S.slow,.9);popText("화면 가장자리 붉은 화살표 = 자폭 드론이 오는 방향")}
+  if(!ALR.kamiSaid&&!BCINE.on&&list.some(x=>x.k==="kami")){ALR.kamiSaid=true;cutin("자폭 드론 접근","붉게 깜빡이며 돌진 · 가까이 오기 전에 쏴서 터뜨리세요");S.slow=Math.max(S.slow,.9);S.slowP=Math.max(S.slowP||0,.9);popText("화면 가장자리 붉은 화살표 = 자폭 드론이 오는 방향")}
   const W=innerWidth,H=innerHeight,cx=W/2,cy=H*.46,rx=W/2-70,ry=H/2-90;let n=0;
   list.sort((a,b)=>a.p.distanceTo(S.pos)-b.p.distanceTo(S.pos));
   for(const x of list){if(n>=ALR.els.length)break;const d=x.p.distanceTo(S.pos);if(x.k==="kami"&&d>140)continue;

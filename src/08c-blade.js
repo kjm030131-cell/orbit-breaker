@@ -49,7 +49,7 @@ function bladeMove(e,dt,T){const em=e.m,to=S.pos.clone().sub(em.position),d=to.l
 // the enemy's swing reaches the player: a slash timed onto it (strike frame within .18 s) knocks it away (perfect clash)
 function bladeContact(e,to){
   if(clockT-(S.lastStrikeT||-9)<.18||S.act&&/^slash/.test(S.act)&&!S.actHit&&S.actT<.2){bladeClash(e,true);return}
-  if(G.iframe>0){e.recT=1.3;S.slow=Math.max(S.slow,.4);popText("간파 · 지금 베어라");addScore(400,S.pos.clone(),"cyan");addSpec(2);sfx("just");
+  if(G.iframe>0){e.recT=1.3;S.slow=Math.max(S.slow,.4);S.slowP=Math.max(S.slowP||0,.4);popText("간파 · 지금 베어라");addScore(400,S.pos.clone(),"cyan");addSpec(2);sfx("just");
     emit(ADD,{pos:S.pos.clone(),tex:TX.ring,color:0x7fe0ff,s0:2,s1:12,life:.35,a:.7});return}
   fxSlashHit(S.pos.clone().add(new V3(0,1,0)),0xff3040,true);hurt({dir:to.clone(),dmg:36,g:{position:S.pos.clone()}})}
 /* posture (자세): every blade contact fills it, full = 자세 붕괴 (1.6 s stagger) and only then does a slash finish the duelist.

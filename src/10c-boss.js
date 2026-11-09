@@ -52,14 +52,14 @@ function wpDamage(w,n,at){
     if(!left)bossDown()}
 }
 function bossDown(){const b=BOSS.e;if(!b)return;b.down=5;BOSS.downs++;BOSS.tele=0;clearTele(b);
-  S.slow=.6;flash(.35);sfx("specReady");cutin("기능 정지","지금 베어서 날려라");
+  S.slow=.6;S.slowP=.6;flash(.35);sfx("specReady");cutin("기능 정지","지금 베어서 날려라");
   radio("이클립스 CIC · 최지우 중위","적 지휘기 정지했습니다! 지금 붙어서 끝내세요!","vo_op06");
   for(let i=0;i<5;i++)setTimeout(()=>{if(BOSS.e&&b.alive){const p=b.m.position.clone().add(new V3().randomDirection().multiplyScalar(6));fxImpact(p,0xff8040);sparks(p,null,0xffc080,30,.5,20)}},i*260);
 }
 function bossDie(b,chainN){
   b.alive=false;BOSS.dead=true;BOSS.killT=Math.max(0,120-S.time);const p=b.m.position.clone();
   for(let i=0;i<6;i++)setTimeout(()=>{fxExplosion(p.clone().add(new V3().randomDirection().multiplyScalar(5)),2+Math.random());sfx("boom",p,4)},i*150);
-  fxExplosion(p,3.2);fxBigExplosion(p,120);flashLight(p,0xffa040,20,160,.9);S.shake=1.8;S.slow=1.1;flash(.6);
+  fxExplosion(p,3.2);fxBigExplosion(p,120);flashLight(p,0xffa040,20,160,.9);S.shake=1.8;S.slow=1.1;S.slowP=1.1;flash(.6);
   if(!S.ended){S.score+=40000;scorePop(p,"+40,000","big")} /* 10/30: flat kill bonus (no combo multiplier) so a full boss clear always stands clear of a run that missed it */
   if(SCREEN==="play")S.kills=(S.kills||0)+1;onKill(b);
   for(const w of BOSS.wps)if(w.alive){w.alive=false;disposeEnemy(w)}
@@ -156,7 +156,7 @@ function bossGuideTick(){const b=BOSS.e,on=!!(b&&b.alive&&!TUT.on&&!VS&&SCREEN==
    heavier fire) with fresh weak points. The second stall + slash destroys it. ---- */
 function bossPhase2(b){if((BOSS.stage||0)>=BOSS_WAVES-1||!(b.down>0))return false;BOSS.stage=(BOSS.stage||0)+1;BOSS.phase2=true;b.down=0;b.flash=1;
   const p=b.m.position.clone();for(let i=0;i<4;i++)setTimeout(()=>{if(BOSS.e===b&&b.alive){fxExplosion(p.clone().add(new V3().randomDirection().multiplyScalar(6)),1.4);sfx("boom",p,3)}},i*140);
-  S.hitstop=Math.max(S.hitstop||0,.14);S.slow=Math.max(S.slow,.5);flash(.35);impactPunch(1.4);addScore(8000,p,"big");
+  S.hitstop=Math.max(S.hitstop||0,.14);S.slow=Math.max(S.slow,.5);S.slowP=Math.max(S.slowP||0,.5);flash(.35);impactPunch(1.4);addScore(8000,p,"big");
   if(BOSS.stage===1){cutin("1차 격파 +8,000","케르고그모스 분노 · 공격이 거세집니다");radio("CIC","1차 격파! 아직 살아 있어요. 약점이 다시 열려요, 한 번 더!","vo_op05")}
   else{cutin(`${BOSS.stage}차 격파 +8,000`,"마지막 약점이 열립니다 · 한 번만 더!");radio("이클립스 CIC · 최지우 중위","2차 격파 확인! 마지막이에요… 약점이 다시 열립니다, 한 번만 더!","vo_op31")}
   buildWPs();b.m.userData.mat.emissive.setRGB(.35,.04,.02);setTimeout(()=>{if(BOSS.e===b)b.m.userData.mat.emissive.setRGB(0,0,0)},900);BOSS.atkT=1.6;return true}

@@ -132,8 +132,8 @@ function fireMissiles(list,per){
   let k=0;const r=new V3(Math.cos(S.face),0,-Math.sin(S.face));
   for(const t of list)for(let j=0;j<per;j++){const side=(k++%2)?1:-1;
     const from=S.pos.clone().addScaledVector(r,-side*1.15).add(new V3(0,2.7,0));
-    setTimeout(()=>{if(!S.ended)launchProj(from,new V3(0,22,0).addScaledVector(r,-side*10).addScaledVector(fwd(),-6),t,"missile")},k*45)}
-  sfx("shot");setTimeout(()=>sfx("whoosh"),60);
+    uLater(k*.045,()=>{if(!S.ended)launchProj(from,new V3(0,22,0).addScaledVector(r,-side*10).addScaledVector(fwd(),-6),t,"missile")})}
+  sfx("shot");uLater(.06,()=>sfx("whoosh"));
 }
 // passive / defensive hooks on every enemy bolt; returns true when the bolt was dealt with
 function boltDefense(b){
@@ -158,16 +158,16 @@ function unitSpecial(){
   const u=G.unit;
   if(u==="mega"){cutin("하이퍼 메가 빔","HM-1");megaStart("f");return}
   if(u==="pods"){cutin("올 레인지","RF-6");G.podsPull={t:0,c:S.pos.clone().addScaledVector(aimDir(),18)};G.podsOut=3.6;return}
-  if(u==="missile"){cutin("풀 버스트","MP-12");G.fBusyT=clockT+4; /* 11/09: 3.2→4 (피날레·늦게 맞는 미사일까지 충전 잠금) */
+  if(u==="missile"){cutin("풀 버스트","MP-12");G.mBusy=4; /* 11/09: 3.2→4 (피날레·늦게 맞는 미사일까지 충전 잠금) · 11/10: 업데이트 시계 기준 */
     /* 10/29 buff: two waves, up to 15 targets each within 110 m (weak-point pods included), slow motion on launch */
     const pick=()=>enemies.filter(e=>targetable(e)&&!e.isBoss&&e.m.position.distanceTo(S.pos)<110).sort((a,b)=>a.m.position.distanceTo(S.pos)-b.m.position.distanceTo(S.pos)).slice(0,15);
-    setTimeout(()=>{if(S.ended)return;fireMissiles(pick(),1)},420); /* 11/09: 발사 슬로우 제거 */setTimeout(()=>{if(!S.ended){fireMissiles(pick(),1);S.shake=Math.max(S.shake,.6)}},1050);
-    setTimeout(()=>{if(!S.ended){fireMissiles(pick(),1);S.shake=Math.max(S.shake,.7)}},1680);
+    uLater(.42,()=>{if(S.ended)return;fireMissiles(pick(),1)}); /* 11/09: 발사 슬로우 제거 */uLater(1.05,()=>{if(!S.ended){fireMissiles(pick(),1);S.shake=Math.max(S.shake,.6)}});
+    uLater(1.68,()=>{if(!S.ended){fireMissiles(pick(),1);S.shake=Math.max(S.shake,.7)}});
     // finale: one huge blast where the enemies are packed tightest
-    setTimeout(()=>{if(S.ended||SCREEN!=="play")return;const l=enemies.filter(e=>isMob(e)&&e.m.position.distanceTo(S.pos)<110);
+    uLater(2.5,()=>{if(S.ended||SCREEN!=="play")return;const l=enemies.filter(e=>isMob(e)&&e.m.position.distanceTo(S.pos)<110);
       let c=S.pos.clone().addScaledVector(aimDir(),30),bn=-1;for(const a of l){let k=0;for(const b of l)if(a.m.position.distanceTo(b.m.position)<25)k++;if(k>bn){bn=k;c=a.m.position.clone()}}
       fxBigExplosion(c,55);fxExplosion(c,2.4);sfx("boom",c,4);sfx("specBurst");S.hitstop=Math.max(S.hitstop||0,.12);S.slow=Math.max(S.slow,.2); /* 11/09: 피날레 슬로우 .35→.2 */S.shake=1.3;flash(.4);impactPunch(1.3);
-      for(const e of enemies)if(e.isWP&&e.alive&&e.m.position.distanceTo(c)<25)wpDamage(e,2,e.m.position.clone());skillBlast(c,25,"missile")},2500);return}
+      for(const e of enemies)if(e.isWP&&e.alive&&e.m.position.distanceTo(c)<25)wpDamage(e,2,e.m.position.clone());skillBlast(c,25,"missile")});return}
   if(u==="shield"){cutin("카운터 필드","SB-4");G.cfield=6;G.cfPulse=.8;G.iframe=Math.max(G.iframe,3)}
 }
 function unitSpecialBurst(){ // called at the special's strike frame
@@ -185,7 +185,11 @@ function unitSpecialBurst(){ // called at the special's strike frame
 function isMob(e){return e.alive&&e.launched<=0&&!e.isBoss&&!e.isWP}
 
 /* ---- per-frame ---- */
-function unitsTick(dt,rdt,T){
+/* 11/10: 유닛 스킬의 지연 동작은 브라우저 타이머(setTimeout) 대신 게임 업데이트 시계로 돈다
+   → 일시정지 중에는 멈추고, 재출격하면 지난 판 것은 버려진다 */
+function uLater(sec,fn){(G.uq||(G.uq=[])).push({t:sec,fn})}
+function uqTick(rdt){const q=G.uq;if(!q||!q.length)return;for(const it of q)it.t-=rdt;const due=q.filter(it=>it.t<=0);G.uq=q.filter(it=>it.t>0);for(const it of due){try{it.fn()}catch(e){console.error(e)}}}
+function unitsTick(dt,rdt,T){uqTick(rdt);if(G.mBusy>0)G.mBusy-=rdt;
   megaVsTick(rdt,T);
   if(VS){stepBits(rdt,T);barrier.visible=vsSkills()&&G.barrier>0;if(barrier.visible){barrier.position.copy(S.pos).add(new V3(0,.8,0));barrier.scale.setScalar(1);barrier.rotation.y+=rdt;barrier.material.opacity=.25;}return;}
   G.unitCd=Math.max(0,G.unitCd-dt);G.podGuard=Math.max(0,G.podGuard-dt);G.podsOut=Math.max(0,G.podsOut-dt);
@@ -224,7 +228,7 @@ function cfieldWave(R,k){const c=S.pos.clone();S.shake=Math.max(S.shake,.5+k*.5)
 }
 function resetUnits(){
   for(const p of G.proj){scene.remove(p.s);p.s.material.dispose()}
-  megaEnd(true);Object.assign(G,{unitCd:0,proj:[],marks:[],marking:false,markT:0,mega:null,barrier:0,cfield:0,cfPulse:0,podGuard:0,podsOut:0,podsPull:null,podStorm:null});
+  megaEnd(true);Object.assign(G,{unitCd:0,proj:[],marks:[],marking:false,markT:0,mega:null,barrier:0,cfield:0,cfPulse:0,podGuard:0,podsOut:0,podsPull:null,podStorm:null,uq:[],mBusy:0});
   if(BIT.kind!==G.unit)buildBits(G.unit);
 }
 
