@@ -12,7 +12,15 @@ function bossCineStart(){if(TUT.on||VS||DUEL||SCREEN!=="play"||!BOSS.e)return fa
 <div class="bcHow"><div class="s1"><em>1</em><span><b>붉은 약점 3곳</b>을 쏘거나 베어서 부수세요</span></div><div class="s2"><em>2</em><span>다 부서지면 보스가 멈춰요 → <b>가까이 붙어 베기!</b> · 이걸 <b>3번</b></span></div></div>
 <div class="bcSkip">Space · 클릭 = 건너뛰기</div>`;document.body.appendChild(el)}
   el.className="";void el.offsetWidth;el.className="on";sfx("phase");return true}
-function bossCineEnd(){if(!BCINE.on)return;BCINE.on=false;const el=$("bcine");if(el)el.className="";camera.fov=BCINE.fov0||camera.fov;camera.updateProjectionMatrix();
+/* 11/10: 컷씬 동안 카메라와 보스 사이를 가리는 물체(전장 잔해·떠다니는 바위·남은 적기)는 잠깐 숨기고, 컷씬이 끝나면 되돌린다 */
+function cineHide(){const b=BOSS.e;if(!b)return;const cam=camera.position,bp=b.m.position,ab=bp.clone().sub(cam),L=ab.length();if(L<1)return;ab.divideScalar(L);
+  const RB=(b.rad||20)*.9,H=BCINE.hid||(BCINE.hid=[]),hide=o=>{if(o&&o.visible){o.visible=false;H.push(o)}};
+  const blocks=(c,r)=>{const t=c.clone().sub(cam).dot(ab);if(t<.5||t>L-RB*.5)return false;return cam.clone().addScaledVector(ab,t).distanceTo(c)<r+RB*t/L+1};
+  if(typeof FIELD!=="undefined")for(const o of FIELD.obs)if(o.mesh&&o.mesh.visible&&blocks(o.center,o.rad*.85)){hide(o.mesh);hide(o.glow)}
+  for(const d of debris)if(d.visible){if(!d.geometry.boundingSphere)d.geometry.computeBoundingSphere();if(blocks(d.position,d.geometry.boundingSphere.radius*d.scale.x))hide(d)}
+  for(const e of enemies)if(e.alive&&!e.isBoss&&!e.isWP&&e.m.visible&&blocks(e.m.position,(e.rad||3)+1))hide(e.m)}
+function cineRestore(){if(BCINE.hid){for(const o of BCINE.hid)o.visible=true;BCINE.hid=null}}
+function bossCineEnd(){if(!BCINE.on)return;BCINE.on=false;cineRestore();const el=$("bcine");if(el)el.className="";camera.fov=BCINE.fov0||camera.fov;camera.updateProjectionMatrix();
   const b=BOSS.e;if(b){const d=b.m.position.clone().sub(S.pos);S.yaw=Math.atan2(d.x,d.z);S.face=S.yaw;S.pitch=clamp(Math.atan2(d.y,Math.hypot(d.x,d.z))*.6,-.4,.35)}
   G.iframe=Math.max(G.iframe,1.2)}
 function bossCineCam(rdt){BCINE.t+=rdt;const b=BOSS.e,t=BCINE.t;if(!b||S.ended||SCREEN!=="play"||t>=BCINE.dur){bossCineEnd();return}
@@ -21,7 +29,9 @@ function bossCineCam(rdt){BCINE.t+=rdt;const b=BOSS.e,t=BCINE.t;if(!b||S.ended||
   // over the shoulder: behind and above the mech, slowly pushing toward the boss
   const k=Math.min(1,t/1.2),e=k*k*(3-2*k);
   const want=S.pos.clone().addScaledVector(dir,-14+e*5).addScaledVector(side,4).add(new V3(0,5,0));
-  camera.position.lerp(want,1-Math.pow(.002,rdt));camera.lookAt(bp.clone().lerp(S.pos,.08));
+  camera.position.lerp(want,1-Math.pow(.002,rdt));
+  {const tg=bp.clone().lerp(S.pos,.08);tg.y-=tg.distanceTo(camera.position)*.13;camera.lookAt(tg)} // 11/10: 보스를 화면 위쪽 1/3에 → 아래쪽 제목·안내 글자에 안 덮임
+  cineHide();
   const fv=BCINE.fov0-14*e;if(Math.abs(camera.fov-fv)>.05){camera.fov=fv;camera.updateProjectionMatrix()}}
 ["keydown","mousedown"].forEach(ev=>addEventListener(ev,e=>{if(!BCINE.on||BCINE.t<2.2)return;if(ev==="keydown"&&!["Space","Enter"].includes(e.code))return;e.preventDefault();e.stopImmediatePropagation();bossCineEnd()},{capture:true}));
 
