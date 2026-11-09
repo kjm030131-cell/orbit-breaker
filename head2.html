@@ -864,6 +864,9 @@ body.versus.tut .hud.tl{display:none}
 #rBoard .board td:nth-child(2){max-width:150px;overflow:hidden;text-overflow:ellipsis}
 #rBoard .board td.d{max-width:130px;overflow:hidden;text-overflow:ellipsis}
 #rBoard .board .ut{display:none}
+/* 11/09: 점수 칸 잘림 수정 — 열 너비 고정, 이름·학과만 말줄임 */
+#rBoard .board{table-layout:fixed}#rBoard .board th{box-sizing:border-box;padding-left:9px;padding-right:9px}#rBoard .board th:nth-child(1){width:44px;padding-left:4px}#rBoard .board th:nth-child(3){width:26%}#rBoard .board th.s{width:96px}
+#rBoard .board td{overflow:hidden;text-overflow:ellipsis}#rBoard .board td:nth-child(2),#rBoard .board td.d{max-width:none}#rBoard .board td.r{padding-left:4px;padding-right:4px}
 #scrResult .console{max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px)}
 #scrResult .pane{min-width:0;overflow:hidden}
 #scrResult .debrief{overflow-wrap:anywhere}
