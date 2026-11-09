@@ -38,6 +38,7 @@ Image.open('sky.jpg').convert('RGB').save(D+'/sky.jpg',quality=72,optimize=True,
 shutil.copytree('ui',D+'/ui',dirs_exist_ok=True)
 os.path.isdir('bgm') and shutil.copytree('bgm',D+'/bgm',dirs_exist_ok=True)  # recorded background music
 shutil.copy('admin.html',D+'/admin.html')  # /admin: ranking management (password checked by the API)
+shutil.copy('board.html',D+'/board.html')  # /board: front-screen leaderboard for the on-site event (reads /api/board only)
 os.makedirs(D+'/sfx',exist_ok=True)
 SFX=sorted(f[:-4] for f in os.listdir('sfx') if f.endswith('.mp3')) if os.path.isdir('sfx') else []
 [shutil.copy('sfx/%s.mp3'%k,D+'/sfx/') for k in SFX];os.path.isdir('vo') and shutil.copytree('vo',D+'/vo',dirs_exist_ok=True);json.dump(SFX,open(D+'/sfx/list.json','w'));os.path.exists('sfx/preview.html') and shutil.copy('sfx/preview.html',D+'/sfx/');print('sfx',SFX)
@@ -66,7 +67,7 @@ self.addEventListener("fetch",e=>{const u=new URL(e.request.url);if(e.request.me
     e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(V).then(k=>k.put("index.html",c));return r}).catch(()=>caches.match("index.html")));return}
   e.respondWith(caches.match(e.request).then(hit=>hit||fetch(e.request).then(r=>{if(r.ok){const c=r.clone();caches.open(V).then(k=>k.put(e.request,c))}return r})))});
 '''%ver)
-open(D+'/_headers','w').write("/models/*\n  Cache-Control: no-cache\n/vo/*\n  Cache-Control: no-cache\n/*.js\n  Cache-Control: public, max-age=3600\n/ui/*\n  Cache-Control: public, max-age=86400\n/sfx/*\n  Cache-Control: public, max-age=3600\n/sw.js\n  Cache-Control: no-cache\n/index.html\n  Cache-Control: no-cache\n/admin*\n  Cache-Control: no-store\n  X-Robots-Tag: noindex\n")
+open(D+'/_headers','w').write("/models/*\n  Cache-Control: no-cache\n/vo/*\n  Cache-Control: no-cache\n/*.js\n  Cache-Control: public, max-age=3600\n/ui/*\n  Cache-Control: public, max-age=86400\n/sfx/*\n  Cache-Control: public, max-age=3600\n/sw.js\n  Cache-Control: no-cache\n/index.html\n  Cache-Control: no-cache\n/admin*\n  Cache-Control: no-store\n  X-Robots-Tag: noindex\n/board*\n  Cache-Control: no-cache\n  X-Robots-Tag: noindex\n")
 print('libs',len(libs));os.system('du -sh '+D)
 
 shutil.copytree('pvp/src',OUT+'/pvp/src',dirs_exist_ok=True)

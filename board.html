@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>실시간 순위 · ARCLIGHT</title>
+<link rel="stylesheet" href="lib/pretendardvariable-dynamic-subset.css">
+<link rel="stylesheet" href="lib/saira.css">
+<!-- /board: front-screen leaderboard for the on-site E-Sports event (11/10-11/11).
+     Reads the same cached /api/board as the title screen (30 s), shows no student IDs, does not load the game. -->
+<style>
+:root{--amber:#f4b223;--txt:#e9ecf2;--sub:#8b93a3;--line:rgba(255,255,255,.08);
+  --f:"Pretendard Variable",Pretendard,"Malgun Gothic",sans-serif;--num:"Saira Semi Condensed","Pretendard Variable",monospace;color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#05070c;color:var(--txt);font-family:var(--f);overflow:hidden}
+body.idle{cursor:none}
+.sky{position:fixed;inset:0;background:url(sky.jpg) center/cover;opacity:.55}
+.sky:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 120%,rgba(5,7,12,0) 0%,rgba(5,7,12,.85) 70%),linear-gradient(180deg,rgba(5,7,12,.6),rgba(5,7,12,.2) 40%,rgba(5,7,12,.9))}
+.wrap{position:relative;height:100%;display:grid;grid-template-rows:auto 1fr auto;padding:3.2vh 4vw 2.6vh;gap:2.4vh}
+
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:2vw}
+header .l img{height:6.4vh;display:block}
+header .l div{font-size:1.9vh;color:var(--sub);margin-top:1vh;letter-spacing:.1em}
+header .l b{color:var(--amber);font-weight:700}
+.clock{text-align:right}
+.clock .k{font-size:1.7vh;color:var(--sub);letter-spacing:.08em}
+.clock .t{font-family:var(--num);font-size:6vh;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}
+.clock .t.soon{color:#ff6a5c}
+.clock .t.word{font-family:var(--f);font-size:5vh;font-weight:800;color:var(--amber)}
+
+main{display:grid;grid-template-columns:1.2fr 1fr;gap:2.6vw;min-height:0}
+.frame{position:relative}
+.frame:before{content:"";position:absolute;inset:-6px;border-style:solid;border-width:30px;border-image:url(ui/panel.webp) 70 / 30px stretch;pointer-events:none;z-index:2}
+
+/* 1-3: medal | boss badge | name + dept | score */
+.pod{display:grid;grid-template-rows:1.35fr 1fr 1fr;gap:1.6vh;min-height:0}
+.card{background:rgba(12,15,22,.8);display:grid;grid-template-columns:7.4vw 2.6vw minmax(0,1fr) auto;column-gap:1vw;align-items:center;padding:0 2.6vw 0 2vw;min-height:0}
+.card .fx{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.card .rk{display:flex;justify-content:center}
+.card .rk img{display:block;width:5.4vw}
+.c1 .rk img{width:6.2vw;filter:drop-shadow(0 0 12px rgba(255,190,60,.45))}
+.c2 .rk img{filter:drop-shadow(0 0 10px rgba(200,215,235,.3))}
+.c3 .rk img{filter:drop-shadow(0 0 8px rgba(205,127,50,.35))}
+.card .bd{display:flex;justify-content:center}
+.card .bd img{display:block;width:2.4vw}
+.c1 .bd img{width:2.6vw}
+.card .who{min-width:0}
+.card .nm{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .dp{color:var(--sub);font-size:min(2vh,1.25vw);margin-top:.6vh;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .sc{font-family:var(--num);font-weight:700;font-variant-numeric:tabular-nums;text-align:right;position:relative;z-index:1}
+.c1{background:rgba(22,19,12,.84)}
+.c1 .nm{font-size:min(5.4vh,3.1vw)}.c2 .nm,.c3 .nm{font-size:min(4.2vh,2.5vw)}
+.c1 .sc{font-size:min(7vh,3.9vw)}.c2 .sc,.c3 .sc{font-size:min(5vh,2.9vw)}
+.card.empty .nm{color:var(--sub);font-weight:600;font-size:3vh}
+/* rank effects: slow and quiet */
+.c1 .fx:before,.c2 .fx:before{content:"";position:absolute;top:0;bottom:0;width:32%;left:-40%;animation:sweep 7s ease-in-out infinite}
+.c1 .fx:before{background:linear-gradient(100deg,transparent,rgba(255,214,110,.09),transparent)}
+.c2 .fx:before{background:linear-gradient(100deg,transparent,rgba(220,230,245,.08),transparent);animation-duration:9s;animation-delay:1.2s}
+@keyframes sweep{0%{left:-40%}60%,100%{left:120%}}
+.c1 .sc{background:linear-gradient(90deg,#f4b223 0%,#ffe6a0 45%,#f4b223 60%,#f4b223 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 7s ease-in-out infinite}
+@keyframes shine{0%{background-position:100% 0}60%,100%{background-position:0 0}}
+.card.new{animation:pop 1.2s ease-out}
+@keyframes pop{0%{box-shadow:0 0 0 2px rgba(244,178,35,.9),0 0 50px rgba(244,178,35,.5)}100%{box-shadow:0 0 0 0 transparent}}
+
+/* right column */
+.side{display:grid;grid-template-rows:1fr auto;gap:2vh;min-height:0}
+.list{background:rgba(12,15,22,.74);padding:2.2vh 2vw;min-height:0;display:flex;flex-direction:column}
+.list h3{font-size:1.7vh;letter-spacing:.14em;color:var(--sub);font-weight:600;display:flex;justify-content:space-between;padding:0 .4vw 1vh;border-bottom:1px solid var(--line)}
+#rows{display:flex;flex-direction:column;flex:1;min-height:0}
+.row{display:grid;grid-template-columns:3vw 1.8vw minmax(0,1fr) auto;align-items:center;gap:1vw;padding:0 .4vw;border-bottom:1px solid var(--line);flex:1}
+.row .r{font-family:var(--num);font-size:2.6vh;color:var(--sub);font-weight:700}
+.row .b img{width:1.5vw;display:block}
+.row .n{font-size:2.5vh;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .n span{font-size:1.7vh;color:var(--sub);font-weight:400;margin-left:.7vw}
+.row .s{font-family:var(--num);font-size:2.8vh;font-weight:600;font-variant-numeric:tabular-nums}
+.row.empty .n{color:#4a5160;font-weight:500}
+.row.new{animation:rowpop 1.6s ease-out}
+@keyframes rowpop{0%{background:rgba(244,178,35,.22)}100%{background:transparent}}
+.guide{background:rgba(12,15,22,.8);padding:2vh 2vw}
+.guide h3{font-size:2vh;font-weight:800;margin-bottom:1.1vh}
+.guide ol{list-style:none;counter-reset:g}
+.guide li{counter-increment:g;display:grid;grid-template-columns:2vw 1fr;gap:.8vw;font-size:min(2vh,1.2vw);line-height:1.45;padding:.5vh 0}
+.guide li:before{content:counter(g) ".";color:var(--sub);font-family:var(--num);font-weight:600}
+.guide b{color:#fff}
+.guide em{font-style:normal;color:var(--amber);font-weight:600}
+
+footer{display:flex;justify-content:space-between;align-items:center;gap:2vw;font-size:1.9vh;color:var(--sub)}
+footer b{color:var(--txt);font-weight:700}
+footer .end{color:var(--amber)}
+#net{color:#ff8a7e;margin-left:1vw}
+</style>
+</head>
+<body>
+<div class="sky"></div>
+<div class="wrap">
+<header>
+  <div class="l"><img src="ui/logo_arclight.webp" alt="ARCLIGHT"><div>2026 SCHU AI·SW FESTIVAL · <b>E-SPORTS</b> <span id="mode">실시간 순위</span></div></div>
+  <div class="clock"><div class="k" id="cdk">&nbsp;</div><div class="t" id="cd">&nbsp;</div></div>
+</header>
+<main>
+  <section class="pod" id="pod"></section>
+  <div class="side">
+    <section class="list frame"><h3><span>4 – 8위</span><span id="tot">참가 0명</span></h3><div id="rows"></div></section>
+    <section class="guide frame"><h3>참가 안내</h3><ol>
+      <li><span><b>이름 · 학과 · 학번</b>을 정확하게 입력하세요. <em>틀리면 시상 제외</em></span></li>
+      <li><span>입구 <b>서명부</b>에 직접 적어 주세요. <em>서명부와 일치해야 시상</em></span></li>
+      <li><span><b>현장(인간사랑관 6114호)</b>에서 플레이한 기록만 인정됩니다.</span></li>
+      <li><span>처음이라면 <b>튜토리얼</b>부터, 출격 전 <b>작전 규칙</b>은 꼭 읽어 주세요.</span></li>
+      <li><span>학번당 <b>3회 출격</b>, 그중 <b>최고 점수</b>로 순위. 1~3등 시상</span></li>
+    </ol></section>
+  </div>
+</main>
+<footer>
+  <div>인간사랑관 6114호 · 순위는 30초마다 갱신<span id="net"></span></div>
+  <div>운영 시간 &nbsp;<b>11/10(화) 12:00 – 18:00</b> &nbsp;·&nbsp; <b>11/11(수) 10:00 – 12:00</b> <span class="end">최종 마감</span></div>
+</footer>
+</div>
+<script>
+"use strict";
+// operating windows in KST (UTC+9) — outside them new sorties are closed from the admin page
+const KST=9*3600e3, at=(d,h)=>Date.UTC(2026,10,d,h)-KST;
+const S1=[at(10,12),at(10,18)], S2=[at(11,10),at(11,12)];
+// ?now=2026-11-10T15:00 previews another moment (KST); harmless, display only
+const q=new URLSearchParams(location.search), off=q.get("now")?new Date(q.get("now")+"+09:00").getTime()-Date.now():0;
+const now=()=>Date.now()+off;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>Number(n||0).toLocaleString("ko-KR");
+const BADGE='<img src="ui/boss_badge.webp" alt="">';
+
+function hms(ms){ms=Math.max(0,ms);const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s/60)%60,x=s%60;return [h,m,x].map(v=>String(v).padStart(2,"0")).join(":")}
+let ended=false;
+function tick(){
+  const t=now();let k,target,soon=false;
+  if(t<S1[0]){k="운영 시작까지 · 11/10(화) 12:00";target=S1[0]}
+  else if(t<S1[1]){k="오늘 운영 종료까지 · 18:00";target=S1[1]}
+  else if(t<S2[0]){k="운영 재개까지 · 11/11(수) 10:00";target=S2[0]}
+  else if(t<S2[1]){k="최종 마감까지 · 12:00";target=S2[1];soon=target-t<600e3}
+  const cd=$("cd");
+  if(target){$("cdk").textContent=k;cd.textContent=hms(target-t);cd.className="t"+(soon?" soon":"")}
+  else{$("cdk").textContent="11/11(수) 12:00 마감";cd.textContent="대회 종료";cd.className="t word"}
+  const e=t>=S2[1];if(e!==ended){ended=e;$("mode").textContent=e?"최종 순위":"실시간 순위"}
+}
+
+let prev=null;
+function key(x){return x?x.name+"|"+x.dept+"|"+x.best:""}
+function render(d){
+  const r=(d&&Array.isArray(d.rows))?d.rows:[];
+  const changed=i=>prev!==null&&key(prev[i])!==key(r[i]);
+  $("pod").innerHTML=[0,1,2].map(i=>{const x=r[i],cls="card frame c"+(i+1)+(changed(i)?" new":"");
+    const fx='<div class="fx"></div>',medal='<div class="rk"><img src="ui/medal'+(i+1)+'.webp" alt=""></div>';
+    if(!x)return '<div class="'+cls+' empty">'+fx+medal+'<div class="bd"></div><div class="who"><div class="nm">'+(d&&d.loading?"순위를 불러오는 중":"도전자를 기다리는 중")+'</div></div><div class="sc"></div></div>';
+    return '<div class="'+cls+'">'+fx+medal+'<div class="bd">'+(x.boss?BADGE:"")+'</div><div class="who"><div class="nm">'+esc(x.name)+'</div><div class="dp">'+esc(x.dept)+'</div></div><div class="sc">'+fmt(x.best)+'</div></div>'}).join("");
+  let h="";
+  for(let i=3;i<8;i++){const x=r[i];
+    h+=x?'<div class="row'+(changed(i)?" new":"")+'"><div class="r">'+(i+1)+'</div><div class="b">'+(x.boss?BADGE:"")+'</div><div class="n">'+esc(x.name)+'<span>'+esc(x.dept)+'</span></div><div class="s">'+fmt(x.best)+'</div></div>'
+        :'<div class="row empty"><div class="r">'+(i+1)+'</div><div class="b"></div><div class="n">—</div><div class="s"></div></div>'}
+  $("rows").innerHTML=h;
+  $("tot").textContent="참가 "+fmt(d&&d.total||0)+"명";
+  prev=r.slice(0,8);
+}
+
+let busy=false;
+async function load(){
+  if(busy)return;busy=true;
+  try{const res=await fetch("/api/board",{cache:"no-store"});if(!res.ok)throw new Error(res.status);render(await res.json());$("net").textContent=""}
+  catch(e){$("net").textContent="· 순위 서버 연결 재시도 중";if(prev===null){render({rows:[],total:0,loading:true});prev=null}}
+  finally{busy=false}
+}
+tick();setInterval(tick,1000);
+load();setInterval(()=>{if(!document.hidden)load()},30000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)load()});
+// hide the mouse pointer on the projector after 3 s without movement
+let idleT;addEventListener("mousemove",()=>{document.body.classList.remove("idle");clearTimeout(idleT);idleT=setTimeout(()=>document.body.classList.add("idle"),3000)});
+</script>
+</body>
+</html>
